@@ -1,48 +1,136 @@
-# Qwen2.5-Omni Phase 1 benchmark
+# Phase 1 Benchmark
 
-One Python program runs on your **benchmark client**, not on your inference instances. It sends HTTP requests to both EC2 inference nodes and samples `llama-server` CPU/RSS via SSH.
+A single Python script runs on the **benchmark client (Mac)**, sending HTTP requests to AWS EC2 inference nodes and collecting CPU/RAM metrics via SSH.
 
-## Setup
+## 1. Setup
 
-Keep `benchmark.py`, `coco.py`, `cnn_dailymail.py`, and `librispeech.py` in the same folder. Install:
+All scripts are in the project root:
 
-```bash
+```
+benchmark.py
+cnn_dailymail.py
+coco.py
+librispeech.py
+dataset/
+results/
+```
+
+Create a virtual environment and install dependencies:
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
 pip install requests datasets transformers soundfile
 ```
 
-Download datasets once using the existing scripts:
+Download datasets:
 
-```bash
+```
 python cnn_dailymail.py --download
 python coco.py --download
 python librispeech.py --download
 ```
 
-Edit `NODES` at the top of `benchmark.py` with the two inference HTTP addresses and SSH targets. Your client must be able to reach the EC2 hosts over HTTP and SSH (e.g. same private VPC, or SSH tunneling). Configure SSH keys using your usual `~/.ssh/config` or ssh-agent. Only allow access from the benchmark client; don't expose port 8080 publicly.
+## 2. SSH Configuration
 
-Run:
+Edit `~/.ssh/config` on your Mac:
 
-```bash
-python benchmark.py --run 01  # quick single workload, both nodes
-python benchmark.py           # all 9 workloads on both nodes
+```
+Host qwen-large
+    HostName <EC2_PUBLIC_IP>
+    User ubuntu
+    IdentityFile ~/.ssh/key.pem
+
+Host qwen-small
+    HostName <EC2_PUBLIC_IP>
+    User ubuntu
+    IdentityFile ~/.ssh/key.pem
 ```
 
-The script fixes repetitions at 10, one warm-up per workload, output cap at 128, single request at a time, and deterministic sampling parameters. No long CLI configuration is needed.
+Set key permissions:
 
-Results: `results/summary.csv` and `results/{small,large}_runNN_raw.csv`.
+```
+chmod 400 ~/.ssh/key.pem
+```
 
-## Columns
+Create SSH tunnels in separate terminals:
 
-- `median_e2e_s`, `p95_s`: client-observed completion time.
-- `req_s`: successful requests divided by **sum of request durations** (sequential inference throughput; excludes SSH setup/dataset loading).
-- `ttft_s`: median request-to-first-streamed-content delay.
-- `decode_tok_s`: median server-reported decode rate when available; otherwise a client-side estimate if completion token counts are reported. Blank when unavailable.
-- `peak_ram_gb`: maximum sampled process RSS (GiB), not instance-wide memory.
-- `cpu_pct`: median per-request CPU utilization of `llama-server` normalized to the node's total logical CPUs (0–100%).
-- `success`, `failed`: number of completed and failed requests.
+```
+ssh -N -L 8080:127.0.0.1:8080 qwen-large
+ssh -N -L 8081:127.0.0.1:8080 qwen-small
+```
 
-## Important
+Verify:
 
-Run the same server model, quantization, context settings appropriate for each input, and compatible multimodal support on each node. The 8192-token input requires an appropriately large model context plus output budget. Input lengths from `cnn_dailymail.py` refer to content tokens, not full templated tokens.
+```
+curl http://127.0.0.1:8080/health
+curl http://127.0.0.1:8081/health
+```
 
-Streaming server events may omit token usage/timing data; in that case `decode_tok_s` can be blank. Audio schema support varies by llama.cpp version; verify a one-request audio smoke test before the full benchmark. SSH sampling at 0.2s intervals measures a sampled peak and may miss short-lived spikes. If SSH authentication fails, latency still runs but CPU and memory results are blank. With only 10 repetitions, p95 is exploratory rather than a high-confidence tail estimate.
+Keep both tunnels running during benchmarking.
+
+## 3. Benchmark Configuration
+
+Edit `benchmark.py`:
+
+```
+MODEL = "qwen"
+
+NODES = {
+    "large": {
+        "url": "http://127.0.0.1:8080",
+        "ssh": "qwen-large",
+    },
+    "small": {
+        "url": "http://127.0.0.1:8081",
+        "ssh": "qwen-small",
+    },
+}
+```
+
+Default: 10 measured requests, 1 warm-up, 128 max output tokens, concurrency = 1.
+
+## 4. Workloads
+
+| Run   | Modality | Size                     | Dataset       |
+| ----- | -------- | ------------------------ | ------------- |
+| 01–03 | Text     | 512 / 1024 / 3072 tokens | CNN/DailyMail |
+| 04–06 | Image    | 1 / 2 / 4 images         | COCO          |
+| 07–09 | Audio    | 5 / 10 / 20 seconds      | LibriSpeech   |
+
+Text sizes assume a 4096-token context window.
+
+## 5. Run
+
+Single workload:
+
+```
+python benchmark.py --run 01
+```
+
+All workloads:
+
+```
+python benchmark.py
+```
+
+Results are **appended**, not overwritten:
+
+```
+results/benchmark.csv
+```
+
+## 6. Metrics
+
+| Metric                                           | Description                           |
+| ------------------------------------------------ | ------------------------------------- |
+| `model`, `node`, `modality`, `size`, `size_unit` | Experiment configuration              |
+| `median_e2e_s`, `p95_s`                          | Request latency                       |
+| `req_s`                                          | Sequential throughput                 |
+| `ttft_s`                                         | Time to first token                   |
+| `decode_tok_s`                                   | Decode throughput                     |
+| `peak_ram_gb`                                    | Peak sampled process RSS              |
+| `cpu_pct`                                        | CPU usage normalized to node capacity |
+| `success`, `failed`                              | Request outcomes                      |
+
+CPU/RAM are sampled remotely via SSH every 0.2 seconds. P95 with 10 repetitions is exploratory. Keep the model, quantization, and runtime settings consistent across nodes.
