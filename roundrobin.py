@@ -41,6 +41,9 @@ FIELDS = ["timestamp_utc", "model", "policy", "requests", "inflight", "seed", "g
           "median_e2e_s", "p95_s", "ttft_s", "req_s", "peak_ram_gb", "cpu_pct"]
 OUTPUT_CSV = Path("results/roundrobin.csv")
 REQUESTS_CSV = Path("results/roundrobin_requests.csv")  # one row per request, all runs
+# Fixed so the file keeps its format; request_once also returns fields only benchmark.py records.
+REQUEST_FIELDS = ["index", "node", "model", "modality", "size", "sent_s", "status", "error",
+                  "e2e_s", "ttft_s", "decode_tok_s", "output_tokens"]
 
 
 def payload(ds, modality, size, index):
@@ -102,7 +105,7 @@ def main():
     REQUESTS_CSV.parent.mkdir(exist_ok=True, parents=True)
     needs_header = not REQUESTS_CSV.exists()
     with REQUESTS_CSV.open('a', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=[*run, *rows[0]])
+        writer = csv.DictWriter(f, fieldnames=[*run, *REQUEST_FIELDS], extrasaction='ignore')
         if needs_header:
             writer.writeheader()
         writer.writerows({**run, **r} for r in rows)
