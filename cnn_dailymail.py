@@ -61,7 +61,7 @@ class CNNDailyMailDataset:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--download", action="store_true")
-    parser.add_argument("--root", default="data/cnn_dailymail")
+    parser.add_argument("--root", default="dataset/cnn_dailymail")
     parser.add_argument("--size", type=int, choices=CNNDailyMailDataset.SIZES, default=512)
     parser.add_argument("--endpoint")
     args = parser.parse_args()

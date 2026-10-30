@@ -75,7 +75,7 @@ class COCODataset:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--download", action="store_true")
-    parser.add_argument("--root", default="data/coco")
+    parser.add_argument("--root", default="dataset/coco")
     parser.add_argument("--split", choices=tuple(COCODataset.ARCHIVES), default="validation")
     parser.add_argument("--count", type=int, choices=COCODataset.COUNTS, default=1)
     parser.add_argument("--endpoint")

@@ -84,7 +84,7 @@ class LibriSpeechDataset:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--download", action="store_true")
-    parser.add_argument("--root", default="data/librispeech")
+    parser.add_argument("--root", default="dataset/librispeech")
     parser.add_argument("--duration", type=int, choices=LibriSpeechDataset.DURATIONS, default=5)
     parser.add_argument("--endpoint")
     args = parser.parse_args()
