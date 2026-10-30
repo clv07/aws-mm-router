@@ -1,6 +1,6 @@
 # Phase 1 Benchmark
 
-A single Python script runs on the **benchmark client (Mac)**, sending HTTP requests to AWS EC2 inference nodes and collecting CPU/RAM metrics via SSH.
+A single Python script runs on the benchmark client, sending HTTP requests to AWS EC2 inference nodes and collecting CPU/RAM metrics via SSH.
 
 ## 1. Setup
 
