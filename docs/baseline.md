@@ -1,3 +1,18 @@
+# Dataset setup
+Keep `benchmark.py`, `coco.py`, `cnn_dailymail.py`, and `librispeech.py` in the same folder. Install:
+
+```bash
+pip install requests datasets transformers soundfile
+```
+
+Download datasets once using the existing scripts:
+
+```bash
+python cnn_dailymail.py --download
+python coco.py --download
+python librispeech.py --download
+```
+
 # llama-server setup
 
 `run.sh` runs on each inference instance. It builds llama.cpp (commit `8642541b2`, CPU only) and downloads the model if missing, starts `llama-server` in a tmux session, and returns once the model is loaded. If the server fails to start, it prints the last 20 log lines.
@@ -21,27 +36,13 @@ Defaults (top of `run.sh`): `-c 8192 -np 2`, i.e. 2 requests at a time with 4,09
 
 The first run needs `sudo` and a few minutes to build and download. The 4,096-token limit is a server setting, not the model's; for longer inputs, edit `CTX` at the top of `run.sh` and rerun it (more context uses more memory).
 
-# Qwen2.5-Omni Phase 1 benchmark
+# Single-request benchmark
 
-One Python program runs on your **benchmark client**, not on your inference instances. It sends HTTP requests to both EC2 inference nodes and samples `llama-server` CPU/RSS via SSH.
+One Python program runs on the client. It sends HTTP requests to both EC2 inference nodes and samples `llama-server` CPU/RSS via SSH.
 
 ## Setup
 
-Keep `benchmark.py`, `coco.py`, `cnn_dailymail.py`, and `librispeech.py` in the same folder. Install:
-
-```bash
-pip install requests datasets transformers soundfile
-```
-
-Download datasets once using the existing scripts:
-
-```bash
-python cnn_dailymail.py --download
-python coco.py --download
-python librispeech.py --download
-```
-
-Edit `NODES` at the top of `benchmark.py` with the two inference HTTP addresses and SSH targets. Your client must be able to reach the EC2 hosts over HTTP and SSH (e.g. same private VPC, or SSH tunneling). Configure SSH keys using your usual `~/.ssh/config` or ssh-agent. Only allow access from the benchmark client; don't expose port 8080 publicly.
+Edit `NODES` at the top of `benchmark.py` with the two inference HTTP addresses and SSH targets. Client must be able to reach the EC2 hosts over HTTP and SSH (e.g. same private VPC, or SSH tunneling). Configure SSH keys using usual `~/.ssh/config` or ssh-agent. Only allow access from the benchmark client; don't expose port 8080 publicly.
 
 Run:
 
