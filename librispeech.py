@@ -11,7 +11,10 @@ import requests
 
 
 class LibriSpeechDataset:
-    DURATIONS = (5, 10, 20)
+    # llama.cpp pads Qwen audio to whole 30 s windows (clip + 30 s of silence, cut into
+    # 30 s windows, partial window dropped), so 5/10/20 s all cost one window and 40 s
+    # costs two. benchmark.py uses 10 and 40; 5 and 20 stay for roundrobin.py.
+    DURATIONS = (5, 10, 20, 40)
     ARCHIVES = {
         "dev-clean-2.tar.gz": "https://www.openslr.org/resources/31/dev-clean-2.tar.gz",
         "train-clean-5.tar.gz": "https://www.openslr.org/resources/31/train-clean-5.tar.gz",
@@ -20,6 +23,7 @@ class LibriSpeechDataset:
     def __init__(self, root: str | Path = "dataset/librispeech"):
         self.root = Path(root)
         self.files = sorted((self.root / "LibriSpeech").rglob("*.flac"))
+        self._long = {}  # duration -> recordings at least that long
         if not self.files:
             raise FileNotFoundError(f"No FLAC files under {self.root}; run with --download")
 
@@ -47,18 +51,44 @@ class LibriSpeechDataset:
             info = sf.info(path)
             return info.frames >= duration * info.samplerate
 
-        source = next(
-            (p for p in self.files[start:] + self.files[:start] if long_enough(p)),
-            None,
-        )
-        if source is None:
-            raise ValueError(f"No recording is at least {duration} seconds long")
+        # The start-th recording that is long enough, so each start gets a different clip
+        # (taking the first long-enough one at or after `start` repeats the same clip).
+        if duration not in self._long:
+            self._long[duration] = [p for p in self.files if long_enough(p)]
+        long = self._long[duration]
+        if not long:
+            # Few recordings are over ~35 s: join consecutive ones and cut to length.
+            return self._joined_clip(duration, self.files[start:] + self.files[:start])
+        source = long[start % len(long)]
         output = self.root / "clips" / f"{source.stem}-{duration}s.wav"
         output.parent.mkdir(parents=True, exist_ok=True)
         if not output.exists():
             info = sf.info(source)
             samples, rate = sf.read(source, stop=duration * info.samplerate)
             sf.write(output, samples, rate, subtype="PCM_16")
+        return output
+
+    def _joined_clip(self, duration: int, order: list[Path]) -> Path:
+        import numpy as np
+        import soundfile as sf
+
+        output = self.root / "clips" / f"{order[0].stem}-joined-{duration}s.wav"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        if not output.exists():
+            parts, total, rate = [], 0, None
+            for path in order:
+                samples, sr = sf.read(path)
+                if rate is None:
+                    rate = sr
+                if sr != rate:
+                    continue
+                parts.append(samples)
+                total += len(samples)
+                if total >= duration * rate:
+                    break
+            if total < duration * rate:
+                raise ValueError(f"Not enough audio for a {duration} second clip")
+            sf.write(output, np.concatenate(parts)[:duration * rate], rate, subtype="PCM_16")
         return output
 
     def messages(self, duration: int, start: int = 0) -> list[dict]:
