@@ -109,7 +109,40 @@ e.g. `results/phase1/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0/`. Copy the folder back w
 
 CPU/RAM are sampled every 0.2 seconds while a workload's measured requests run. Keep the model, quantization, and runtime settings consistent across nodes.
 
-## 6. Round-Robin Baseline (Phase 2)
+## 6. Answer Quality (once per quantization)
+
+`benchmark.py` measures speed only. Quantization trades answer quality for speed and memory, so the quantization row also measures quality. Quality depends on the weights, not the machine, so this runs **once per quantization on one node**, not on every instance. With the server and datasets from sections 2–3 (start with whichever model is loaded):
+
+```
+python quality.py                    # collect answers from the model llama-server is serving
+./run.sh qwen Q4_K_M && python quality.py
+./run.sh qwen Q8_0 && python quality.py
+./run.sh qwen f16 && python quality.py
+python quality.py --score            # compare all collected models with the f16 answers
+./perplexity.sh                      # perplexity of every downloaded quantization (stops llama-server)
+```
+
+| Task         | Inputs                                         | Score                                                  |
+| ------------ | ---------------------------------------------- | ------------------------------------------------------ |
+| `chat`       | 10 Dolly questions (run 00)                    | ROUGE-L vs the f16 answer, share identical to f16      |
+| `summarize`  | 10 512-token CNN/DailyMail texts (run 01)      | ROUGE-L vs the f16 answer, share identical to f16      |
+| `image`      | 10 single COCO photos (run 04)                 | ROUGE-L vs the f16 answer, share identical to f16      |
+| `transcribe` | 10 whole LibriSpeech recordings of 5–25 s      | word error rate vs the human transcript, plus ROUGE-L vs f16 |
+| perplexity   | 20 × 512 tokens of wikitext-2 test             | perplexity (lower is better), the standard llama.cpp quantization measure |
+
+f16 is the unquantized model, so ROUGE-L vs f16 (word overlap, 1.0 = same words in the same order) measures how much quantization changed the answer, not whether it is correct: one different early token can send a long description in another direction. Word error rate and perplexity are the measures against ground truth. Transcription uses whole recordings (not the cut clips of `benchmark.py`) so the transcript matches the audio, asks for the transcript only, and allows 256 output tokens; the other tasks keep `benchmark.py`'s prompts and 128 tokens. All requests use temperature 0 and no prompt cache.
+
+Results:
+
+```
+results/quality/answers.csv      # every answer, with the model, task, input and (transcription) human transcript
+results/quality/scores.csv       # one row per model and task
+results/quality/perplexity.csv   # one row per model; perplexity-<quant>.log holds the full output
+```
+
+`--inputs` and `--tasks` change the number of inputs per task and which tasks are collected (e.g. `--tasks transcribe` to redo one); scoring uses the latest answer per model, task and input.
+
+## 7. Round-Robin Baseline (Phase 2)
 
 Round robin fixes each request's node in advance by its position in the list (A, B, A, B, ...), regardless of the request type or how busy the node is. `roundrobin.py` by default sends 50 requests in order, 4 at a time across all nodes: each time one finishes, the next is sent. A request sent to a busy node waits in that node's queue.
 
