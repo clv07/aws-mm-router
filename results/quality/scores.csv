@@ -1,0 +1,13 @@
+timestamp_utc,model,reference_model,task,inputs,rouge_l_vs_reference,identical_to_reference,wer_vs_transcript,mean_answer_words
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q4_K_M,Qwen2.5-Omni-3B-f16,chat,10,0.6554129935400352,0.1,,52
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q4_K_M,Qwen2.5-Omni-3B-f16,summarize,10,0.5573194911943158,0.0,,73.1
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q4_K_M,Qwen2.5-Omni-3B-f16,image,10,0.44801824207005836,0.0,,65.2
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q4_K_M,Qwen2.5-Omni-3B-f16,transcribe,10,0.9701333797650112,0.4,0.04763193076273572,25.4
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q8_0,Qwen2.5-Omni-3B-f16,chat,10,0.7301997136023309,0.3,,64.4
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q8_0,Qwen2.5-Omni-3B-f16,summarize,10,0.8780056547903492,0.3,,94.2
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q8_0,Qwen2.5-Omni-3B-f16,image,10,0.6374428576992295,0.2,,76.6
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-Q8_0,Qwen2.5-Omni-3B-f16,transcribe,10,0.990909090909091,0.8,0.029819753260155738,25.5
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-f16,Qwen2.5-Omni-3B-f16,chat,10,1.0,1.0,,56.7
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-f16,Qwen2.5-Omni-3B-f16,summarize,10,1.0,1.0,,94.1
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-f16,Qwen2.5-Omni-3B-f16,image,10,1.0,1.0,,86
+2026-11-01T21:26:57+00:00,Qwen2.5-Omni-3B-f16,Qwen2.5-Omni-3B-f16,transcribe,10,1.0,1.0,0.04231975326015574,25.6
