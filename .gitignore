@@ -221,3 +221,6 @@ __marimo__/
 
 .DS_Store
 dataset/
+
+# experiment logs belong with the results
+!results/**/*.log

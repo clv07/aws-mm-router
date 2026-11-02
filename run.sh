@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Run on the AWS instance: ./run.sh <qwen|gemma> [quant]
+# Run on the AWS instance: [SLOTS=2|4] ./run.sh <qwen|gemma> [quant]
 #   quant = weights file: Q8_0 (default), Q4_K_M or f16. The image/audio encoder (mmproj)
 #   stays Q8_0 for every quant, so only the language model's weights change.
+#   SLOTS = requests llama-server processes at once (-np, default 2); the context grows with it
+#   so every slot keeps 4096 tokens. Override the total with CTX=... if needed.
 # Build llama.cpp and download the model if missing, (re)start llama-server in tmux only if it
 # isn't already serving this model with these flags, and wait until it is ready.
 set -euo pipefail
@@ -16,7 +18,8 @@ esac
 MODEL=$NAME-$QUANT.gguf
 MMPROJ=mmproj-$NAME-Q8_0.gguf
 LLAMA_COMMIT=8642541b2     # the llama.cpp build in README.md
-CTX=8192 SLOTS=2           # llama-server -c / -np: each slot gets CTX / SLOTS tokens
+SLOTS=${SLOTS:-2}               # llama-server -np: requests processed at once
+CTX=${CTX:-$((4096 * SLOTS))}   # llama-server -c: each slot gets CTX / SLOTS tokens (4096 by default)
 
 # 1. llama.cpp
 if [ ! -x ~/llama.cpp/build/bin/llama-server ]; then
@@ -60,4 +63,4 @@ until curl -sf localhost:8080/health >/dev/null; do
   fi
   sleep 1
 done
-echo "llama-server ready (pid $(pgrep -x llama-server)); watch it with: tmux attach -t llama"
+echo "llama-server ready (pid $(pgrep -x llama-server), $SLOTS slots, context $CTX); watch it with: tmux attach -t llama"
