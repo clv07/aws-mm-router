@@ -32,7 +32,7 @@ tmux attach -t llama          # leave with Ctrl-b d; Ctrl-C stops the server
 tail -f ~/llama-server.log
 ```
 
-Server settings: `-c 8192 -np 2` (2 requests at a time, 4096 tokens each for input + output), `-t` = number of vCPUs (on Intel these include hyperthreads: 8 vCPU = 4 physical cores), listening on `127.0.0.1:8080`. For longer inputs, edit `CTX` at the top of `run.sh`.
+Server settings: `-np 2` slots by default (2 requests processed at once) with `-c` = 4096 × slots, so every slot has 4096 tokens for input + output; `-t` = number of vCPUs (on Intel these include hyperthreads: 8 vCPU = 4 physical cores), listening on `127.0.0.1:8080`. `SLOTS=4 ./run.sh qwen` restarts the server with 4 slots (`-c 16384`); `CTX=...` overrides the total context. `benchmark.py` reads the slot count from the server and refuses a `--concurrency` above it, unless `--allow-queue` is given: then the extra requests wait in `llama-server`'s queue and `queue_s` measures that wait.
 
 ## 3. Client Setup
 
@@ -66,46 +66,75 @@ Run 00 is the short-prompt case (decode-heavy); runs 01–03 are long-input (pre
 
 llama.cpp pads Qwen audio to whole 30-second windows (the clip plus 30 s of silence, cut into 30 s windows, a partial last window dropped), so any clip under 30 s costs one window: 5, 10 and 20 s took the same time. 10 s (one window) and 40 s (two windows, joined from consecutive LibriSpeech recordings) show that step.
 
-Each workload sends 1 unrecorded warm-up and then 5 measured requests, each with a different input (question, article, image or recording), at temperature 0, at most 128 output tokens, no prompt cache.
+Each workload sends 1 unrecorded warm-up and then `--repeats` measured requests (default 5), each with a different input (question, article, image or recording), at temperature 0, at most 128 output tokens, no prompt cache. `--repeats` is requests per workload, not repetitions of the whole experiment; to repeat the experiment, run the command again (rows are appended with a new `run_id`).
+
+**Output modes.** `natural` stops when the answer ends, so output length differs between requests and can differ between nodes for the same input. `fixed` sends `ignore_eos`, so every request generates exactly 128 tokens: compare `e2e_s` across nodes on `fixed` rows, and use `natural` rows for realistic latency. `ttft_s`, `prefill_tok_s`, `decode_tok_s` and `tpot_ms` do not depend on output length in either mode.
 
 ## 5. Run
 
-Run inside tmux so the run continues if SSH disconnects:
+Run inside tmux so the run continues if SSH disconnects. The whole sweep is one command:
 
 ```
 tmux new -s bench
+./experiment.sh qwen                   # REPEATS=5 and QUEUE_REPEATS=2 by default
+NODE=c7i.2xlarge-noamx ./experiment.sh qwen   # label a variant of the same instance type
+```
+
+| Server (`run.sh`) | Concurrency | Waiting in the queue | Output modes | Repeats | Measured requests |
+| ----------------- | ----------- | -------------------- | ------------ | ------- | ----------------- |
+| `SLOTS=2`         | 1, then 2   | 0                    | natural, fixed | 5     | (45 + 90) × 2 = 270 |
+| `SLOTS=2`         | 5, then 10  | 3, then 8            | fixed        | 2       | 90 + 180 = 270    |
+| `SLOTS=4`         | 4           | 0                    | natural, fixed | 5     | 180 × 2 = 360     |
+
+900 requests in total. Each workload sends repeats × concurrency measured requests, so the queue steps use fewer repeats (`QUEUE_REPEATS`): at concurrency 10 that is still 20 requests per workload. They use fixed output only, so every request needs the same work and the wait reflects the queue, not answer lengths.
+
+In a queue step, `benchmark.py` keeps `concurrency` requests outstanding (closed loop): `slots` of them are processed and the rest wait, and a new one is sent each time one finishes. The queue therefore always holds concurrency − slots requests. Compare `queue_s`, `ttft_s`, `median_e2e_s` and `req_s` across concurrency 2, 5 and 10: throughput should stay at its concurrency-2 value while waiting grows with the queue.
+
+It activates `.venv`, restarts `llama-server` for each slot count, logs everything to `<results folder>/logs/experiment-<run_id>.log`, and ends by printing the request count per slots / concurrency / output mode against the expected count. The server is left running with 4 slots. If a step fails the script stops; everything written so far is kept.
+
+Single passes, by hand:
+
+```
 source .venv/bin/activate
-python benchmark.py                    # all workloads, 1 request at a time (the main Phase 1 run)
-python benchmark.py --concurrency 2    # optional: 2 at a time (= the server's 2 slots)
-python benchmark.py --run 04           # a single workload
+python benchmark.py --repeats 10                             # 1 request at a time
+python benchmark.py --repeats 10 --concurrency 1 2 --output natural fixed
+python benchmark.py --run 04                                 # a single workload
+python benchmark.py --repeats 2 --concurrency 5 10 --output fixed --allow-queue   # queue, 2 slots
 ```
 
-Detach with Ctrl-b d and reattach with `tmux attach -t bench`. The node label defaults to the EC2 instance type; add a suffix for a variant of the same instance, e.g. `--node c7i.2xlarge-noamx`. With `--concurrency 2`, each workload sends 2 × 5 = 10 measured requests, keeping 2 outstanding. `--url` and `--ssh` point the client at a server on another machine, for example through an SSH tunnel, but then network time is included again.
+Detach with Ctrl-b d and reattach with `tmux attach -t bench`. The node label defaults to the EC2 instance type; add a suffix for a variant of the same instance, e.g. `--node c7i.2xlarge-noamx`. With `--concurrency 2`, each workload sends 2 × repeats measured requests, keeping 2 outstanding. `--url` and `--ssh` point the client at a server on another machine, for example through an SSH tunnel, but then network time is included again.
 
-Results are **appended** to one folder per node and model, so teammates' results can all be committed without conflicts:
+Results are **appended**, never overwritten, to one folder per node and model, so teammates' results can all be committed without conflicts:
 
 ```
-results/phase1/<node>__<model>/summary.csv    # one row per workload and concurrency
-results/phase1/<node>__<model>/requests.csv   # one row per request
+results/phase1/<node>__<model>/summary_v2.csv              # one row per workload, concurrency and output mode
+results/phase1/<node>__<model>/requests_v2.csv             # one row per request, written as each request finishes
+results/phase1/<node>__<model>/system_info-<run_id>-np<slots>.txt   # llama-server CPU features
+results/phase1/<node>__<model>/logs/experiment-<run_id>.log
 ```
 
-e.g. `results/phase1/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0/`. Copy the folder back with `scp -r <host>:aws-mm-router/results/phase1/<folder> results/phase1/` and commit it. `results/benchmark.csv` holds the earlier single-request c8g.4xlarge run in the previous format.
+e.g. `results/phase1/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0/`. Older `summary.csv` / `requests.csv` files (previous column layout) are left untouched. Results live on the instance's disk: copy the folder back with `scp -r <host>:aws-mm-router/results/phase1/<folder> results/phase1/` and commit it **before terminating the instance** (stopping it keeps them). `results/benchmark.csv` holds the earlier single-request c8g.4xlarge run in the previous format.
 
 | Summary metric                                   | Description                                                   |
 | ------------------------------------------------ | ------------------------------------------------------------- |
+| `run_id`                                         | One label per invocation (`experiment.sh` uses one for the whole sweep) |
 | `model`, `llama_build`                           | Model file and llama.cpp build reported by `llama-server`     |
+| `slots`, `ctx_per_slot`                          | Server slots (`-np`) and context per slot, reported by `llama-server` |
 | `node`, `run`, `modality`, `size`, `size_unit`   | Experiment configuration                                      |
+| `output_mode`                                    | `natural` or `fixed` (`ignore_eos`, always 128 output tokens)  |
 | `concurrency`, `requests`                        | Requests in flight at once, measured requests                 |
-| `median_e2e_s`, `p95_s`                          | Request latency                                               |
+| `median_e2e_s`, `p95_s`                          | Request latency (depends on output length in `natural` mode)  |
 | `ttft_s`                                         | Median time to first token                                    |
+| `prefill_tok_s`                                  | Median `prompt_tokens / server_prompt_ms` × 1000 (includes image/audio encoding) |
+| `decode_tok_s`, `tpot_ms`                        | Median per-request decode throughput, and time per output token = 1000 / `decode_tok_s` |
+| `queue_s`                                        | Median `e2e_s` − server processing time: time waiting for a slot + HTTP overhead; ≈ 0 when concurrency ≤ slots, the queue wait with `--allow-queue` |
 | `prompt_tokens`, `output_tokens`                 | Median input tokens (how many tokens the images/audio became) and output tokens |
 | `req_s`, `out_tok_s`                             | Successful requests and output tokens per second of wall time |
-| `decode_tok_s`                                   | Median per-request decode throughput                          |
 | `peak_ram_gb`                                    | Peak sampled `llama-server` RSS                               |
 | `cpu_pct`                                        | Median CPU usage normalized to node capacity                  |
 | `success`, `failed`                              | Request outcomes                                              |
 
-`requests.csv` has the same configuration columns plus, per request: `index`, `input` (dataset position), `sent_s`, `status`, `error`, `e2e_s`, `ttft_s`, `prompt_tokens`, `output_tokens`, `decode_tok_s`, and `server_prompt_ms` / `server_predicted_ms` (llama-server's own prompt-processing and generation times; prompt processing includes image/audio encoding and matched `ttft_s` within about 0.1 s in a test).
+`requests_v2.csv` has the same configuration columns plus, per request: `index`, `input` (dataset position; the same on every node), `sent_s`, `status`, `error`, `finish_reason` (`length` = hit 128 tokens, `stop` = answer ended), `e2e_s`, `ttft_s`, `queue_s`, `prompt_tokens`, `output_tokens`, `prefill_tok_s`, `decode_tok_s`, `tpot_ms`, and `server_prompt_ms` / `server_predicted_ms` (llama-server's own prompt-processing and generation times; prompt processing includes image/audio encoding and matched `ttft_s` within about 0.1 s in a test). Match rows across nodes by `run`, `input`, `concurrency` and `output_mode`.
 
 CPU/RAM are sampled every 0.2 seconds while a workload's measured requests run. Keep the model, quantization, and runtime settings consistent across nodes.
 
