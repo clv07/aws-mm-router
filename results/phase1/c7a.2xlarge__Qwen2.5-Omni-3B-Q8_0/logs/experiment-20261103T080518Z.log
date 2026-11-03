@@ -1,0 +1,566 @@
+experiment run_id=20261103T080518Z model=qwen quant=Q8_0 repeats=5 queue_repeats=2 started Tue Nov  3 08:05:18 UTC 2026
+=== llama-server with 2 slots: concurrency 1 2, output natural fixed, repeats 5
+llama-server already running this model
+llama-server ready (pid 1408, 2 slots, context 8192); watch it with: tmux attach -t llama
+run_id=20261103T080518Z node=c7a.2xlarge model=Qwen2.5-Omni-3B-Q8_0 build=b11960-8642541b2 slots=2 ctx_per_slot=4096 concurrency=[1, 2] output=['natural', 'fixed'] -> results/phase1/c7a.2xlarge__Qwen2.5-Omni-3B-Q8_0
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+[c7a.2xlarge] 00 chat=short x5, 1 at a time, output=natural
+  warmup: ok 1.40s
+  1: ok 10.95s
+  2: ok 10.95s
+  3: ok 10.99s
+  4: ok 8.00s
+  5: ok 3.00s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:06:08+00:00', 'output_mode': 'natural', 'run': '00', 'modality': 'chat', 'size': 'short', 'size_unit': 'question', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 10.94792481899998, 'p95_s': 10.98474925079994, 'ttft_s': 0.2176811510000789, 'prefill_tok_s': 125.14136339197982, 'decode_tok_s': 11.824993692265593, 'tpot_ms': 84.56664130434783, 'queue_s': 0.0023111499999242113, 'prompt_tokens': 27, 'output_tokens': 128, 'req_s': 0.11390213582593368, 'out_tok_s': 11.640798281410422, 'peak_ram_gb': 5.2170867919921875, 'cpu_pct': 99.79435128540416}
+[c7a.2xlarge] 01 text=512 x5, 1 at a time, output=natural
+  warmup: ok 14.39s
+  1: ok 14.41s
+  2: ok 13.04s
+  3: ok 14.40s
+  4: ok 14.42s
+  5: ok 9.66s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:07:28+00:00', 'output_mode': 'natural', 'run': '01', 'modality': 'text', 'size': 512, 'size_unit': 'tokens', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 14.401320800000008, 'p95_s': 14.418051410399949, 'ttft_s': 3.4255259660000092, 'prefill_tok_s': 155.70564419764824, 'decode_tok_s': 11.562916651947468, 'tpot_ms': 86.48337007874017, 'queue_s': 0.014596459999980382, 'prompt_tokens': 531, 'output_tokens': 128, 'req_s': 0.0758374712608994, 'out_tok_s': 8.630304229490353, 'peak_ram_gb': 5.398368835449219, 'cpu_pct': 99.85265841571885}
+[c7a.2xlarge] 02 text=1024 x5, 1 at a time, output=natural
+  warmup: ok 17.99s
+  1: ok 17.32s
+  2: ok 15.65s
+  3: ok 11.87s
+  4: ok 18.04s
+  5: ok 14.79s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:09:04+00:00', 'output_mode': 'natural', 'run': '02', 'modality': 'text', 'size': 1024, 'size_unit': 'tokens', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 15.649581839000007, 'p95_s': 17.89345980600001, 'ttft_s': 6.852292470000066, 'prefill_tok_s': 152.8975552663093, 'decode_tok_s': 11.362965783722847, 'tpot_ms': 88.00519327731092, 'queue_s': 0.030158701999965842, 'prompt_tokens': 1043, 'output_tokens': 101, 'req_s': 0.06437448261866213, 'out_tok_s': 6.411698468818749, 'peak_ram_gb': 5.503501892089844, 'cpu_pct': 99.86285484622448}
+[c7a.2xlarge] 03 text=3072 x5, 1 at a time, output=natural
+  warmup: ok 31.63s
+  1: ok 34.10s
+  2: ok 30.28s
+  3: ok 29.72s
+  4: ok 34.44s
+  5: ok 34.19s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:12:19+00:00', 'output_mode': 'natural', 'run': '03', 'modality': 'text', 'size': 3072, 'size_unit': 'tokens', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 34.097708932000046, 'p95_s': 34.39110648299993, 'ttft_s': 22.14909227199996, 'prefill_tok_s': 140.03968954048045, 'decode_tok_s': 10.44837633490596, 'tpot_ms': 95.70865060240965, 'queue_s': 0.07694452399991647, 'prompt_tokens': 3091, 'output_tokens': 128, 'req_s': 0.030723866643586988, 'out_tok_s': 3.367335784137134, 'peak_ram_gb': 5.859508514404297, 'cpu_pct': 99.86435449694582}
+[c7a.2xlarge] 04 image=1 x5, 1 at a time, output=natural
+  warmup: ok 15.88s
+  1: ok 17.97s
+  2: ok 16.62s
+  3: ok 7.00s
+  4: ok 10.82s
+  5: ok 11.25s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:13:38+00:00', 'output_mode': 'natural', 'run': '04', 'modality': 'image', 'size': 1, 'size_unit': 'images', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 11.253172559000063, 'p95_s': 17.69849557760001, 'ttft_s': 4.908787005000022, 'prefill_tok_s': 78.81883929944178, 'decode_tok_s': 11.567403167173202, 'tpot_ms': 86.44982677165355, 'queue_s': 0.023691559000063478, 'prompt_tokens': 385, 'output_tokens': 74, 'req_s': 0.07854038878931001, 'out_tok_s': 6.958678446732867, 'peak_ram_gb': 6.355792999267578, 'cpu_pct': 99.85853341146938}
+[c7a.2xlarge] 05 image=2 x5, 1 at a time, output=natural
+  warmup: ok 18.80s
+  1: ok 22.04s
+  2: ok 17.57s
+  3: ok 14.90s
+  4: ok 15.69s
+  5: ok 16.98s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:15:24+00:00', 'output_mode': 'natural', 'run': '05', 'modality': 'image', 'size': 2, 'size_unit': 'images', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 16.981581369999958, 'p95_s': 21.14209825540006, 'ttft_s': 9.68730467399996, 'prefill_tok_s': 76.8454109567264, 'decode_tok_s': 11.495779594603409, 'tpot_ms': 86.98844578313253, 'queue_s': 0.032096679999984445, 'prompt_tokens': 742, 'output_tokens': 84, 'req_s': 0.05735116315528326, 'out_tok_s': 5.092783288189154, 'peak_ram_gb': 6.484447479248047, 'cpu_pct': 99.85349245955452}
+[c7a.2xlarge] 06 image=4 x5, 1 at a time, output=natural
+  warmup: ok 29.25s
+  1: ok 27.30s
+  2: ok 30.07s
+  3: ok 24.56s
+  4: ok 24.45s
+  5: ok 30.80s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:18:11+00:00', 'output_mode': 'natural', 'run': '06', 'modality': 'image', 'size': 4, 'size_unit': 'images', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 27.300166955000122, 'p95_s': 30.654528903400113, 'ttft_s': 20.861131283000077, 'prefill_tok_s': 73.69404983212614, 'decode_tok_s': 11.159586858145028, 'tpot_ms': 89.60905208333334, 'queue_s': 0.08795060400012389, 'prompt_tokens': 1529, 'output_tokens': 73, 'req_s': 0.03644840506051246, 'out_tok_s': 2.901293042816792, 'peak_ram_gb': 6.739646911621094, 'cpu_pct': 99.8563910319535}
+[c7a.2xlarge] 07 audio=10 x5, 1 at a time, output=natural
+  warmup: ok 11.91s
+  1: ok 11.10s
+  2: ok 11.33s
+  3: ok 11.29s
+  4: ok 10.77s
+  5: ok 11.01s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:19:20+00:00', 'output_mode': 'natural', 'run': '07', 'modality': 'audio', 'size': 10, 'size_unit': 'seconds', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 11.101610735000122, 'p95_s': 11.322914338600048, 'ttft_s': 8.237467573999993, 'prefill_tok_s': 94.98912209512996, 'decode_tok_s': 11.46463683633674, 'tpot_ms': 87.22474285714286, 'queue_s': 0.05550207000002949, 'prompt_tokens': 777, 'output_tokens': 34, 'req_s': 0.09008915663332258, 'out_tok_s': 2.99096000022631, 'peak_ram_gb': 6.973152160644531, 'cpu_pct': 99.85944732855629}
+[c7a.2xlarge] 08 audio=40 x5, 1 at a time, output=natural
+  warmup: ok 26.85s
+  1: ok 28.04s
+  2: ok 28.04s
+  3: ok 28.08s
+  4: ok 28.04s
+  5: ok 28.16s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:22:08+00:00', 'output_mode': 'natural', 'run': '08', 'modality': 'audio', 'size': 40, 'size_unit': 'seconds', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 28.044157565999967, 'p95_s': 28.143251806000034, 'ttft_s': 16.670677909999995, 'prefill_tok_s': 92.25848034876243, 'decode_tok_s': 11.16856129143745, 'tpot_ms': 89.5370472440945, 'queue_s': 0.1186219740001242, 'prompt_tokens': 1527, 'output_tokens': 128, 'req_s': 0.035621361936009635, 'out_tok_s': 4.559534327809233, 'peak_ram_gb': 7.293460845947266, 'cpu_pct': 99.85365273908666}
+[c7a.2xlarge] 00 chat=short x10, 2 at a time, output=natural
+  warmup: ok 1.43s
+  2: ok 11.42s
+  1: ok 11.42s
+  4: ok 8.60s
+  3: ok 11.76s
+  5: ok 3.16s
+  7: ok 1.72s
+  6: ok 3.95s
+  8: ok 3.81s
+  9: ok 11.64s
+  10: ok 11.34s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:22:49+00:00', 'output_mode': 'natural', 'run': '00', 'modality': 'chat', 'size': 'short', 'size_unit': 'question', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 9.96798616600006, 'p95_s': 11.706490290200032, 'ttft_s': 0.43226464500003203, 'prefill_tok_s': 90.59688430303754, 'decode_tok_s': 11.473506776848488, 'tpot_ms': 87.1592593873518, 'queue_s': 0.04571481549999845, 'prompt_tokens': 27.0, 'output_tokens': 110.5, 'req_s': 0.2496951796342854, 'out_tok_s': 21.423846412621685, 'peak_ram_gb': 7.350284576416016, 'cpu_pct': 99.83260044630615}
+[c7a.2xlarge] 01 text=512 x10, 2 at a time, output=natural
+  warmup: ok 14.71s
+  2: ok 17.97s
+  1: ok 22.02s
+  3: ok 18.85s
+  4: ok 18.80s
+  5: ok 12.42s
+  6: ok 18.99s
+  7: ok 18.98s
+  8: ok 16.93s
+  9: ok 16.69s
+  10: ok 15.01s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:24:36+00:00', 'output_mode': 'natural', 'run': '01', 'modality': 'text', 'size': 512, 'size_unit': 'tokens', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 18.381464419000054, 'p95_s': 20.658900000199864, 'ttft_s': 3.6207169324999313, 'prefill_tok_s': 150.38208062705172, 'decode_tok_s': 8.33158309344336, 'tpot_ms': 120.02599606299214, 'queue_s': 0.10161493499987806, 'prompt_tokens': 531.0, 'output_tokens': 128.0, 'req_s': 0.10898461040899779, 'out_tok_s': 12.664011729525543, 'peak_ram_gb': 7.550510406494141, 'cpu_pct': 99.8530684564983}
+[c7a.2xlarge] 02 text=1024 x10, 2 at a time, output=natural
+  warmup: ok 17.75s
+  2: ok 26.01s
+  1: ok 26.11s
+  3: ok 19.19s
+  4: ok 32.79s
+  5: ok 22.62s
+  6: ok 24.76s
+  7: ok 25.95s
+  8: ok 25.00s
+  9: ok 25.17s
+  10: ok 16.98s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:26:59+00:00', 'output_mode': 'natural', 'run': '02', 'modality': 'text', 'size': 1024, 'size_unit': 'tokens', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 25.089138580499935, 'p95_s': 29.783548898600092, 'ttft_s': 7.1240708684999845, 'prefill_tok_s': 148.8865747517367, 'decode_tok_s': 6.714018603478987, 'tpot_ms': 148.94212204724408, 'queue_s': 0.10800275999994824, 'prompt_tokens': 1043.0, 'output_tokens': 118.0, 'req_s': 0.079585262501571, 'out_tok_s': 8.92150792642611, 'peak_ram_gb': 7.485202789306641, 'cpu_pct': 99.85834045893064}
+[c7a.2xlarge] 03 text=3072 x10, 2 at a time, output=natural
+  warmup: ok 31.77s
+  2: ok 53.31s
+  1: ok 80.84s
+  3: ok 53.02s
+  4: ok 58.54s
+  5: ok 58.60s
+  6: ok 55.15s
+  7: ok 52.24s
+  8: ok 55.23s
+  9: ok 58.59s
+  10: ok 35.11s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:32:16+00:00', 'output_mode': 'natural', 'run': '03', 'modality': 'text', 'size': 3072, 'size_unit': 'tokens', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 55.18970596400004, 'p95_s': 70.83194138634998, 'ttft_s': 22.58960052600014, 'prefill_tok_s': 137.871660666381, 'decode_tok_s': 3.3989382131217503, 'tpot_ms': 294.57874507874016, 'queue_s': 0.17089638850004008, 'prompt_tokens': 3091.0, 'output_tokens': 112.0, 'req_s': 0.035104007645368314, 'out_tok_s': 3.7175144096445045, 'peak_ram_gb': 7.810733795166016, 'cpu_pct': 99.86128817696496}
+[c7a.2xlarge] 04 image=1 x10, 2 at a time, output=natural
+  warmup: ok 15.91s
+  2: ok 21.73s
+  1: ok 27.50s
+  3: ok 12.38s
+  4: ok 16.58s
+  5: ok 16.03s
+  6: ok 20.74s
+  7: ok 21.44s
+  8: ok 21.20s
+  9: ok 19.98s
+  10: ok 14.65s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:34:13+00:00', 'output_mode': 'natural', 'run': '04', 'modality': 'image', 'size': 1, 'size_unit': 'images', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 20.36254417100008, 'p95_s': 24.901084494349853, 'ttft_s': 5.1937181680002595, 'prefill_tok_s': 75.60843978543535, 'decode_tok_s': 7.010781714548994, 'tpot_ms': 142.6417960952468, 'queue_s': 0.10110450250012626, 'prompt_tokens': 385.0, 'output_tokens': 100.0, 'req_s': 0.09932428010387291, 'out_tok_s': 9.197428337618632, 'peak_ram_gb': 8.103164672851562, 'cpu_pct': 99.85553151339846}
+[c7a.2xlarge] 05 image=2 x10, 2 at a time, output=natural
+  warmup: ok 18.87s
+  2: ok 31.12s
+  1: ok 34.71s
+  4: ok 20.94s
+  3: ok 34.98s
+  5: ok 45.20s
+  6: ok 55.44s
+  8: ok 32.53s
+  7: ok 65.69s
+  10: ok 18.28s
+  9: ok 31.36s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:37:37+00:00', 'output_mode': 'natural', 'run': '05', 'modality': 'image', 'size': 2, 'size_unit': 'images', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 33.62173003699991, 'p95_s': 61.078321000399896, 'ttft_s': 15.54490338599976, 'prefill_tok_s': 64.96262011561434, 'decode_tok_s': 6.171609089841461, 'tpot_ms': 163.5435314679294, 'queue_s': 0.13614056899990246, 'prompt_tokens': 765.0, 'output_tokens': 99.5, 'req_s': 0.05392702003387965, 'out_tok_s': 5.311811473337145, 'peak_ram_gb': 8.131519317626953, 'cpu_pct': 99.77854650502906}
+[c7a.2xlarge] 06 image=4 x10, 2 at a time, output=natural
+  warmup: ok 29.26s
+  1: ok 49.70s
+  2: ok 69.35s
+  4: ok 25.30s
+  3: ok 70.97s
+  5: ok 54.96s
+  6: ok 56.35s
+  7: ok 53.77s
+  8: ok 48.74s
+  9: ok 47.85s
+  10: ok 29.58s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:42:22+00:00', 'output_mode': 'natural', 'run': '06', 'modality': 'image', 'size': 4, 'size_unit': 'images', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 51.735670255500054, 'p95_s': 70.2405215420002, 'ttft_s': 22.657287772500013, 'prefill_tok_s': 71.92057354496495, 'decode_tok_s': 3.336492612958687, 'tpot_ms': 299.791812280503, 'queue_s': 0.16648122099995177, 'prompt_tokens': 1515.5, 'output_tokens': 98.0, 'req_s': 0.039164505431172766, 'out_tok_s': 3.626633202926598, 'peak_ram_gb': 8.340198516845703, 'cpu_pct': 99.85480038587443}
+[c7a.2xlarge] 07 audio=10 x10, 2 at a time, output=natural
+  warmup: ok 11.91s
+  1: ok 19.40s
+  2: ok 19.55s
+  4: ok 19.31s
+  3: ok 28.16s
+  5: ok 19.56s
+  6: ok 20.90s
+  7: ok 20.60s
+  8: ok 20.26s
+  9: ok 20.01s
+  10: ok 11.66s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:44:14+00:00', 'output_mode': 'natural', 'run': '07', 'modality': 'audio', 'size': 10, 'size_unit': 'seconds', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 19.78314185850013, 'p95_s': 24.89564081200014, 'ttft_s': 8.626848208999945, 'prefill_tok_s': 92.22893635440144, 'decode_tok_s': 3.519270069957262, 'tpot_ms': 284.5413170731707, 'queue_s': 0.15779005700018445, 'prompt_tokens': 777.0, 'output_tokens': 35.5, 'req_s': 0.09961142838087933, 'out_tok_s': 3.6059337073878317, 'peak_ram_gb': 8.52585220336914, 'cpu_pct': 99.85723211813819}
+[c7a.2xlarge] 08 audio=40 x10, 2 at a time, output=natural
+  warmup: ok 26.72s
+  1: ok 45.49s
+  2: ok 45.49s
+  3: ok 45.74s
+  4: ok 45.74s
+  6: ok 45.52s
+  5: ok 45.53s
+  7: ok 46.12s
+  8: ok 46.12s
+  9: ok 45.49s
+  10: ok 45.49s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:48:29+00:00', 'output_mode': 'natural', 'run': '08', 'modality': 'audio', 'size': 40, 'size_unit': 'seconds', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 45.52249400100004, 'p95_s': 46.12398769505023, 'ttft_s': 33.04704192700001, 'prefill_tok_s': 46.42431461777209, 'decode_tok_s': 10.181569859480593, 'tpot_ms': 98.2166811023622, 'queue_s': 0.15199191950011937, 'prompt_tokens': 1527.0, 'output_tokens': 128.0, 'req_s': 0.04378890614274329, 'out_tok_s': 5.604979986271141, 'peak_ram_gb': 8.752082824707031, 'cpu_pct': 99.86064895806632}
+[c7a.2xlarge] 00 chat=short x5, 1 at a time, output=fixed
+  warmup: ok 11.14s
+  1: ok 10.94s
+  2: ok 10.95s
+  3: ok 11.13s
+  4: ok 10.97s
+  5: ok 10.97s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:49:36+00:00', 'output_mode': 'fixed', 'run': '00', 'modality': 'chat', 'size': 'short', 'size_unit': 'question', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 10.966939213999922, 'p95_s': 11.095645455800332, 'ttft_s': 0.21752208499992776, 'prefill_tok_s': 125.41631248171012, 'decode_tok_s': 11.814956935412281, 'tpot_ms': 84.63848031496063, 'queue_s': 0.0024072139999233855, 'prompt_tokens': 27, 'output_tokens': 128, 'req_s': 0.09097555268889064, 'out_tok_s': 11.644870744178002, 'peak_ram_gb': 8.865730285644531, 'cpu_pct': 99.80710107243084}
+[c7a.2xlarge] 01 text=512 x5, 1 at a time, output=fixed
+  warmup: ok 14.53s
+  1: ok 14.41s
+  2: ok 14.57s
+  3: ok 14.40s
+  4: ok 14.84s
+  5: ok 14.42s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:51:03+00:00', 'output_mode': 'fixed', 'run': '01', 'modality': 'text', 'size': 512, 'size_unit': 'tokens', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 14.415886689999752, 'p95_s': 14.788055146399893, 'ttft_s': 3.4184147519999897, 'prefill_tok_s': 155.6736903547689, 'decode_tok_s': 11.54716982504492, 'tpot_ms': 86.60130708661418, 'queue_s': 0.0076926249999154095, 'prompt_tokens': 531, 'output_tokens': 128, 'req_s': 0.06882418975042456, 'out_tok_s': 8.809496288054344, 'peak_ram_gb': 8.865730285644531, 'cpu_pct': 99.84510878704813}
+[c7a.2xlarge] 02 text=1024 x5, 1 at a time, output=fixed
+  warmup: ok 18.14s
+  1: ok 18.08s
+  2: ok 18.12s
+  3: ok 18.19s
+  4: ok 18.33s
+  5: ok 18.22s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:52:52+00:00', 'output_mode': 'fixed', 'run': '02', 'modality': 'text', 'size': 1024, 'size_unit': 'tokens', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 18.19047633199989, 'p95_s': 18.307266457799777, 'ttft_s': 6.870899379000093, 'prefill_tok_s': 152.7499680733528, 'decode_tok_s': 11.206704397669641, 'tpot_ms': 89.23229921259842, 'queue_s': 0.042750545999716394, 'prompt_tokens': 1043, 'output_tokens': 128, 'req_s': 0.05498584367955, 'out_tok_s': 7.0381879909824, 'peak_ram_gb': 8.778640747070312, 'cpu_pct': 99.85236827352274}
+[c7a.2xlarge] 03 text=3072 x5, 1 at a time, output=fixed
+  warmup: ok 34.48s
+  1: ok 34.49s
+  2: ok 33.89s
+  3: ok 33.90s
+  4: ok 34.48s
+  5: ok 34.15s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:56:18+00:00', 'output_mode': 'fixed', 'run': '03', 'modality': 'text', 'size': 3072, 'size_unit': 'tokens', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 34.147205063, 'p95_s': 34.48664178199997, 'ttft_s': 22.20537713299973, 'prefill_tok_s': 139.69045571175337, 'decode_tok_s': 10.604986949185747, 'tpot_ms': 94.29525984251967, 'queue_s': 0.07761220800006896, 'prompt_tokens': 3091, 'output_tokens': 128, 'req_s': 0.029255268130409552, 'out_tok_s': 3.7446743206924227, 'peak_ram_gb': 8.782012939453125, 'cpu_pct': 99.8605911195658}
+[c7a.2xlarge] 04 image=1 x5, 1 at a time, output=fixed
+  warmup: ok 15.94s
+  1: ok 17.89s
+  2: ok 16.59s
+  3: ok 14.29s
+  4: ok 15.95s
+  5: ok 15.96s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T08:57:54+00:00', 'output_mode': 'fixed', 'run': '04', 'modality': 'image', 'size': 1, 'size_unit': 'images', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 15.957288749000327, 'p95_s': 17.628239461799694, 'ttft_s': 5.042497517999891, 'prefill_tok_s': 76.63921228403879, 'decode_tok_s': 11.611912688657007, 'tpot_ms': 86.1184566929134, 'queue_s': 0.016034530999965213, 'prompt_tokens': 385, 'output_tokens': 128, 'req_s': 0.061972587893826134, 'out_tok_s': 7.932491250409745, 'peak_ram_gb': 8.892570495605469, 'cpu_pct': 99.84653462877867}
+[c7a.2xlarge] 05 image=2 x5, 1 at a time, output=fixed
+  warmup: ok 22.81s
+  1: ok 23.57s
+  2: ok 19.98s
+  3: ok 19.17s
+  4: ok 20.90s
+  5: ok 20.65s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:00:01+00:00', 'output_mode': 'fixed', 'run': '05', 'modality': 'image', 'size': 2, 'size_unit': 'images', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 20.64646816300001, 'p95_s': 23.03988953019971, 'ttft_s': 9.711626153999987, 'prefill_tok_s': 76.71473985845614, 'decode_tok_s': 11.470231723066338, 'tpot_ms': 87.18219685039371, 'queue_s': 0.03529645799962822, 'prompt_tokens': 742, 'output_tokens': 128, 'req_s': 0.04794993286615792, 'out_tok_s': 6.137591406868213, 'peak_ram_gb': 8.813541412353516, 'cpu_pct': 99.85128424324648}
+[c7a.2xlarge] 06 image=4 x5, 1 at a time, output=fixed
+  warmup: ok 31.95s
+  1: ok 32.04s
+  2: ok 30.22s
+  3: ok 29.17s
+  4: ok 33.55s
+  5: ok 33.68s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:03:12+00:00', 'output_mode': 'fixed', 'run': '06', 'modality': 'image', 'size': 4, 'size_unit': 'images', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 32.04484365799999, 'p95_s': 33.65287635639989, 'ttft_s': 20.80375131599976, 'prefill_tok_s': 73.80736779031989, 'decode_tok_s': 11.10157521736797, 'tpot_ms': 90.07730708661417, 'queue_s': 0.079386141999791, 'prompt_tokens': 1529, 'output_tokens': 128, 'req_s': 0.03151316814625027, 'out_tok_s': 4.0336855227200346, 'peak_ram_gb': 8.84487533569336, 'cpu_pct': 99.85350592}
+[c7a.2xlarge] 07 audio=10 x5, 1 at a time, output=fixed
+  warmup: ok 19.33s
+  1: ok 19.14s
+  2: ok 19.44s
+  3: ok 19.33s
+  4: ok 19.41s
+  5: ok 19.61s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:05:08+00:00', 'output_mode': 'fixed', 'run': '07', 'modality': 'audio', 'size': 10, 'size_unit': 'seconds', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 19.407087648000015, 'p95_s': 19.57624250840008, 'ttft_s': 8.245227597999929, 'prefill_tok_s': 94.77430116150359, 'decode_tok_s': 11.453831184777984, 'tpot_ms': 87.30703149606299, 'queue_s': 0.04574676300006075, 'prompt_tokens': 777, 'output_tokens': 128, 'req_s': 0.05158124000269506, 'out_tok_s': 6.602398720344968, 'peak_ram_gb': 8.904792785644531, 'cpu_pct': 99.85159456909192}
+[c7a.2xlarge] 08 audio=40 x5, 1 at a time, output=fixed
+  warmup: ok 27.96s
+  1: ok 27.99s
+  2: ok 28.05s
+  3: ok 28.03s
+  4: ok 28.13s
+  5: ok 28.03s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:07:57+00:00', 'output_mode': 'fixed', 'run': '08', 'modality': 'audio', 'size': 40, 'size_unit': 'seconds', 'concurrency': 1, 'requests': 5, 'success': 5, 'failed': 0, 'median_e2e_s': 28.034452891, 'p95_s': 28.110837830199852, 'ttft_s': 16.666108710000117, 'prefill_tok_s': 92.32742752206245, 'decode_tok_s': 11.15901481890808, 'tpot_ms': 89.61364566929134, 'queue_s': 0.1265817160001923, 'prompt_tokens': 1527, 'output_tokens': 128, 'req_s': 0.035654781977353237, 'out_tok_s': 4.563812093101214, 'peak_ram_gb': 8.879440307617188, 'cpu_pct': 99.85689757668467}
+[c7a.2xlarge] 00 chat=short x10, 2 at a time, output=fixed
+  warmup: ok 10.98s
+  1: ok 11.61s
+  2: ok 11.61s
+  3: ok 11.48s
+  4: ok 11.56s
+  5: ok 11.69s
+  6: ok 11.69s
+  7: ok 11.58s
+  8: ok 11.58s
+  9: ok 11.54s
+  10: ok 11.46s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:09:06+00:00', 'output_mode': 'fixed', 'run': '00', 'modality': 'chat', 'size': 'short', 'size_unit': 'question', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 11.57759893850016, 'p95_s': 11.686370696449695, 'ttft_s': 0.454505911999604, 'prefill_tok_s': 89.58301991285084, 'decode_tok_s': 11.375311569621099, 'tpot_ms': 87.9096811023622, 'queue_s': 0.0892373849999668, 'prompt_tokens': 27.0, 'output_tokens': 128.0, 'req_s': 0.17271505528129102, 'out_tok_s': 22.10752707600525, 'peak_ram_gb': 8.936264038085938, 'cpu_pct': 99.80951229837885}
+[c7a.2xlarge] 01 text=512 x10, 2 at a time, output=fixed
+  warmup: ok 14.57s
+  1: ok 18.60s
+  2: ok 18.60s
+  3: ok 18.56s
+  4: ok 18.57s
+  6: ok 18.66s
+  5: ok 18.66s
+  8: ok 18.49s
+  7: ok 18.49s
+  10: ok 18.65s
+  9: ok 18.65s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:10:53+00:00', 'output_mode': 'fixed', 'run': '01', 'modality': 'text', 'size': 512, 'size_unit': 'tokens', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 18.603472973000407, 'p95_s': 18.6630898771999, 'ttft_s': 6.743530955999631, 'prefill_tok_s': 78.92225786428736, 'decode_tok_s': 10.697199675617501, 'tpot_ms': 93.4824094488189, 'queue_s': 0.011679190999887012, 'prompt_tokens': 531.0, 'output_tokens': 128.0, 'req_s': 0.10754318069198979, 'out_tok_s': 13.765527128574693, 'peak_ram_gb': 8.981353759765625, 'cpu_pct': 99.84704207061057}
+[c7a.2xlarge] 02 text=1024 x10, 2 at a time, output=fixed
+  warmup: ok 18.02s
+  1: ok 25.92s
+  2: ok 26.01s
+  3: ok 26.03s
+  4: ok 26.03s
+  5: ok 26.13s
+  6: ok 32.98s
+  7: ok 26.13s
+  8: ok 26.23s
+  9: ok 26.19s
+  10: ok 19.32s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:13:22+00:00', 'output_mode': 'fixed', 'run': '02', 'modality': 'text', 'size': 1024, 'size_unit': 'tokens', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 26.07814494500053, 'p95_s': 29.940959539499993, 'ttft_s': 13.433215281500452, 'prefill_tok_s': 78.31807565347951, 'decode_tok_s': 10.087616993652636, 'tpot_ms': 99.13628346456693, 'queue_s': 0.1032139469999791, 'prompt_tokens': 1043.0, 'output_tokens': 128.0, 'req_s': 0.07658733002001643, 'out_tok_s': 9.803178242562103, 'peak_ram_gb': 8.916007995605469, 'cpu_pct': 99.85525930218532}
+[c7a.2xlarge] 03 text=3072 x10, 2 at a time, output=fixed
+  warmup: ok 34.16s
+  2: ok 58.45s
+  1: ok 72.68s
+  3: ok 58.48s
+  4: ok 58.57s
+  5: ok 58.61s
+  6: ok 58.62s
+  7: ok 58.58s
+  8: ok 58.56s
+  9: ok 58.51s
+  10: ok 44.38s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:18:49+00:00', 'output_mode': 'fixed', 'run': '03', 'modality': 'text', 'size': 3072, 'size_unit': 'tokens', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 58.56557024100039, 'p95_s': 66.35592613865022, 'ttft_s': 29.776062014499985, 'prefill_tok_s': 137.75522371655916, 'decode_tok_s': 4.4207951103736765, 'tpot_ms': 226.38898818897638, 'queue_s': 4.207011765500205, 'prompt_tokens': 3091.0, 'output_tokens': 128.0, 'req_s': 0.03415086307960034, 'out_tok_s': 4.371310474188843, 'peak_ram_gb': 8.809684753417969, 'cpu_pct': 99.85805227773456}
+[c7a.2xlarge] 04 image=1 x10, 2 at a time, output=fixed
+  warmup: ok 16.05s
+  2: ok 24.12s
+  1: ok 24.23s
+  3: ok 19.98s
+  4: ok 19.97s
+  5: ok 21.58s
+  6: ok 21.58s
+  8: ok 23.85s
+  7: ok 23.96s
+  9: ok 22.00s
+  10: ok 22.00s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:20:57+00:00', 'output_mode': 'fixed', 'run': '04', 'modality': 'image', 'size': 1, 'size_unit': 'images', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 22.003252685000007, 'p95_s': 24.176025998750266, 'ttft_s': 10.115782910000235, 'prefill_tok_s': 43.96366902812338, 'decode_tok_s': 10.780884211523006, 'tpot_ms': 92.75720472440945, 'queue_s': 0.10967202200006554, 'prompt_tokens': 385.0, 'output_tokens': 128.0, 'req_s': 0.08956997548647205, 'out_tok_s': 11.464956862268423, 'peak_ram_gb': 9.030799865722656, 'cpu_pct': 99.84742963251175}
+[c7a.2xlarge] 05 image=2 x10, 2 at a time, output=fixed
+  warmup: ok 22.88s
+  2: ok 33.13s
+  1: ok 33.14s
+  4: ok 29.71s
+  3: ok 29.71s
+  6: ok 33.67s
+  5: ok 33.67s
+  8: ok 34.36s
+  7: ok 34.37s
+  9: ok 31.94s
+  10: ok 31.93s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:24:03+00:00', 'output_mode': 'fixed', 'run': '05', 'modality': 'image', 'size': 2, 'size_unit': 'images', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 33.133655565000026, 'p95_s': 34.36762794460064, 'ttft_s': 21.164591797499725, 'prefill_tok_s': 38.29065916288302, 'decode_tok_s': 10.648412129449161, 'tpot_ms': 93.91071653543307, 'queue_s': 0.06915756600033163, 'prompt_tokens': 765.0, 'output_tokens': 128.0, 'req_s': 0.06141634980896472, 'out_tok_s': 7.861292775547484, 'peak_ram_gb': 8.935089111328125, 'cpu_pct': 99.8551249425607}
+[c7a.2xlarge] 06 image=4 x10, 2 at a time, output=fixed
+  warmup: ok 32.25s
+  2: ok 51.93s
+  1: ok 51.93s
+  3: ok 52.48s
+  4: ok 52.48s
+  5: ok 57.42s
+  6: ok 57.42s
+  8: ok 55.62s
+  7: ok 55.62s
+  10: ok 50.12s
+  9: ok 50.12s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:29:03+00:00', 'output_mode': 'fixed', 'run': '06', 'modality': 'image', 'size': 4, 'size_unit': 'images', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 52.48225296500004, 'p95_s': 57.42226894344999, 'ttft_s': 39.87752924550023, 'prefill_tok_s': 37.13803801166189, 'decode_tok_s': 10.130470263615202, 'tpot_ms': 98.71210236220473, 'queue_s': 0.08813979150001927, 'prompt_tokens': 1515.5, 'output_tokens': 128.0, 'req_s': 0.03737148586944497, 'out_tok_s': 4.783550191288956, 'peak_ram_gb': 9.111053466796875, 'cpu_pct': 99.85538643331462}
+[c7a.2xlarge] 07 audio=10 x10, 2 at a time, output=fixed
+  warmup: ok 19.50s
+  1: ok 28.44s
+  2: ok 28.44s
+  3: ok 28.51s
+  4: ok 28.51s
+  6: ok 28.29s
+  5: ok 28.29s
+  7: ok 28.40s
+  8: ok 28.40s
+  10: ok 28.29s
+  9: ok 28.29s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:31:44+00:00', 'output_mode': 'fixed', 'run': '07', 'modality': 'audio', 'size': 10, 'size_unit': 'seconds', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 28.39713187849975, 'p95_s': 28.507836546549424, 'ttft_s': 16.33830431699971, 'prefill_tok_s': 47.70223052599468, 'decode_tok_s': 10.598161928277378, 'tpot_ms': 94.35598425196851, 'queue_s': 0.05061013049973262, 'prompt_tokens': 777.0, 'output_tokens': 128.0, 'req_s': 0.07045879550306859, 'out_tok_s': 9.01872582439278, 'peak_ram_gb': 9.21615219116211, 'cpu_pct': 99.85416947601175}
+[c7a.2xlarge] 08 audio=40 x10, 2 at a time, output=fixed
+  warmup: ok 27.98s
+  1: ok 45.74s
+  2: ok 45.74s
+  3: ok 45.59s
+  4: ok 45.59s
+  5: ok 45.77s
+  6: ok 45.77s
+  8: ok 45.61s
+  7: ok 45.62s
+  10: ok 45.76s
+  9: ok 45.76s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:36:01+00:00', 'output_mode': 'fixed', 'run': '08', 'modality': 'audio', 'size': 40, 'size_unit': 'seconds', 'concurrency': 2, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 45.736868770000456, 'p95_s': 45.7721439038999, 'ttft_s': 33.07262768799956, 'prefill_tok_s': 46.3846971205311, 'decode_tok_s': 10.024632058551987, 'tpot_ms': 99.7542874015748, 'queue_s': 0.16360980200015618, 'prompt_tokens': 1527.0, 'output_tokens': 128.0, 'req_s': 0.04376711380351794, 'out_tok_s': 5.602190566850297, 'peak_ram_gb': 9.12826919555664, 'cpu_pct': 99.85989855925027}
+Appended results to results/phase1/c7a.2xlarge__Qwen2.5-Omni-3B-Q8_0/summary_v2.csv and requests_v2.csv (run_id=20261103T080518Z)
+=== llama-server with 2 slots: concurrency 5 10, output fixed, repeats 2
+llama-server already running this model
+llama-server ready (pid 1408, 2 slots, context 8192); watch it with: tmux attach -t llama
+run_id=20261103T080518Z node=c7a.2xlarge model=Qwen2.5-Omni-3B-Q8_0 build=b11960-8642541b2 slots=2 ctx_per_slot=4096 concurrency=[5, 10] output=['fixed'] -> results/phase1/c7a.2xlarge__Qwen2.5-Omni-3B-Q8_0
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+[c7a.2xlarge] 00 chat=short x10, 5 at a time, output=fixed
+  warmup: ok 11.01s
+  2: ok 11.41s
+  1: ok 11.74s
+  3: ok 23.23s
+  4: ok 23.53s
+  5: ok 34.94s
+  6: ok 23.83s
+  7: ok 34.77s
+  8: ok 23.65s
+  9: ok 34.56s
+  10: ok 23.24s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:37:12+00:00', 'output_mode': 'fixed', 'run': '00', 'modality': 'chat', 'size': 'short', 'size_unit': 'question', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 23.59247298299988, 'p95_s': 34.864418054450105, 'ttft_s': 12.282822357999976, 'prefill_tok_s': 92.3844799086715, 'decode_tok_s': 11.253212405089286, 'tpot_ms': 88.86372440944882, 'queue_s': 11.977515251500119, 'prompt_tokens': 27.0, 'output_tokens': 128.0, 'req_s': 0.17185517150095528, 'out_tok_s': 21.997461952122276, 'peak_ram_gb': 9.18509292602539, 'cpu_pct': 99.80333281070787}
+[c7a.2xlarge] 01 text=512 x10, 5 at a time, output=fixed
+  warmup: ok 14.39s
+  2: ok 18.49s
+  1: ok 18.50s
+  5: ok 36.98s
+  3: ok 36.99s
+  6: ok 37.00s
+  4: ok 55.50s
+  8: ok 36.98s
+  7: ok 55.48s
+  10: ok 36.97s
+  9: ok 55.47s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:38:59+00:00', 'output_mode': 'fixed', 'run': '01', 'modality': 'text', 'size': 512, 'size_unit': 'tokens', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 36.98703900849978, 'p95_s': 55.48715645959987, 'ttft_s': 25.225585668999884, 'prefill_tok_s': 79.03478730154553, 'decode_tok_s': 10.795988219431912, 'tpot_ms': 92.62700000000001, 'queue_s': 18.50503600849978, 'prompt_tokens': 531.0, 'output_tokens': 128.0, 'req_s': 0.10814866205701949, 'out_tok_s': 13.843028743298495, 'peak_ram_gb': 9.18509292602539, 'cpu_pct': 99.85913072138958}
+[c7a.2xlarge] 02 text=1024 x10, 5 at a time, output=fixed
+  warmup: ok 18.01s
+  1: ok 25.88s
+  2: ok 32.82s
+  5: ok 51.84s
+  3: ok 58.78s
+  4: ok 77.82s
+  6: ok 58.90s
+  7: ok 70.95s
+  8: ok 58.89s
+  9: ok 70.97s
+  10: ok 52.02s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:41:27+00:00', 'output_mode': 'fixed', 'run': '02', 'modality': 'text', 'size': 1024, 'size_unit': 'tokens', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 58.83395754000003, 'p95_s': 74.73518484169966, 'ttft_s': 39.90358765600013, 'prefill_tok_s': 149.97444435300446, 'decode_tok_s': 6.6879832854751395, 'tpot_ms': 149.5219094488189, 'queue_s': 32.94511958800015, 'prompt_tokens': 1043.0, 'output_tokens': 128.0, 'req_s': 0.07701618202664903, 'out_tok_s': 9.858071299411076, 'peak_ram_gb': 9.074535369873047, 'cpu_pct': 99.85693571703116}
+[c7a.2xlarge] 03 text=3072 x10, 5 at a time, output=fixed
+  warmup: ok 34.03s
+  2: ok 58.29s
+  1: ok 80.68s
+  3: ok 116.61s
+  4: ok 139.03s
+  5: ok 174.97s
+  6: ok 139.09s
+  7: ok 152.63s
+  8: ok 139.12s
+  9: ok 152.65s
+  10: ok 116.91s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:46:53+00:00', 'output_mode': 'fixed', 'run': '03', 'modality': 'text', 'size': 3072, 'size_unit': 'tokens', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 139.06167111950026, 'p95_s': 164.92585760874996, 'ttft_s': 103.18364160750025, 'prefill_tok_s': 138.2659383588727, 'decode_tok_s': 3.535302604598959, 'tpot_ms': 282.8612204724409, 'queue_s': 80.82435694249999, 'prompt_tokens': 3091.0, 'output_tokens': 128.0, 'req_s': 0.034260629045929886, 'out_tok_s': 4.385360517879025, 'peak_ram_gb': 8.963977813720703, 'cpu_pct': 99.86330461205446}
+[c7a.2xlarge] 04 image=1 x10, 5 at a time, output=fixed
+  warmup: ok 15.91s
+  3: ok 19.72s
+  5: ok 19.72s
+  4: ok 41.70s
+  2: ok 41.71s
+  6: ok 45.51s
+  1: ok 65.23s
+  7: ok 69.22s
+  8: ok 47.23s
+  10: ok 45.68s
+  9: ok 69.20s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:49:00+00:00', 'output_mode': 'fixed', 'run': '04', 'modality': 'image', 'size': 1, 'size_unit': 'images', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 45.59326622399976, 'p95_s': 69.20806293914966, 'ttft_s': 33.88113458949965, 'prefill_tok_s': 39.387037305808875, 'decode_tok_s': 10.93813452080756, 'tpot_ms': 91.42326771653543, 'queue_s': 22.7721258234999, 'prompt_tokens': 385.0, 'output_tokens': 128.0, 'req_s': 0.09016256830952592, 'out_tok_s': 11.540808743619317, 'peak_ram_gb': 9.18509292602539, 'cpu_pct': 99.856401502031}
+[c7a.2xlarge] 05 image=2 x10, 5 at a time, output=fixed
+  warmup: ok 22.80s
+  2: ok 30.25s
+  5: ok 30.25s
+  3: ok 59.84s
+  4: ok 59.84s
+  1: ok 96.23s
+  7: ok 65.98s
+  8: ok 70.70s
+  6: ok 100.28s
+  10: ok 66.18s
+  9: ok 102.57s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:52:06+00:00', 'output_mode': 'fixed', 'run': '05', 'modality': 'image', 'size': 2, 'size_unit': 'images', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 66.08156449850003, 'p95_s': 101.54281411129955, 'ttft_s': 54.097027034500115, 'prefill_tok_s': 37.67287813644542, 'decode_tok_s': 10.659631422395805, 'tpot_ms': 93.81187401574803, 'queue_s': 32.314804581000466, 'prompt_tokens': 765.0, 'output_tokens': 128.0, 'req_s': 0.061568138467454465, 'out_tok_s': 7.880721723834172, 'peak_ram_gb': 8.957656860351562, 'cpu_pct': 99.8583945554764}
+[c7a.2xlarge] 06 image=4 x10, 5 at a time, output=fixed
+  warmup: ok 32.12s
+  3: ok 48.91s
+  2: ok 48.92s
+  1: ok 104.09s
+  5: ok 104.08s
+  7: ok 112.50s
+  4: ok 161.42s
+  9: ok 111.10s
+  6: ok 166.27s
+  8: ok 162.77s
+  10: ok 105.44s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:57:05+00:00', 'output_mode': 'fixed', 'run': '06', 'modality': 'image', 'size': 4, 'size_unit': 'images', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 108.27180922349999, 'p95_s': 164.69852067225057, 'ttft_s': 95.75183703350012, 'prefill_tok_s': 37.1195687677653, 'decode_tok_s': 10.110392366933858, 'tpot_ms': 98.90812992125984, 'queue_s': 54.548631478000004, 'prompt_tokens': 1515.5, 'output_tokens': 128.0, 'req_s': 0.03747236800829545, 'out_tok_s': 4.796463105061817, 'peak_ram_gb': 9.142372131347656, 'cpu_pct': 99.86105382899211}
+[c7a.2xlarge] 07 audio=10 x10, 5 at a time, output=fixed
+  warmup: ok 19.50s
+  2: ok 28.43s
+  3: ok 28.43s
+  5: ok 56.99s
+  1: ok 57.00s
+  6: ok 56.98s
+  4: ok 85.41s
+  8: ok 56.67s
+  7: ok 85.23s
+  10: ok 56.55s
+  9: ok 84.96s
+  result: {'run_id': '20261103T080518Z', 'model': 'Qwen2.5-Omni-3B-Q8_0', 'llama_build': 'b11960-8642541b2', 'node': 'c7a.2xlarge', 'slots': 2, 'ctx_per_slot': 4096, 'timestamp_utc': '2026-11-03T09:59:46+00:00', 'output_mode': 'fixed', 'run': '07', 'modality': 'audio', 'size': 10, 'size_unit': 'seconds', 'concurrency': 5, 'requests': 10, 'success': 10, 'failed': 0, 'median_e2e_s': 56.987209294499735, 'p95_s': 85.33087580179986, 'ttft_s': 44.80474294950045, 'prefill_tok_s': 47.591804181884136, 'decode_tok_s': 10.522891687303591, 'tpot_ms': 95.03091338582678, 'queue_s': 28.440770754499958, 'prompt_tokens': 777.0, 'output_tokens': 128.0, 'req_s': 0.07044117525436233, 'out_tok_s': 9.016470432558378, 'peak_ram_gb': 9.25149917602539, 'cpu_pct': 99.85555095726018}
+[c7a.2xlarge] 08 audio=40 x10, 5 at a time, output=fixed
+  warmup: ok 27.99s
+Traceback (most recent call last):
+  File "/home/ubuntu/aws-mm-router/benchmark.py", line 428, in run_pass
+    rows = list(pool.map(send, range(n)))
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 639, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 311, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 445, in result
+    self._condition.wait(timeout)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/threading.py", line 369, in wait
+    waiter.acquire()
+    ~~~~~~~~~~~~~~^^
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ubuntu/aws-mm-router/benchmark.py", line 459, in <module>
+    main()
+    ~~~~^^
+  File "/home/ubuntu/aws-mm-router/benchmark.py", line 382, in main
+    run_pass(args, selected, datasets, out_dir, write_lock,
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+             {'run_id':run_id, 'model':model, 'llama_build':build, 'node':node,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              'slots':slots, 'ctx_per_slot':ctx},
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+             output_mode, concurrency)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/aws-mm-router/benchmark.py", line 427, in run_pass
+    with ThreadPoolExecutor(concurrency) as pool:
+         ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 667, in __exit__
+    self.shutdown(wait=True)
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 273, in shutdown
+    t.join()
+    ~~~~~~^^
+  File "/usr/lib/python3.14/threading.py", line 1133, in join
+    self._os_thread_handle.join(timeout)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+KeyboardInterrupt
+Exception ignored on threading shutdown:
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/threading.py", line 1577, in _shutdown
+    atexit_call()
+  File "/usr/lib/python3.14/threading.py", line 1548, in <lambda>
+    _threading_atexits.append(lambda: func(*arg, **kwargs))
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 31, in _python_exit
+    t.join()
+  File "/usr/lib/python3.14/threading.py", line 1133, in join
+    self._os_thread_handle.join(timeout)
+KeyboardInterrupt: 
