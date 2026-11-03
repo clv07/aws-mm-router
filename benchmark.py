@@ -328,7 +328,11 @@ def main():
                         help='measured requests per workload (times --concurrency)')
     parser.add_argument('--concurrency', type=int, nargs='+', default=[1],
                         help='requests in flight at once, one pass per value (e.g. 1 2); '
-                             'each must be <= llama-server slots (-np)')
+                             'each must be <= llama-server slots (-np) unless --allow-queue')
+    parser.add_argument('--allow-queue', action='store_true',
+                        help='allow concurrency above the slot count: the extra requests wait in '
+                             "llama-server's queue (concurrency - slots of them at all times), "
+                             'and queue_s is the time each one waited')
     parser.add_argument('--output', nargs='+', choices=OUTPUT_MODES, default=['natural'],
                         help='natural: stop at end of answer; fixed: ignore_eos, always '
                              f'{OUTPUT_TOKENS} output tokens. One pass per value (e.g. natural fixed)')
@@ -351,9 +355,10 @@ def main():
         return
     if slots is None:
         print('warning: llama-server did not report its slot count; slots column left empty', flush=True)
-    elif max(args.concurrency) > slots:
+    elif max(args.concurrency) > slots and not args.allow_queue:
         parser.error(f'--concurrency {max(args.concurrency)} exceeds the server\'s {slots} slots; '
-                     f'restart it with SLOTS={max(args.concurrency)} ./run.sh <model>')
+                     f'restart it with SLOTS={max(args.concurrency)} ./run.sh <model>, '
+                     'or pass --allow-queue to measure waiting in the queue')
     run_id = args.run_id or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     print(f'run_id={run_id} node={node} model={model} build={build} slots={slots} ctx_per_slot={ctx} '
           f'concurrency={args.concurrency} output={args.output} -> {out_dir}', flush=True)

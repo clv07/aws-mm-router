@@ -32,7 +32,7 @@ tmux attach -t llama          # leave with Ctrl-b d; Ctrl-C stops the server
 tail -f ~/llama-server.log
 ```
 
-Server settings: `-np 2` slots by default (2 requests processed at once) with `-c` = 4096 × slots, so every slot has 4096 tokens for input + output; `-t` = number of vCPUs (on Intel these include hyperthreads: 8 vCPU = 4 physical cores), listening on `127.0.0.1:8080`. `SLOTS=4 ./run.sh qwen` restarts the server with 4 slots (`-c 16384`); `CTX=...` overrides the total context. `benchmark.py` reads the slot count from the server and refuses a `--concurrency` above it.
+Server settings: `-np 2` slots by default (2 requests processed at once) with `-c` = 4096 × slots, so every slot has 4096 tokens for input + output; `-t` = number of vCPUs (on Intel these include hyperthreads: 8 vCPU = 4 physical cores), listening on `127.0.0.1:8080`. `SLOTS=4 ./run.sh qwen` restarts the server with 4 slots (`-c 16384`); `CTX=...` overrides the total context. `benchmark.py` reads the slot count from the server and refuses a `--concurrency` above it, unless `--allow-queue` is given: then the extra requests wait in `llama-server`'s queue and `queue_s` measures that wait.
 
 ## 3. Client Setup
 
@@ -76,13 +76,19 @@ Run inside tmux so the run continues if SSH disconnects. The whole sweep is one 
 
 ```
 tmux new -s bench
-./experiment.sh qwen                   # REPEATS=10 by default; e.g. REPEATS=5 ./experiment.sh qwen
+./experiment.sh qwen                   # REPEATS=5 and QUEUE_REPEATS=2 by default
+NODE=c7i.2xlarge-noamx ./experiment.sh qwen   # label a variant of the same instance type
 ```
 
-| Server (`run.sh`) | Concurrency | Output modes | Measured requests (REPEATS=10) |
-| ----------------- | ----------- | ------------ | ------------------------------ |
-| `SLOTS=2`         | 1, then 2   | natural, fixed | (90 + 180) × 2 = 540         |
-| `SLOTS=4`         | 4           | natural, fixed | 360 × 2 = 720                |
+| Server (`run.sh`) | Concurrency | Waiting in the queue | Output modes | Repeats | Measured requests |
+| ----------------- | ----------- | -------------------- | ------------ | ------- | ----------------- |
+| `SLOTS=2`         | 1, then 2   | 0                    | natural, fixed | 5     | (45 + 90) × 2 = 270 |
+| `SLOTS=2`         | 5, then 10  | 3, then 8            | fixed        | 2       | 90 + 180 = 270    |
+| `SLOTS=4`         | 4           | 0                    | natural, fixed | 5     | 180 × 2 = 360     |
+
+900 requests in total. Each workload sends repeats × concurrency measured requests, so the queue steps use fewer repeats (`QUEUE_REPEATS`): at concurrency 10 that is still 20 requests per workload. They use fixed output only, so every request needs the same work and the wait reflects the queue, not answer lengths.
+
+In a queue step, `benchmark.py` keeps `concurrency` requests outstanding (closed loop): `slots` of them are processed and the rest wait, and a new one is sent each time one finishes. The queue therefore always holds concurrency − slots requests. Compare `queue_s`, `ttft_s`, `median_e2e_s` and `req_s` across concurrency 2, 5 and 10: throughput should stay at its concurrency-2 value while waiting grows with the queue.
 
 It activates `.venv`, restarts `llama-server` for each slot count, logs everything to `<results folder>/logs/experiment-<run_id>.log`, and ends by printing the request count per slots / concurrency / output mode against the expected count. The server is left running with 4 slots. If a step fails the script stops; everything written so far is kept.
 
@@ -93,6 +99,7 @@ source .venv/bin/activate
 python benchmark.py --repeats 10                             # 1 request at a time
 python benchmark.py --repeats 10 --concurrency 1 2 --output natural fixed
 python benchmark.py --run 04                                 # a single workload
+python benchmark.py --repeats 2 --concurrency 5 10 --output fixed --allow-queue   # queue, 2 slots
 ```
 
 Detach with Ctrl-b d and reattach with `tmux attach -t bench`. The node label defaults to the EC2 instance type; add a suffix for a variant of the same instance, e.g. `--node c7i.2xlarge-noamx`. With `--concurrency 2`, each workload sends 2 × repeats measured requests, keeping 2 outstanding. `--url` and `--ssh` point the client at a server on another machine, for example through an SSH tunnel, but then network time is included again.
@@ -120,7 +127,7 @@ e.g. `results/phase1/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0/`. Older `summary.csv` / 
 | `ttft_s`                                         | Median time to first token                                    |
 | `prefill_tok_s`                                  | Median `prompt_tokens / server_prompt_ms` × 1000 (includes image/audio encoding) |
 | `decode_tok_s`, `tpot_ms`                        | Median per-request decode throughput, and time per output token = 1000 / `decode_tok_s` |
-| `queue_s`                                        | Median `e2e_s` − server processing time: slot wait + HTTP overhead, ≈ 0 when concurrency ≤ slots |
+| `queue_s`                                        | Median `e2e_s` − server processing time: time waiting for a slot + HTTP overhead; ≈ 0 when concurrency ≤ slots, the queue wait with `--allow-queue` |
 | `prompt_tokens`, `output_tokens`                 | Median input tokens (how many tokens the images/audio became) and output tokens |
 | `req_s`, `out_tok_s`                             | Successful requests and output tokens per second of wall time |
 | `peak_ram_gb`                                    | Peak sampled `llama-server` RSS                               |
