@@ -1,6 +1,6 @@
 # Phase 1 Benchmark
 
-Phase 1 measures each node on its own: every teammate runs the same workloads with the same settings on their EC2 instance, so results differ only by the instance (or, for one row, the quantization). `run.sh` sets up the inference server, and `benchmark.py` runs **on the same instance**, next to the server, so that network delay and image/audio upload time from a laptop are not part of the measurements and a laptop going to sleep cannot stop the run. `roundrobin.py` is the Phase 2 round-robin baseline over several nodes (section 6).
+Phase 1 measures each node on its own: every teammate runs the same workloads with the same settings on their EC2 instance, so results differ only by the instance (or, for one row, the quantization). `run.sh` sets up the inference server, and `benchmark.py` runs **on the same instance**, next to the server, so that network delay and image/audio upload time from a laptop are not part of the measurements and a laptop going to sleep cannot stop the run. `roundrobin.py` is the Phase 2 round-robin baseline over several nodes (section 7), and `loadgen.py` the open-loop load generator with routing policies (section 8).
 
 ## 1. Instance
 
@@ -237,3 +237,53 @@ results/roundrobin.csv            # one row per run and group: all, each modalit
 | `success`, `failed`                                       | Request outcomes                                                     |
 
 Every run sends the same 50 inputs; `--seed` only changes their order, and with it the node assignment. Thinking is off because Gemma 4 would otherwise spend all 128 tokens reasoning and return no answer; Qwen is unaffected. Replies can stop before 128 tokens and text sizes are counted with the Qwen tokenizer, so compare `output_tokens` and `decode_tok_s` alongside `e2e_s` across models. Results are written only when a run finishes.
+
+## 8. Open-Loop Load Generator and Routing Policies (Phase 2)
+
+`loadgen.py` replays a fixed trace of requests over several nodes and routes each one with a policy. Unlike `roundrobin.py` (closed loop: the next request is sent when one finishes), requests are sent at their **arrival time** whether or not earlier ones have finished, so load can exceed what the nodes keep up with and queues build as they would with real users.
+
+**Trace.** A seeded Poisson process: each request gets an arrival time, a workload from `benchmark.py`'s nine (chat; text 512 / 1024 / 3072 tokens; 1 / 2 / 4 images; 10 / 40 s audio) and an input. The trace is a file, so every policy and every cluster replays exactly the same requests at the same times.
+
+```
+python loadgen.py trace --rate 0.15 --duration 900 --seed 1                # traces/rate0.15-dur900-seed1.csv
+python loadgen.py trace --rate 0.15 --mix chat=50,text=20,image=15,audio=15  # the default mix, in percent
+```
+
+A mix key is a modality (its sizes share the weight equally) or a run id, e.g. `03=10` for 3072-token text only. The same seed at another `--rate` gives the same requests in the same order with every gap scaled, so load levels differ only in how close together the requests arrive.
+
+**Nodes.** Copy `nodes.example.json` to `nodes.json`: one entry per node with its `url`, `profile` (its folder in `results/phase1`, which `ect` uses for its costs), optionally `ssh` (to sample CPU/RAM, as in section 7), `price_per_hour` (for cost per request) and `slot_gain` (overrides the measured one). Entry order is the round-robin order. Then:
+
+```
+python loadgen.py capacity --nodes nodes.json      # predicted cost per workload and node, cluster capacity
+```
+
+prints each node's predicted time per workload, its slot gain and its capacity for the mix, and the cluster capacity at 60% and 90% load: pick `--rate` from these.
+
+**Run.** `llama-server` listens on localhost only, so the router reaches the nodes through SSH tunnels as in section 7. Run the router **on an AWS instance in the same region** (not a laptop, which would add internet delay and image/audio upload time), with this repository and the datasets from section 3. Connect to it with `ssh -A` so the tunnels from it to the nodes use the key on your laptop; do not copy the key to the instance. In tmux:
+
+```
+python loadgen.py run --trace traces/<trace>.csv --nodes nodes.json --policy ect --cluster C --requests 10   # quick test
+for p in random rr least ect; do python loadgen.py run --trace traces/<trace>.csv --nodes nodes.json --policy $p --cluster C; done
+```
+
+The run prints the predicted capacity and the trace's offered load, warms up each node (one request per modality, not recorded), replays the trace, waits for the last request, and prints a summary. `--output fixed` makes every request generate 128 tokens; `--seed` sets the `random` policy and tie-breaks; `--no-warmup` skips the warm-up.
+
+**Policies.** Each picks a node when the request arrives; the request then waits in that node's `llama-server` queue if its slots are busy.
+
+| Policy   | Picks                                                                                                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `random` | A node uniformly at random (seeded)                                                                              |
+| `rr`     | Nodes in `nodes.json` order, in turn                                                                             |
+| `least`  | Fewest requests in flight per slot; ties at random. Ignores request type and node speed                         |
+| `ect`    | Earliest estimated completion time, from the node's Phase 1 costs and the work it already has (below)          |
+
+`ect` predicts each workload's time on each node as its median `e2e_s` at concurrency 1 with natural output in Phase 1 (`summary_v2.csv` if present, otherwise `summary.csv`). A workload missing on a node (e.g. failed audio) is estimated from the other Phase 1 folders, scaled by how much slower or faster this node is on the workloads both have; `capacity` marks those with `*`. A node's backlog is the predicted work it has been given and not finished. It drops by `slot_gain` seconds per second while the node is busy, and is reset to 0 when the node has nothing in flight. `slot_gain` is the node's throughput with 2 requests at once vs 1 (median over workloads of `req_s` at concurrency 2 / 1, fixed output, in the Phase 1 sweep), and 1.0 if the sweep has not been run on that node. A request goes to the node with the smallest `now + (backlog + predicted time) / slot_gain`.
+
+Results are **appended**:
+
+```
+results/phase2/requests.csv   # one row per request, written as each request finishes
+results/phase2/summary.csv    # one row per run and group: all, each modality, each node
+```
+
+Per request: `arrival_s` (from the trace), `sent_s` (when it was sent; later than `arrival_s` only if the router fell behind), `node`, `node_inflight` (requests on that node including this one), `predicted_s` (its Phase 1 time on that node) and `predicted_e2e_s` (`ect`'s estimate, logged for every policy), then the same metrics as `benchmark.py` (`e2e_s`, `ttft_s`, `queue_s`, `decode_tok_s`, ...). Per group: `offered_req_s`, median / p95 / p99 `e2e_s`, median / p95 `ttft_s`, median `queue_s`, `req_s` (over the run's wall time, including the wait for the last request), `usd_per_1k_requests` (`all` row, when every node has a price), and CPU/RAM per node when `ssh` is set. Compare policies on the same trace and cluster by `trace`, `cluster` and `policy`.
