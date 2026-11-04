@@ -120,22 +120,22 @@ def load_nodes(path):
 
 
 def profile_costs(profile):
-    """Median e2e_s per workload at concurrency 1, natural output, in one Phase 1 results folder
-    (summary_v2.csv rows replace summary.csv rows; later rows replace earlier ones); workloads
-    with any failed request are left out."""
-    costs = {}
+    """Median e2e_s per workload at concurrency 1 in one Phase 1 results folder, natural output
+    if measured, otherwise fixed (128 tokens, so somewhat longer). summary_v2.csv rows replace
+    summary.csv rows and later rows replace earlier ones; workloads with any failed request
+    are left out."""
+    costs = {'natural': {}, 'fixed': {}}
     for file in ('summary.csv', 'summary_v2.csv'):
         path = RESULTS_DIR / profile / file
         for r in read_csv(path) if path.exists() else []:
-            if (r.get('concurrency') == '1' and r.get('output_mode', 'natural') == 'natural'
-                    and r['failed'] == '0' and r['median_e2e_s']):
-                costs[r['run']] = float(r['median_e2e_s'])
-    return costs
+            if r.get('concurrency') == '1' and r['failed'] == '0' and r['median_e2e_s']:
+                costs[r.get('output_mode', 'natural')][r['run']] = float(r['median_e2e_s'])
+    return {**costs['fixed'], **costs['natural']}
 
 
 def load_costs(nodes):
     """Predicted service time (s) of each workload on each node when it runs alone, from the
-    node's Phase 1 results. A workload not measured on a node (e.g. failed audio) is estimated
+    node's Phase 1 results (profile_costs). A workload not measured on a node (e.g. failed audio) is estimated
     from every other Phase 1 folder that has it: that folder's time times this node's median
     ratio to it on the workloads both have; the median of those estimates is used."""
     others = {d.name: profile_costs(d.name) for d in sorted(RESULTS_DIR.iterdir()) if d.is_dir()}
