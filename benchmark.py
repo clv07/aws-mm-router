@@ -128,7 +128,7 @@ def messages_for(ds, modality, setting, index):
             elif item["type"] == "image":
                 output.append({"type": "image_url", "image_url": {"url": item["image"]}})
             elif item["type"] == "audio":
-                # The uploaded LibriSpeech script produces a WAV data URL.
+                # librispeech.py gives the clip as a base64 WAV data URL.
                 output.append({"type": "input_audio", "input_audio": {"data": item["audio"]}})
             else:
                 raise ValueError(f'Unsupported message type: {item["type"]}')

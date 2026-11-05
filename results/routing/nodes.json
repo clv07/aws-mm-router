@@ -1,0 +1,8 @@
+{
+  "c7a.2xlarge": {"url": "http://127.0.0.1:8080", "profile": "c7a.2xlarge-p2__Qwen2.5-Omni-3B-Q8_0",
+                  "ssh": "node-c7a", "price_per_hour": 0.41},
+  "c7i.xlarge":  {"url": "http://127.0.0.1:8081", "profile": "c7i.xlarge-p2__Qwen2.5-Omni-3B-Q8_0",
+                  "ssh": "node-c7i", "price_per_hour": 0.18, "slot_gain": 1.0},
+  "m8g.xlarge":  {"url": "http://127.0.0.1:8082", "profile": "m8g.xlarge-p2__Qwen2.5-Omni-3B-Q8_0",
+                  "ssh": "node-m8g", "price_per_hour": 0.18, "slot_gain": 1.01}
+}
