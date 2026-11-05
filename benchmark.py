@@ -141,7 +141,7 @@ def payload(ds, modality, setting, index, output_mode='natural'):
             'max_tokens': OUTPUT_TOKENS, 'temperature': 0,
             'stream': True, 'stream_options': {'include_usage': True},
             'cache_prompt': False,
-            'chat_template_kwargs': {'enable_thinking': False}}  # same request shape as roundrobin.py
+            'chat_template_kwargs': {'enable_thinking': False}}
     if output_mode == 'fixed':
         # Keep generating past end-of-text, so every request (on every node) decodes exactly
         # OUTPUT_TOKENS tokens and e2e_s no longer depends on how long the answer is.

@@ -1,0 +1,11 @@
+0.00.249.432 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.556.974 I cmn          init: llama threadpool init, n_threads = 8
+0.00.644.081 I 
+0.00.644.187 I system_info: n_threads = 8 (n_threads_batch = 8) / 8 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | AVX512_VBMI = 1 | AVX512_VNNI = 1 | AVX512_BF16 = 1 | AMX_INT8 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.644.202 I perplexity: tokenizing the input ..
+0.01.158.764 I perplexity: tokenization took 514.552 ms
+0.01.158.992 I perplexity: calculating perplexity over 20 chunks, n_ctx=512, batch_size=2048, n_seq=4
+0.14.150.626 I perplexity: 12.99 seconds per pass - ETA 1.07 minutes
+[1]9.7939,[2]13.4904,[3]12.4750,[4]11.7831,[5]11.4306,[6]11.7414,[7]12.0569,[8]12.8481,[9]13.5947,[10]13.9278,[11]13.9335,[12]14.1835,[13]14.7437,[14]14.1361,[15]13.9793,[16]14.3106,[17]13.5523,[18]13.6713,[19]13.6044,[20]13.5864,
+1.06.168.577 I Final estimate: PPL = 13.5864 +/- 0.54739
+

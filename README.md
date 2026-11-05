@@ -232,7 +232,7 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
 
 - [`results/routing/`](results/routing/): [`summary.csv`](results/routing/summary.csv) (one row per run and request group), [`requests.csv`](results/routing/requests.csv) (one row per request), [`nodes.json`](results/routing/nodes.json) (the cluster configuration used), [`c7i-memory-rerun.csv`](results/routing/c7i-memory-rerun.csv) (c7i.xlarge memory samples during the rerun), and [`routing-console.log`](results/routing/routing-console.log).
 - [`results/quality/`](results/quality/): [`answers.csv`](results/quality/answers.csv), [`scores.csv`](results/quality/scores.csv), and [`perplexity.csv`](results/quality/perplexity.csv).
-- Earlier runs not used in the report: [`roundrobin.py`](roundrobin.py) with [`results/roundrobin.csv`](results/roundrobin.csv) and [`results/roundrobin_requests.csv`](results/roundrobin_requests.csv) (a closed-loop round-robin test), and [`results/benchmark.csv`](results/benchmark.csv) (a first c8g.4xlarge run).
+- Earlier runs not used in the report, in [`archive/`](archive/): [`roundrobin.py`](archive/roundrobin.py) with [`roundrobin.csv`](archive/results/roundrobin.csv) and [`roundrobin_requests.csv`](archive/results/roundrobin_requests.csv) (a closed-loop round-robin test), and [`benchmark.csv`](archive/results/benchmark.csv) (a first c8g.4xlarge run).
 
 ## Results Format
 

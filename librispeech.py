@@ -13,7 +13,7 @@ import requests
 class LibriSpeechDataset:
     # llama.cpp pads Qwen audio to whole 30 s windows (clip + 30 s of silence, cut into
     # 30 s windows, partial window dropped), so 5/10/20 s all cost one window and 40 s
-    # costs two. benchmark.py uses 10 and 40; 5 and 20 stay for roundrobin.py.
+    # costs two. benchmark.py uses 10 and 40; 5 and 20 stay for archive/roundrobin.py.
     DURATIONS = (5, 10, 20, 40)
     ARCHIVES = {
         "dev-clean-2.tar.gz": "https://www.openslr.org/resources/31/dev-clean-2.tar.gz",

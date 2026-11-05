@@ -181,4 +181,4 @@ results/quality/{answers,scores,perplexity}.csv
 
 Copy a folder off the instance (`scp -r <host>:aws-mm-router/results/phase1/<folder> results/phase1/`) before terminating it; stopping it keeps the disk.
 
-`results/benchmark.csv` (a first c8g.4xlarge run) and `results/roundrobin*.csv` (an early closed-loop round-robin baseline, `roundrobin.py`) predate this setup and are not used in the report.
+Early test runs that predate this setup (a first c8g.4xlarge run and a closed-loop round-robin test) are in [`archive/`](../archive/) and are not used in the report.
