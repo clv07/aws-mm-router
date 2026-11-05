@@ -1,9 +1,6 @@
-# aws-mm-router
-AWS Multimodel Router
-
 # Characterizing and Routing Multimodal Inference on Heterogeneous Edge Machines
 
-CSE 291A course project (Option 3). Team: Sushila Seshasayee, Livia Chandra, Liangyuan Wang, Sofiya Bootwala, Abhinav Sanisetty.
+CSE 291A course project (Option 3). Team: Sushila Seshasayee, Livia Chandra, Liangyuan Wang, Shofiya Bootwala, Abhinav Sanisetty.
 
 Emerging edge applications such as private on-premises AI, industrial automation, and robotics increasingly process varied inputs such as short chat questions, long documents, images, and audio. Unlike large datacenters, these deployments may rely on a handful of machines with different compute and memory capabilities. We study how modality, request size, and system load affect inference performance across such heterogeneous edge machines, and when workload-aware routing can improve on simpler routing policies.
 
@@ -13,7 +10,7 @@ In Phase 1, we profile AWS instances differing in CPU architecture (Intel with a
 
 **Baseline benchmarks** (one node at a time, Q8_0 unless noted)
 
-- **No architecture wins everything.** ARM Graviton4 decodes about 3× faster than the x86 nodes (43 vs. 12–13 tokens/s), so it answers short chat questions fastest, but it has the slowest prefill on long text. AMD Genoa has the fastest prefill for long text, images, and audio. The best machine depends on the request, which is why routing helps.
+- **No architecture wins everything.** ARM Graviton4 decodes about 3× faster than the x86 nodes (43 vs. 12–13 tokens/s), so it answers short chat questions fastest, but it has the slowest prefill on long text. Long text runs fastest on AMD Genoa or on Intel with AMX (tied), and images and audio on AMD Genoa. The best machine depends on the request, which is why routing helps.
 - **Input processing grows with input size and depends on modality.** Prefill time grows roughly linearly with prompt tokens, and image and audio tokens each cost about 2–3× more than text tokens, because they first pass through the encoder.
 - **vCPUs speed up both prefill and decode.** Going from 4 to 8 to 16 vCPUs roughly halves both at each step.
 - **Memory size makes no difference.** The 32 GB m7i and 64 GB r7i matched the 16 GB c7i, whose peak use stayed below its memory. Use the cheapest size that fits the model.
@@ -29,7 +26,7 @@ In Phase 1, we profile AWS instances differing in CPU architecture (Intel with a
 - **A simple cost model is enough.** `ect` predicts each request's time from profiles of requests running alone, and its median prediction error grew only from 29% to 34% between the two loads.
 - **Routers need health checks.** When the 8 GB c7i.xlarge ran out of memory, least loaded kept choosing it, since a node that fails instantly looks idle.
 
-Plots for each baseline experiment (architecture, memory, vCPU, quantization, and concurrency, plus a summary figure) are in [`analysis/plot.ipynb`](analysis/plot.ipynb). The routing results, with figures, are written up in [`analysis/routing/README.md`](analysis/routing/README.md).
+Plots for each baseline experiment (architecture, memory, vCPU, quantization, and concurrency, plus a summary figure) are in [`analysis/plot.ipynb`](analysis/plot.ipynb), with a closer look at quantization (speed, memory, and answer quality) in [`analysis/quantization/README.md`](analysis/quantization/README.md). The routing results, with figures, are written up in [`analysis/routing/README.md`](analysis/routing/README.md).
 
 ## Benchmarks
 
@@ -207,6 +204,7 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
 **Analysis and docs**
 
 - [`analysis/plot.ipynb`](analysis/plot.ipynb): plots from `results/phase1/` for architecture, memory, vCPU, quantization, and concurrency, plus a summary figure. The figures are saved in the notebook's outputs.
+- [`analysis/quantization/`](analysis/quantization/): f16 vs. Q8_0 vs. Q4_K_M on the c7i.2xlarge: speed, memory, and answer quality ([`README.md`](analysis/quantization/README.md)), its figures, and [`make_plots.py`](analysis/quantization/make_plots.py), which regenerates them.
 - [`analysis/routing/`](analysis/routing/): the routing results write-up ([`README.md`](analysis/routing/README.md)), its figures, and [`analyze_routing.py`](analysis/routing/analyze_routing.py), which regenerates them from `results/routing/`.
 - [`docs/baseline-benchmark.md`](docs/baseline-benchmark.md): baseline benchmark setup, methodology, metrics, and reproduction steps.
 - [`docs/routing-benchmark.md`](docs/routing-benchmark.md): routing benchmark motivation, cluster, traffic, policies, and metrics.
@@ -214,7 +212,7 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
 
 **Results**
 
-- [`results/phase1/`](results/phase1/): one folder per node label and quantization, named `<node>__<model>`. `summary.csv` / `requests.csv` (v1) hold one-request-at-a-time runs from the first version of `benchmark.py`; `summary_v2.csv` / `requests_v2.csv` (v2) hold runs from the current version (concurrency sweeps and routing profiles); `logs/` holds `experiment.sh` output.
+- [`results/phase1/`](results/phase1/): one folder per node label and quantization, named `<node>__<model>`. `summary.csv` / `requests.csv` (v1) hold one-request-at-a-time runs from the first version of `benchmark.py`; `summary_v2.csv` / `requests_v2.csv` (v2) hold runs from the current version (concurrency sweeps and routing profiles); `logs/` holds `experiment.sh` and `llama-server` output.
 
   | Folder (`…__Qwen2.5-Omni-3B-<quant>`) | Configuration | Files |
   | ------------------------------------- | ------------- | ----- |
@@ -227,11 +225,11 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
   | `c7i.1xlarge-q8__…-Q8_0`, `c7i.4xlarge-q8__…-Q8_0` | 4 and 16 vCPUs (`c7i.1xlarge` is the c7i.xlarge) | v1 |
   | `m7i.2xlarge__…-Q8_0`, `r7i.2xlarge__…-Q8_0` | 32 and 64 GB RAM | v1 |
   | `c7i.2xlarge__…-Q4_K_M` | 4-bit quantization; Q4_K_M concurrency sweep | v1, v2, log |
-  | `c7i.2xlarge__…-f16` | 16-bit weights | v1 |
+  | `c7i.2xlarge__…-f16` | 16-bit weights | v1, log |
   | `c7a.2xlarge-p2__…`, `c7i.xlarge-p2__…`, `m8g.xlarge-p2__…` | Routing cluster node profiles | v2 |
 
 - [`results/routing/`](results/routing/): [`summary.csv`](results/routing/summary.csv) (one row per run and request group), [`requests.csv`](results/routing/requests.csv) (one row per request), [`nodes.json`](results/routing/nodes.json) (the cluster configuration used), [`c7i-memory-rerun.csv`](results/routing/c7i-memory-rerun.csv) (c7i.xlarge memory samples during the rerun), and [`routing-console.log`](results/routing/routing-console.log).
-- [`results/quality/`](results/quality/): [`answers.csv`](results/quality/answers.csv), [`scores.csv`](results/quality/scores.csv), and [`perplexity.csv`](results/quality/perplexity.csv).
+- [`results/quality/`](results/quality/): [`answers.csv`](results/quality/answers.csv), [`scores.csv`](results/quality/scores.csv), [`perplexity.csv`](results/quality/perplexity.csv), and the raw perplexity logs (`perplexity-<quant>.log`).
 - Earlier runs not used in the report, in [`archive/`](archive/): [`roundrobin.py`](archive/roundrobin.py) with [`roundrobin.csv`](archive/results/roundrobin.csv) and [`roundrobin_requests.csv`](archive/results/roundrobin_requests.csv) (a closed-loop round-robin test), and [`benchmark.csv`](archive/results/benchmark.csv) (a first c8g.4xlarge run).
 
 ## Results Format
