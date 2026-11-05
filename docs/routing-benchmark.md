@@ -4,54 +4,48 @@
 
 Step-by-step cluster setup: `docs/routing-cluster-runbook.md`. 
 
-The baseline benchmarks it builds on: `docs/benchmark.md`.
+The baseline benchmarks it builds on: `docs/baseline-benchmark.md`.
 
-## 1. Question
+## 1. Motivation and question
 
-We initially benchmarked each modality on one node at a time to get baseline metrics. We now extend this to benchmark routing policies: a cluster of different CPU nodes serving a mix of requests that arrive like real traffic, at different loads. The question is:
+The baseline benchmarks (`docs/baseline-benchmark.md`) ran each modality on one node at a time. Their key takeaway is that **no CPU architecture is fastest for every modality**. One request alone on 8-vCPU nodes:
 
-> On a small cluster of CPU nodes with different strengths, under open-loop traffic, how much does a router gain by knowing what each request needs and what each node is good at, compared with a generic routing policy that does not look at the request?
+| Modality              | Fastest                         | Others        |
+| --------------------- | ------------------------------- | ------------- |
+| Chat                  | Graviton c8g: 3.1 s             | 9.3–11 s      |
+| Text, 3,072 tokens    | Intel c7i (AMX) and AMD c7a: 33–34 s | 59–66 s  |
+| 4 images              | AMD c7a: 31 s                   | 42–61 s       |
+| 40 s audio            | AMD c7a: 28 s                   | 35–63 s       |
+
+This follows from where each modality spends its time. Chat is mostly decode (generating the answer), which ran fastest on Graviton. Long text is mostly prefill (processing the prompt), which ran fastest with AMX or more physical cores. Images and audio add an encoding step before prefill, which ran more than twice as fast on the AMD node's 8 physical cores as on any other node.
+
+We route whole requests, and a request's modality is known when it arrives. So the question is:
+
+> On a small cluster of CPU nodes with different strengths, under open-loop traffic, how much does a router gain by knowing each request's modality and what each node is good at, compared with a generic routing policy that does not look at the request?
 
 We compare three routing policies on the same cluster and the same traffic, at a moderate and a high load.
 
 ## 2. Cluster
 
-### 2.1 Configuration
-
 |                              | **c7a.2xlarge**                 | **c7i.xlarge**                     | **m8g.xlarge**                |
 | ---------------------------- | ------------------------------- | ---------------------------------- | ----------------------------- |
 | CPU                          | AMD EPYC (Genoa)                | Intel Xeon (Sapphire Rapids), AMX  | AWS Graviton4 (Arm)           |
 | vCPUs / physical cores / RAM | 8 / 8 / 16 GB                   | 4 / 2 / 8 GB                       | 4 / 4 / 16 GB                 |
+| Fastest for (baseline)       | images, audio, long text        | long text                          | chat                          |
 | Slots                        | 2                               | 1                                  | 2                             |
 | Prompt cache                 | default                         | off (`--cache-ram 0`)              | default                       |
 | ~$/hour                      | 0.41                            | 0.18                               | 0.18                          |
 
-Every node serves Qwen2.5-Omni-3B Q8_0 with the same llama.cpp build and 4,096 tokens per slot, so the answers are the same on every node and only speed differs. The cluster costs $0.77/hour.
+Every node serves Qwen2.5-Omni-3B Q8_0 with the same llama.cpp build and 4,096 tokens per slot, so answers are the same on every node and only speed differs.
 
-### 2.2 Why these choices
-
-**Node types.** We want one node from each CPU family that the baseline benchmarks measured as different (AMD, Intel with AMX, Graviton), so that the request type can matter for where a request should go.
-
-**Sizes.** The AWS account allows 16 vCPUs running at once, so the cluster is 8 + 4 + 4 vCPUs. The 8-vCPU node is the c7a, because it was fastest on the most expensive requests (images, audio, long text).
-
-**m8g instead of c8g.** Q8_0 needs more than the 8 GB of a c8g.xlarge (the c8g.2xlarge peaked at 10.4 GB). The m8g.xlarge has the same Graviton4 CPU with 16 GB.
-
-**c7i.xlarge memory.** With 8 GB it needs two changes to stay up:
-- one slot, because two 4-image requests at once ran it out of memory;
-- the prompt cache off. llama-server keeps past prompts in RAM, up to 8 GB by default; on this node the cache grew until the server was killed during the 90% `least` run. That run and the 90% `ect` run were repeated with the cache off. Every request in a trace has a different input, so the cache never gets a hit and turning it off does not change speed.
-
-### 2.3 Profiles
-
-The router predicts request times from a profile of each node, measured on the same machines right before the routing runs with the baseline benchmark (`benchmark.py`): 2 requests per workload, alone (natural and fixed output) and two at once (fixed output). Results are in `results/phase1/<node>-p2__…`. The m8g.xlarge was not profiled two at once, to save time; its slot gain is taken from the c8g.2xlarge (same CPU).
-
-Time per request alone (s), slot gain (throughput with 2 requests at once ÷ with 1), and capacity for the trace mix:
-
-|                 | chat | text 3,072 tok | 4 images | 40 s audio | slot gain | capacity (req/s) |
-| --------------- | ---- | -------------- | -------- | ---------- | --------- | ---------------- |
-| c7a.2xlarge     | 10.9 | 31.9           | 28.5     | 27.9       | 1.39      | 0.088            |
-| c7i.xlarge      | 17.5 | 64.0           | 76.4     | 65.9       | 1.00      | 0.031            |
-| m8g.xlarge      | 5.9  | 126.7          | 99.7     | 110.8      | 1.01      | 0.029            |
-| **cluster**     |      |                |          |            |           | **0.148**        |
+Why this cluster:
+- **One node per CPU family** from the baseline, so each modality has a different best node.
+- **16 vCPUs in total** (the AWS account limit), split 8 + 4 + 4; the 8 vCPUs go to the c7a, fastest on the most expensive requests.
+- **Cost:** $0.77/hour for the cluster, to fit our AWS credits.
+- **m8g instead of c8g:** same Graviton4 CPU, but 16 GB; Q8_0 needs more than a c8g.xlarge's 8 GB.
+- **One region (us-west-2):** network delay between nodes is negligible, so only compute differs.
+- **c7i.xlarge, 1 slot:** with 8 GB, two 4-image requests at once ran it out of memory.
+- **c7i.xlarge, prompt cache off:** llama-server's default 8 GB prompt cache ran it out of memory during the 90% `least` run; that run and the 90% `ect` run were repeated with it off. Every input is different, so the cache never hits and turning it off does not change speed.
 
 ## 3. Traffic
 
@@ -65,37 +59,40 @@ Time per request alone (s), slot gain (throughput with 2 requests at once ÷ wit
 
 The trace is generated once from a seed and saved, so **every policy replays exactly the same requests at the same times**.
 
-**Two loads**, both seed 1: the same requests in the same order, only closer together at 90%.
+**Two loads**, as a share of the cluster's predicted capacity (0.148 req/s for this mix, from the node profiles in section 4). Both use seed 1: the same requests in the same order, only closer together at 90%.
 
 | Trace                       | Target load | Rate (req/s) | Requests |
 | --------------------------- | ----------- | ------------ | -------- |
 | `traces/cluster-load60.csv` | 60%         | 0.089        | 85       |
 | `traces/cluster-load90.csv` | 90%         | 0.134        | 122      |
 
-Capacity is Σ over nodes of slot gain ÷ (mix-weighted mean time per request), from the profiles above.
-
 ## 4. Routing policies
 
-Each policy picks a node **when the request arrives**. The request then goes to that node's llama-server and waits in its queue if all slots are busy. The router keeps no queue of its own.
+We compare three well-known routing approaches. They differ in how much each one knows about the request when it picks a node, so comparing them in order shows what each extra piece of information is worth on a cluster of different CPUs.
 
-| Policy  | Picks                                        | Knows request type? | Knows node speed? | Knows node load?     |
-| ------- | -------------------------------------------- | ------------------- | ----------------- | -------------------- |
-| `rr`    | nodes in turn                                | no                  | no                | no                   |
-| `least` | fewest requests in flight per slot           | no                  | no                | yes (count only)     |
-| `ect`   | earliest estimated completion time           | yes                 | yes               | yes (predicted work) |
+Each policy picks a node **when the request arrives** (immediate dispatch). The request then goes to that node's llama-server and waits in its queue if all slots are busy. The router keeps no queue of its own.
 
-**`rr` (round robin):** nodes in the order of `nodes.json`, one after another.
+| Policy  | Known as                                         | Picks                                | Knows node load?     | Knows modality and node speed? |
+| ------- | ------------------------------------------------ | ------------------------------------ | -------------------- | ------------------------------ |
+| `rr`    | Round robin                                      | nodes in turn                        | no                   | no                             |
+| `least` | Least loaded / join the shortest queue           | fewest requests in flight per slot   | yes (count only)     | no                             |
+| `ect`   | Minimum completion time (MCT)                    | earliest estimated completion time   | yes (predicted work) | yes                            |
 
-**`least` (least loaded):** for each node, the router counts the requests it has sent there that have not finished, and picks the lowest `in_flight / slots`, breaking ties at random. A chat request and a 4-image request count the same.
+**`rr` (round robin):** nodes in the order of `nodes.json`, one after another. The default in common load balancers (e.g. nginx, Envoy). It uses no information, so every node gets the same share of every modality, however fast or busy it is.
 
-**`ect` (earliest estimated completion time):**
-1. *Cost:* `cost[node][workload]` is the median time of that workload alone on that node, from the profiles. A workload missing on a node is estimated from other baseline results, scaled by how much faster or slower the node is on the workloads both have.
-2. *Backlog:* for each node, the predicted seconds of work sent there and not yet finished. A request's cost is added when it is sent. While the node is busy, the backlog drops by `slot_gain[node]` seconds per second, and it is reset to 0 when the node has nothing in flight. `slot_gain` is the node's throughput with 2 requests at once ÷ with 1.
-3. *Choice:* the node with the smallest `(backlog[node] + cost[node][request]) / slot_gain[node]`.
+**`least` (least loaded):** picks the node with the fewest unfinished requests per slot, breaking ties at random. This is the classic join-the-shortest-queue rule (Envoy's "least request", nginx's `least_conn`). It reacts to load but treats every request as equal work and every node as equally fast.
 
-Example: a 4-image request arrives while the c7a still has about 20 s of work. `ect` predicts the c7a would finish it in about 20 + 28.5 = 48.5 s, the idle c7i in 76 s and the idle m8g in 100 s, so it sends it to the **busy** c7a. `least` would send it to an idle node. This is the decision the experiment tests.
+**`ect` (earliest estimated completion time):** the minimum completion time (MCT) heuristic from scheduling on heterogeneous computers (Maheswaran et al., JPDC 1999; Braun et al., JPDC 2001): send each request to the node where it is predicted to finish first.
+- *Predicted time per request:* the median time of each workload alone on each node, from profiling the cluster nodes right before the runs (2 requests per workload with `benchmark.py`; results in `results/phase1/<node>-p2__…`). For example, chat / 4 images: c7a 10.9 / 28.5 s, c7i 17.5 / 76.4 s, m8g 5.9 / 99.7 s.
+- *Backlog:* the predicted work already sent to each node and not finished, draining at the node's slot gain (throughput with 2 requests at once ÷ with 1: c7a 1.39; c7i 1.00 with one slot; m8g 1.01, taken from the c8g.2xlarge to save profiling time).
+- *Choice:* the node with the smallest `(backlog + predicted time) / slot gain`.
 
-`ect` uses only what is known when the request arrives and only measurements of requests running alone. It does not model interference between co-running requests beyond the average slot gain, or each request's output length beyond the median.
+Example: a 4-image request arrives while the c7a still has about 20 s of work. `ect` predicts the c7a would finish it in about 48.5 s, the idle c7i in 76 s and the idle m8g in 100 s, so it sends it to the **busy** c7a, where `least` would pick an idle node. `ect` does not model interference between co-running requests beyond the average slot gain.
+
+**What each comparison isolates.**
+- **`rr` vs `least`: the value of knowing node load.** Both ignore what the request is; `least` adds a live count of work in flight.
+- **`least` vs `ect`: the value of knowing the modality and node speed.** Both react to load; `ect` also knows that chat is cheap on the m8g and images on the c7a, and weighs queued work by how long it will take, not by how many requests it is.
+- **What each one needs to run.** `rr` needs nothing; `least` needs a count of requests in flight; `ect` also needs a profile of every node and modality, redone when the hardware, model or server settings change. The comparison shows whether that extra effort pays off.
 
 ## 5. Metrics
 
