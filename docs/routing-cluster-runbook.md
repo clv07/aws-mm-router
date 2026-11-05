@@ -1,4 +1,4 @@
-# Phase 2 Cluster Runbook: c7a.2xlarge + c7i.xlarge + m8g.xlarge
+# Phase 1 Routing Benchmarks, Cluster Runbook: c7a.2xlarge + c7i.xlarge + m8g.xlarge
 
 The goal: route an open-loop Poisson trace over three CPU nodes with different strengths, comparing four policies (`random`, `rr`, `least`, `ect`) at two load levels. Each node is profiled on itself right before the routing runs.
 
@@ -105,7 +105,7 @@ source .venv/bin/activate
 
 ## 5. Audio test on the c7i.xlarge (~5 min)
 
-Its 40 s audio failed in Phase 1, probably because it ran out of memory. Test the worst case, two 40 s clips at once:
+Its 40 s audio failed in the baseline benchmarks, probably because it ran out of memory. Test the worst case, two 40 s clips at once:
 
 ```bash
 python benchmark.py --node test-c7i --run 08 --repeats 1 --concurrency 2 --output fixed
@@ -128,7 +128,7 @@ python benchmark.py --node $L --repeats 2 --concurrency 1 2 --output fixed
 
 - The first command gives `ect` its costs: time per workload when a request runs alone, natural output.
 - The second gives the slot gain: how much faster the node is with 2 requests at once.
-- The `-p2` labels keep these runs in their own folders, `results/phase1/<label>__Qwen2.5-Omni-3B-Q8_0/`, separate from the Phase 1 sweeps.
+- The `-p2` labels keep these runs in their own folders, `results/phase1/<label>__Qwen2.5-Omni-3B-Q8_0/`, separate from the baseline sweeps.
 
 Nothing else may run on a node while it is being profiled.
 
@@ -206,7 +206,7 @@ Both traces use the same seed: the same requests in the same order, only closer 
 python loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6
 ```
 
-You should see 6 `ok` requests, two per node, and a summary. Then delete the test output: `rm -rf results/phase2`.
+You should see 6 `ok` requests, two per node, and a summary. Then delete the test output: `rm -rf results/routing`.
 
 ## 10. The 8 routing runs (~2.7 h), then shut everything down
 
@@ -232,10 +232,10 @@ Start only the c7a, then from your laptop:
 
 ```bash
 cd ~/Desktop/UCSD/claude/291a/aws-mm-router
-scp -i ~/.ssh/sushila-291a.pem -r ubuntu@<C7A_IP>:aws-mm-router/results/phase2 results/
+scp -i ~/.ssh/sushila-291a.pem -r ubuntu@<C7A_IP>:aws-mm-router/results/routing results/
 scp -i ~/.ssh/sushila-291a.pem -r 'ubuntu@<C7A_IP>:aws-mm-router/results/phase1/*-p2__*' results/phase1/
 scp -i ~/.ssh/sushila-291a.pem -r ubuntu@<C7A_IP>:aws-mm-router/traces .
-scp -i ~/.ssh/sushila-291a.pem ubuntu@<C7A_IP>:aws-mm-router/results/routing-console.log results/phase2/
+scp -i ~/.ssh/sushila-291a.pem ubuntu@<C7A_IP>:aws-mm-router/results/routing-console.log results/routing/
 ```
 
 Then stop the c7a again.

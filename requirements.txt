@@ -1,0 +1,7 @@
+# Client side (benchmark.py, quality.py, the dataset scripts, loadgen.py). Versions are the ones
+# installed on the Phase 2 cluster nodes (Python 3.14); llama.cpp itself is built by run.sh.
+requests==2.34.2
+datasets==5.1.0
+transformers==5.22.1
+soundfile==0.14.0
+numpy==2.5.4

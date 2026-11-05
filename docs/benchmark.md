@@ -1,239 +1,184 @@
-# Phase 1 Benchmark
+# Phase 1 Baseline Benchmarks: Multimodal Inference on CPU Instances
 
-Phase 1 measures each node on its own: every teammate runs the same workloads with the same settings on their EC2 instance, so results differ only by the instance (or, for one row, the quantization). `run.sh` sets up the inference server, and `benchmark.py` runs **on the same instance**, next to the server, so that network delay and image/audio upload time from a laptop are not part of the measurements and a laptop going to sleep cannot stop the run. `roundrobin.py` is the Phase 2 round-robin baseline over several nodes (section 6).
+The baseline benchmarks measure how the choice of CPU instance affects a multimodal model's latency, throughput and cost, one node at a time. The routing benchmarks (`routing-benchmark.md`) use these measurements to route requests across a cluster of different nodes.
 
-## 1. Instance
+## 1. Setup
 
-| Setting       | Value                                                                    |
-| ------------- | ------------------------------------------------------------------------ |
-| AMI           | Ubuntu Server 24.04 LTS, 64-bit (x86) for c6i/c7i/c7a/m7i/r7i, 64-bit (Arm) for c8g |
-| Storage       | 30 GiB gp3 (llama.cpp build, models and datasets do not fit in the default 8 GiB) |
-| Inbound rules | SSH from My IP only                                                      |
+**Model.** Qwen2.5-Omni-3B, a 3-billion-parameter model that takes text, images and audio and answers in text. It runs on CPU in llama.cpp's `llama-server` (built from commit `8642541b2`), as GGUF weights: Q8_0 (8-bit) unless a run varies the quantization, with the image/audio encoder (`mmproj`) always in Q8_0. The server processes 2 requests at once (2 slots) with 4,096 tokens of context each.
 
-Peak `llama-server` memory with Q8_0 was 9.4–10.3 GB on c8g and c7i but 6.7 GB on c7a (same model and settings). On 8 GB instances (c7i.xlarge, c8g.xlarge) run one short test first and check `tail ~/llama-server.log` and `free -g` before the full run.
+**Workloads.** Four request types (modalities), in nine sizes, each from a public dataset:
 
-## 2. Inference Server
+| Run   | Modality | Size                        | Dataset                          | Prompt                                 |
+| ----- | -------- | --------------------------- | -------------------------------- | -------------------------------------- |
+| 00    | Chat     | short question (~40 tokens) | Dolly-15k (open_qa, general_qa)  | the question                           |
+| 01–03 | Text     | 512 / 1024 / 3072 tokens    | CNN/DailyMail                    | Summarize the following news article   |
+| 04–06 | Image    | 1 / 2 / 4 images            | COCO 2017 validation             | Describe the image or images concisely |
+| 07–08 | Audio    | 10 / 40 seconds             | Mini LibriSpeech                 | Transcribe this speech exactly         |
 
-On the instance, clone this repository and start `llama-server`:
+Chat is a short prompt with a long answer, so its time is mostly spent generating (decode). Long text, images and audio are mostly spent processing the input (prefill, and encoding for images and audio). llama.cpp pads Qwen audio to whole 30-second windows, so any clip under 30 s costs one window: 10 s is one window and 40 s is two.
 
-```
-git clone https://github.com/clv07/aws-mm-router
-cd aws-mm-router
-./run.sh qwen            # Qwen2.5-Omni-3B Q8_0, the default for every node
-./run.sh qwen Q4_K_M     # quantization rows only: Q4_K_M or f16
-```
+Every request uses temperature 0 (greedy decoding), at most 128 output tokens and no prompt cache, so the same input gives the same answer on every node.
 
-`run.sh` builds llama.cpp (commit `8642541b2`, CPU only) and downloads the model if missing, starts `llama-server` in tmux session `llama`, and returns once the model is loaded. The image/audio encoder (`mmproj-...-Q8_0.gguf`) is the same for every quantization, so only the language model's weights change. Rerun it to switch models (the restart aborts requests in flight) or after an instance stop/start. The first run needs `sudo` and a few minutes; if the build fails it prints the end of `~/llama-build.log`.
+**Infrastructure.** AWS EC2 in us-west-2, Ubuntu 24.04 or later (Arm image for Graviton), 30 GiB gp3 disk. The client runs **on the same instance** as the server, so network delay and image/audio upload time are not part of the measurements.
 
-Monitor the server:
+## 2. Methodology
 
-```
-tmux attach -t llama          # leave with Ctrl-b d; Ctrl-C stops the server
-tail -f ~/llama-server.log
-```
+**One variable at a time.** The baseline is a c7i.2xlarge (Intel Sapphire Rapids with AMX, 8 vCPUs = 4 physical cores, 16 GB) serving Q8_0. Every other configuration changes exactly one thing from it (in bold), so differences can be attributed to that one variable:
 
-Server settings: `-np 2` slots by default (2 requests processed at once) with `-c` = 4096 × slots, so every slot has 4096 tokens for input + output; `-t` = number of vCPUs (on Intel these include hyperthreads: 8 vCPU = 4 physical cores), listening on `127.0.0.1:8080`. `SLOTS=4 ./run.sh qwen` restarts the server with 4 slots (`-c 16384`); `CTX=...` overrides the total context. `benchmark.py` reads the slot count from the server and refuses a `--concurrency` above it, unless `--allow-queue` is given: then the extra requests wait in `llama-server`'s queue and `queue_s` measures that wait.
+| Variable     | Instance    | CPU                       | vCPUs (physical cores) | RAM       | Quantization      | ~$/h | Results folder (`results/phase1/…`) |
+| ------------ | ----------- | ------------------------- | ---------------------- | --------- | ----------------- | ---- | ----------------------------------- |
+| Baseline     | c7i.2xlarge | Intel + AMX               | 8 (4)                  | 16 GB     | Q8_0              | 0.36 | `c7i.2xlarge__…-Q8_0`               |
+| Architecture | c7a.2xlarge | **AMD Genoa**             | 8 (8)                  | 16 GB     | Q8_0              | 0.41 | `c7a.2xlarge__…-Q8_0`               |
+|              | c8g.2xlarge | **Arm Graviton4**         | 8 (8)                  | 16 GB     | Q8_0              | 0.32 | `c8g.2xlarge__…-Q8_0`               |
+|              | c7i.2xlarge | **Intel, AMX off**        | 8 (4)                  | 16 GB     | Q8_0              | 0.36 | `c7i.2xlarge-noamx__…-Q8_0`         |
+|              | c6i.2xlarge | **Intel Ice Lake, no AMX** | 8 (4)                 | 16 GB     | Q8_0              | 0.34 | `c6i.2xlarge__…-Q8_0`               |
+| vCPUs        | c7i.xlarge  | Intel + AMX               | **4 (2)**              | 8 GB      | Q8_0              | 0.18 | `c7i.1xlarge-q8__…-Q8_0`            |
+|              | c7i.4xlarge | Intel + AMX               | **16 (8)**             | 32 GB     | Q8_0              | 0.71 | `c7i.4xlarge-q8__…-Q8_0`            |
+| RAM          | m7i.2xlarge | Intel + AMX               | 8 (4)                  | **32 GB** | Q8_0              | 0.40 | `m7i.2xlarge__…-Q8_0`               |
+|              | r7i.2xlarge | Intel + AMX               | 8 (4)                  | **64 GB** | Q8_0              | 0.53 | `r7i.2xlarge__…-Q8_0`               |
+| Quantization | c7i.2xlarge | Intel + AMX               | 8 (4)                  | 16 GB     | **Q4_K_M (4-bit)** | 0.36 | `c7i.2xlarge__…-Q4_K_M`            |
+|              | c7i.2xlarge | Intel + AMX               | 8 (4)                  | 16 GB     | **f16 (16-bit)**  | 0.36 | `c7i.2xlarge__…-f16`                |
 
-## 3. Client Setup
+The vCPU rows change RAM along with vCPUs, because EC2 ties them within a family.
 
-On the same instance, in the repository folder:
+**Same type, different machine.** Teammates ran on their own instances, so the baseline was measured on three c7i.2xlarge machines (`c7i.2xlarge`, `c7i.2xlarge-abhinav`, `c7i.2xlarge-amx`). They differed by up to 27% in prefill time and under 3% in decode speed. Each comparison uses runs from one machine where possible: AMX on and off ran on the same instance (`-amx` / `-noamx`), m7i and r7i are compared with `-abhinav`, and the quantizations ran on one instance.
 
-```
-python3 -m venv .venv
-source .venv/bin/activate
-pip install requests datasets transformers soundfile
-```
+**Concurrency and queueing.** On a subset of nodes (c6i, c7a, c7i with Q8_0 and Q4_K_M, c8g) we also vary how many requests are in flight: 1, 2 (both slots busy), and 4 with a 4-slot server. At 5 and 10 there are more requests than slots, so we deliberately let a queue build up in the server and measure each request's time waiting in it (`queue_s`) along with latency and throughput. This shows how much a second slot helps, and what queueing does to latency and throughput once a node has more requests than slots.
 
-Download datasets (a few minutes inside AWS, about 3 GB):
+**Answer quality.** Quantization trades quality for speed, so each quantization's answers are also scored, once on one node, since quality depends on the weights and not on the machine.
 
-```
-python dolly.py --download
-python cnn_dailymail.py --download
-python coco.py --download
-python librispeech.py --download
-```
+## 3. How the Benchmark Works
 
-## 4. Workloads
+`benchmark.py` runs on the instance next to `llama-server`. For each workload it sends one unrecorded warm-up request, then `--repeats` measured requests (default 5), each with a different input, keeping `--concurrency` requests in flight (closed loop: a new request is sent when one finishes). Responses are streamed, so the time of the first output token is known. A background sampler reads `llama-server`'s CPU and memory use every 0.2 s.
 
-| Run   | Modality | Size                     | Dataset       | Prompt                                   |
-| ----- | -------- | ------------------------ | ------------- | ---------------------------------------- |
-| 00    | Chat     | short question (~40 tokens) | Dolly-15k (open_qa, general_qa) | the question                |
-| 01–03 | Text     | 512 / 1024 / 3072 tokens | CNN/DailyMail | Summarize the following news article     |
-| 04–06 | Image    | 1 / 2 / 4 images         | COCO          | Describe the image or images concisely   |
-| 07–08 | Audio    | 10 / 40 seconds          | LibriSpeech   | Transcribe this speech exactly           |
+**Output modes.** `natural` stops when the answer ends, so output length differs between requests and between quantizations. `fixed` keeps generating to exactly 128 tokens (`ignore_eos`), so end-to-end times are comparable across nodes. Prefill and decode speeds do not depend on the mode.
 
-Run 00 is the short-prompt case (decode-heavy); runs 01–03 are long-input (prefill-heavy). Text sizes assume a 4096-token context window.
+## 4. What We Measure
 
-llama.cpp pads Qwen audio to whole 30-second windows (the clip plus 30 s of silence, cut into 30 s windows, a partial last window dropped), so any clip under 30 s costs one window: 5, 10 and 20 s took the same time. 10 s (one window) and 40 s (two windows, joined from consecutive LibriSpeech recordings) show that step.
+Per request (`requests_v2.csv`) and summarized per workload as medians (`summary_v2.csv`):
 
-Each workload sends 1 unrecorded warm-up and then `--repeats` measured requests (default 5), each with a different input (question, article, image or recording), at temperature 0, at most 128 output tokens, no prompt cache. `--repeats` is requests per workload, not repetitions of the whole experiment; to repeat the experiment, run the command again (rows are appended with a new `run_id`).
+| Metric                                | Meaning                                                                                   |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `e2e_s` (`median_e2e_s`, `p95_s`)     | End-to-end latency: request sent to last token received                                   |
+| `ttft_s`                              | Time to first token: waiting, encoding images/audio and prefill                           |
+| `prefill_tok_s`                       | Input tokens processed per second (images and audio count as the tokens they become)      |
+| `decode_tok_s`, `tpot_ms`             | Output tokens generated per second, and time per output token                             |
+| `queue_s`                             | Time waiting for a free slot (≈ 0 unless concurrency > slots)                             |
+| `req_s`, `out_tok_s`                  | Throughput: completed requests and output tokens per second                               |
+| `prompt_tokens`, `output_tokens`      | Input size after tokenization (how many tokens an image or clip became), and answer length |
+| `peak_ram_gb`, `cpu_pct`              | Peak memory of `llama-server`, and its median CPU use as a share of all vCPUs             |
 
-**Output modes.** `natural` stops when the answer ends, so output length differs between requests and can differ between nodes for the same input. `fixed` sends `ignore_eos`, so every request generates exactly 128 tokens: compare `e2e_s` across nodes on `fixed` rows, and use `natural` rows for realistic latency. `ttft_s`, `prefill_tok_s`, `decode_tok_s` and `tpot_ms` do not depend on output length in either mode.
+Each row also records the configuration: `node`, `model`, `llama_build`, `slots`, `ctx_per_slot`, `output_mode`, `concurrency`, `run_id`, and, per request, `input` (the dataset position, the same on every node) and `finish_reason`.
 
-## 5. Run
+**Answer quality** (`quality.py`, `perplexity.sh`), per quantization:
 
-Run inside tmux so the run continues if SSH disconnects. The whole sweep is one command:
+| Task         | Inputs                                       | Score                                                 |
+| ------------ | -------------------------------------------- | ----------------------------------------------------- |
+| `chat`       | 10 Dolly questions                           | ROUGE-L vs the f16 answer, share identical to f16     |
+| `summarize`  | 10 512-token CNN/DailyMail articles          | ROUGE-L vs the f16 answer, share identical to f16     |
+| `image`      | 10 single COCO photos                        | ROUGE-L vs the f16 answer, share identical to f16     |
+| `transcribe` | 10 whole LibriSpeech recordings of 5–25 s    | word error rate vs the human transcript               |
+| perplexity   | 20 × 512 tokens of wikitext-2 test           | perplexity (lower is better)                          |
 
-```
-tmux new -s bench
-./experiment.sh qwen                   # REPEATS=5 and QUEUE_REPEATS=2 by default
-NODE=c7i.2xlarge-noamx ./experiment.sh qwen   # label a variant of the same instance type
-```
+ROUGE-L against f16 measures how much quantization changed the answer, not whether it is correct; word error rate and perplexity measure against ground truth.
 
-| Server (`run.sh`) | Concurrency | Waiting in the queue | Output modes | Repeats | Measured requests |
-| ----------------- | ----------- | -------------------- | ------------ | ------- | ----------------- |
-| `SLOTS=2`         | 1, then 2   | 0                    | natural, fixed | 5     | (45 + 90) × 2 = 270 |
-| `SLOTS=2`         | 5, then 10  | 3, then 8            | fixed        | 2       | 90 + 180 = 270    |
-| `SLOTS=4`         | 4           | 0                    | natural, fixed | 5     | 180 × 2 = 360     |
+## 5. Reproducing the Results
 
-900 requests in total. Each workload sends repeats × concurrency measured requests, so the queue steps use fewer repeats (`QUEUE_REPEATS`): at concurrency 10 that is still 20 requests per workload. They use fixed output only, so every request needs the same work and the wait reflects the queue, not answer lengths.
+### 5.1 Instance and server
 
-In a queue step, `benchmark.py` keeps `concurrency` requests outstanding (closed loop): `slots` of them are processed and the rest wait, and a new one is sent each time one finishes. The queue therefore always holds concurrency − slots requests. Compare `queue_s`, `ttft_s`, `median_e2e_s` and `req_s` across concurrency 2, 5 and 10: throughput should stay at its concurrency-2 value while waiting grows with the queue.
-
-It activates `.venv`, restarts `llama-server` for each slot count, logs everything to `<results folder>/logs/experiment-<run_id>.log`, and ends by printing the request count per slots / concurrency / output mode against the expected count. The server is left running with 4 slots. If a step fails the script stops; everything written so far is kept.
-
-Single passes, by hand:
+Launch an instance from the table in section 2 (Ubuntu, 30 GiB gp3, inbound SSH from your IP only), then on it:
 
 ```
-source .venv/bin/activate
-python benchmark.py --repeats 10                             # 1 request at a time
-python benchmark.py --repeats 10 --concurrency 1 2 --output natural fixed
-python benchmark.py --run 04                                 # a single workload
-python benchmark.py --repeats 2 --concurrency 5 10 --output fixed --allow-queue   # queue, 2 slots
+git clone https://github.com/clv07/aws-mm-router && cd aws-mm-router
+./run.sh qwen              # builds llama.cpp, downloads Q8_0 + mmproj, starts llama-server (2 slots) in tmux
+./run.sh qwen Q4_K_M       # quantization rows: Q4_K_M or f16
+SLOTS=1 ./run.sh qwen      # 8 GB instances (c7i.xlarge): see below
 ```
 
-Detach with Ctrl-b d and reattach with `tmux attach -t bench`. The node label defaults to the EC2 instance type; add a suffix for a variant of the same instance, e.g. `--node c7i.2xlarge-noamx`. With `--concurrency 2`, each workload sends 2 × repeats measured requests, keeping 2 outstanding. `--url` and `--ssh` point the client at a server on another machine, for example through an SSH tunnel, but then network time is included again.
+`run.sh` returns once the model is loaded; `tmux attach -t llama` shows the server and `~/llama-server.log` its output. Rerun it after an instance stop/start.
 
-Results are **appended**, never overwritten, to one folder per node and model, so teammates' results can all be committed without conflicts:
+**Memory.** Q8_0 peaked at 9–12 GB with 2 slots and up to 14.5 GB with 4 slots. On the 8 GB c7i.xlarge, one request at a time peaked at 5.9 GB, but two 4-image requests at once ran out of memory and the kernel killed `llama-server` (`sudo dmesg | grep -i oom`), so use one slot there.
 
-```
-results/phase1/<node>__<model>/summary_v2.csv              # one row per workload, concurrency and output mode
-results/phase1/<node>__<model>/requests_v2.csv             # one row per request, written as each request finishes
-results/phase1/<node>__<model>/system_info-<run_id>-np<slots>.txt   # llama-server CPU features
-results/phase1/<node>__<model>/logs/experiment-<run_id>.log
-```
-
-e.g. `results/phase1/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0/`. Older `summary.csv` / `requests.csv` files (previous column layout) are left untouched. Results live on the instance's disk: copy the folder back with `scp -r <host>:aws-mm-router/results/phase1/<folder> results/phase1/` and commit it **before terminating the instance** (stopping it keeps them). `results/benchmark.csv` holds the earlier single-request c8g.4xlarge run in the previous format.
-
-| Summary metric                                   | Description                                                   |
-| ------------------------------------------------ | ------------------------------------------------------------- |
-| `run_id`                                         | One label per invocation (`experiment.sh` uses one for the whole sweep) |
-| `model`, `llama_build`                           | Model file and llama.cpp build reported by `llama-server`     |
-| `slots`, `ctx_per_slot`                          | Server slots (`-np`) and context per slot, reported by `llama-server` |
-| `node`, `run`, `modality`, `size`, `size_unit`   | Experiment configuration                                      |
-| `output_mode`                                    | `natural` or `fixed` (`ignore_eos`, always 128 output tokens)  |
-| `concurrency`, `requests`                        | Requests in flight at once, measured requests                 |
-| `median_e2e_s`, `p95_s`                          | Request latency (depends on output length in `natural` mode)  |
-| `ttft_s`                                         | Median time to first token                                    |
-| `prefill_tok_s`                                  | Median `prompt_tokens / server_prompt_ms` × 1000 (includes image/audio encoding) |
-| `decode_tok_s`, `tpot_ms`                        | Median per-request decode throughput, and time per output token = 1000 / `decode_tok_s` |
-| `queue_s`                                        | Median `e2e_s` − server processing time: time waiting for a slot + HTTP overhead; ≈ 0 when concurrency ≤ slots, the queue wait with `--allow-queue` |
-| `prompt_tokens`, `output_tokens`                 | Median input tokens (how many tokens the images/audio became) and output tokens |
-| `req_s`, `out_tok_s`                             | Successful requests and output tokens per second of wall time |
-| `peak_ram_gb`                                    | Peak sampled `llama-server` RSS                               |
-| `cpu_pct`                                        | Median CPU usage normalized to node capacity                  |
-| `success`, `failed`                              | Request outcomes                                              |
-
-`requests_v2.csv` has the same configuration columns plus, per request: `index`, `input` (dataset position; the same on every node), `sent_s`, `status`, `error`, `finish_reason` (`length` = hit 128 tokens, `stop` = answer ended), `e2e_s`, `ttft_s`, `queue_s`, `prompt_tokens`, `output_tokens`, `prefill_tok_s`, `decode_tok_s`, `tpot_ms`, and `server_prompt_ms` / `server_predicted_ms` (llama-server's own prompt-processing and generation times; prompt processing includes image/audio encoding and matched `ttft_s` within about 0.1 s in a test). Match rows across nodes by `run`, `input`, `concurrency` and `output_mode`.
-
-CPU/RAM are sampled every 0.2 seconds while a workload's measured requests run. Keep the model, quantization, and runtime settings consistent across nodes.
-
-## 6. Answer Quality (once per quantization)
-
-`benchmark.py` measures speed only. Quantization trades answer quality for speed and memory, so the quantization row also measures quality. Quality depends on the weights, not the machine, so this runs **once per quantization on one node**, not on every instance. With the server and datasets from sections 2–3 (start with whichever model is loaded):
+### 5.2 Client and datasets
 
 ```
-python quality.py                    # collect answers from the model llama-server is serving
-./run.sh qwen Q4_K_M && python quality.py
-./run.sh qwen Q8_0 && python quality.py
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python dolly.py --download && python cnn_dailymail.py --download && python coco.py --download && python librispeech.py --download
+```
+
+The datasets (~3 GB) go to `dataset/`, which git ignores.
+
+### 5.3 Running the benchmarks
+
+Run inside tmux (`tmux new -s bench`), so the run continues if SSH disconnects. `--node` sets the label used in the results folder name; the default is the EC2 instance type. Each run writes to `results/phase1/<label>__<model>/`.
+
+**One request at a time (section 2 matrix).**
+
+```bash
+python benchmark.py --node <label>
+```
+
+For the AMX-off row, first disable AMX (**TODO: how AMX was disabled**), then run with `--node c7i.2xlarge-noamx`.
+
+Results: `summary.csv` (one row per workload) and `requests.csv` (one row per request) in the folder listed for each row in section 2. These were collected with the first version of `benchmark.py` (commit `ceb04b5`); the current version measures the same thing and writes `summary_v2.csv` / `requests_v2.csv` instead. The c8g.2xlarge has only the `_v2` files: its one-at-a-time numbers are the concurrency-1 rows of the sweep below.
+
+**Concurrency sweep.**
+
+```bash
+./experiment.sh qwen            # Q8_0
+./experiment.sh qwen Q4_K_M     # Q4_K_M
+```
+
+`experiment.sh` runs the whole sweep in one command (~5 h, 900 measured requests):
+- a 2-slot server at concurrency 1 and 2, natural and fixed output, 5 repeats;
+- concurrency 5 and 10, fixed output, 2 repeats, with the extra requests waiting in the server's queue;
+- a 4-slot server at concurrency 4;
+- at the end, it prints the request count per step against the expected count.
+
+The c7a.2xlarge and c8g.2xlarge ran a shorter version with `benchmark.py` directly:
+
+```bash
+python benchmark.py --concurrency 1 2 --output natural fixed      # c7a
+python benchmark.py --repeats 2 --concurrency 5 --output fixed --allow-queue
+python benchmark.py --concurrency 1 2 --output fixed               # c8g
+```
+
+Results: `summary_v2.csv` and `requests_v2.csv` (one row per workload × concurrency × output mode), plus the server logs in `logs/`, in these folders:
+
+| Node                 | Results folder (`results/phase1/…`) |
+| -------------------- | ----------------------------------- |
+| c6i.2xlarge          | `c6i.2xlarge__…-Q8_0`               |
+| c7i.2xlarge, Q8_0    | `c7i.2xlarge__…-Q8_0`               |
+| c7i.2xlarge, Q4_K_M  | `c7i.2xlarge__…-Q4_K_M`             |
+| c7a.2xlarge, partial | `c7a.2xlarge__…-Q8_0`               |
+| c8g.2xlarge, partial | `c8g.2xlarge__…-Q8_0`               |
+
+**Labels.** A suffix such as `-q8` or `-amx` marks a variant or a different machine of the same type; `c7i.1xlarge-q8` is the c7i.xlarge. The c7i.xlarge has no audio results: its server crashed, most likely out of memory (see 5.1).
+
+### 5.4 Answer quality
+
+On one node, with each quantization in turn:
+
+```
 ./run.sh qwen f16 && python quality.py
-python quality.py --score            # compare all collected models with the f16 answers
-./perplexity.sh                      # perplexity of every downloaded quantization (stops llama-server)
+./run.sh qwen Q8_0 && python quality.py
+./run.sh qwen Q4_K_M && python quality.py
+python quality.py --score      # compare every model with the f16 answers
+./perplexity.sh                # perplexity of every downloaded quantization (stops llama-server)
 ```
 
-| Task         | Inputs                                         | Score                                                  |
-| ------------ | ---------------------------------------------- | ------------------------------------------------------ |
-| `chat`       | 10 Dolly questions (run 00)                    | ROUGE-L vs the f16 answer, share identical to f16      |
-| `summarize`  | 10 512-token CNN/DailyMail texts (run 01)      | ROUGE-L vs the f16 answer, share identical to f16      |
-| `image`      | 10 single COCO photos (run 04)                 | ROUGE-L vs the f16 answer, share identical to f16      |
-| `transcribe` | 10 whole LibriSpeech recordings of 5–25 s      | word error rate vs the human transcript, plus ROUGE-L vs f16 |
-| perplexity   | 20 × 512 tokens of wikitext-2 test             | perplexity (lower is better), the standard llama.cpp quantization measure |
+### 5.5 Where results go
 
-f16 is the unquantized model, so ROUGE-L vs f16 (word overlap, 1.0 = same words in the same order) measures how much quantization changed the answer, not whether it is correct: one different early token can send a long description in another direction. Word error rate and perplexity are the measures against ground truth. Transcription uses whole recordings (not the cut clips of `benchmark.py`) so the transcript matches the audio, asks for the transcript only, and allows 256 output tokens; the other tasks keep `benchmark.py`'s prompts and 128 tokens. All requests use temperature 0 and no prompt cache.
-
-Results:
+Results are only ever **appended**, to one folder per node label and model, so teammates' results never collide:
 
 ```
-results/quality/answers.csv      # every answer, with the model, task, input and (transcription) human transcript
-results/quality/scores.csv       # one row per model and task
-results/quality/perplexity.csv   # one row per model; perplexity-<quant>.log holds the full output
+results/phase1/<node>__<model>/summary_v2.csv     # one row per workload, concurrency and output mode
+results/phase1/<node>__<model>/requests_v2.csv    # one row per request, written as each one finishes
+results/phase1/<node>__<model>/logs/              # experiment.sh console output
+results/quality/{answers,scores,perplexity}.csv
 ```
 
-`--inputs` and `--tasks` change the number of inputs per task and which tasks are collected (e.g. `--tasks transcribe` to redo one); scoring uses the latest answer per model, task and input.
+Copy a folder off the instance (`scp -r <host>:aws-mm-router/results/phase1/<folder> results/phase1/`) before terminating it; stopping it keeps the disk.
 
-## 7. Round-Robin Baseline (Phase 2)
-
-Round robin fixes each request's node in advance by its position in the list (A, B, A, B, ...), regardless of the request type or how busy the node is. `roundrobin.py` by default sends 50 requests in order, 4 at a time across all nodes: each time one finishes, the next is sent. A request sent to a busy node waits in that node's queue.
-
-`roundrobin.py` runs on the local machine and reaches the nodes through SSH tunnels. Edit `~/.ssh/config` on the local machine:
-
-```
-Host node-c7a
-    HostName <EC2_PUBLIC_IP>
-    User ubuntu
-    IdentityFile ~/.ssh/key.pem
-
-Host node-c7i
-    HostName <EC2_PUBLIC_IP>
-    User ubuntu
-    IdentityFile ~/.ssh/key.pem
-```
-
-Set key permissions with `chmod 400 ~/.ssh/key.pem`, then create one tunnel per node in separate terminals and keep them running:
-
-```
-ssh -N -L 8080:127.0.0.1:8080 node-c7a
-ssh -N -L 8081:127.0.0.1:8080 node-c7i
-curl http://127.0.0.1:8080/health
-curl http://127.0.0.1:8081/health
-```
-
-Edit `NODES` at the top of `roundrobin.py`: one entry per node with its tunnel `url` and `ssh` host (used to sample CPU/RAM). Entry order is the turn order; a single entry gives the fixed-node baseline. With the tunnels running:
-
-```
-python roundrobin.py --requests 10 --inflight 2   # quick test: 10 requests, 2 in flight across all nodes
-python roundrobin.py                              # full run: 50 requests, 4 in flight, seed 0
-```
-Default 50 requests use the sizes in `SIZES` at the top of `roundrobin.py` (text 512 / 1024 / 3072 tokens, 1 / 2 / 4 images, 5 / 10 / 20 s audio) in a 3:1:1 text/image/audio mix (30 / 10 / 10), with temperature 0, at most 128 output tokens, no prompt cache, and thinking off. One unrecorded warm-up runs per node and modality.
-
-Results are **appended** and linked by `timestamp_utc`:
-
-```
-results/roundrobin_requests.csv   # one row per request
-results/roundrobin.csv            # one row per run and group: all, each modality, each node
-```
-
-| Per-request metric                       | Description                                    |
-| ---------------------------------------- | ---------------------------------------------- |
-| `timestamp_utc`, `policy`, `seed`, `inflight` | Run configuration                         |
-| `index`                                  | Send order                                     |
-| `node`, `model`                          | Node used and model reported by `llama-server` |
-| `modality`, `size`                       | Request type and size                          |
-| `sent_s`                                 | Send time since the start of the run           |
-| `e2e_s`                                  | Send to end of stream, including queueing      |
-| `ttft_s`                                 | Time to first token                            |
-| `decode_tok_s`, `output_tokens`          | Decode throughput and tokens generated (≤ 128) |
-| `status`, `error`                        | Request outcome                                |
-
-| Summary metric                                            | Description                                                          |
-| --------------------------------------------------------- | -------------------------------------------------------------------- |
-| `timestamp_utc`, `policy`, `requests`, `inflight`, `seed` | Run configuration                                                    |
-| `model`                                                   | Model reported by `llama-server` (node rows: that node's model)      |
-| `group`                                                   | Requests the row summarizes: `all`, a modality, or a node            |
-| `median_e2e_s`, `p95_s`                                   | Request latency in the group                                         |
-| `ttft_s`                                                  | Median time to first token in the group                              |
-| `req_s`                                                   | Successful requests / whole run's wall time (`all` row = throughput) |
-| `peak_ram_gb`, `cpu_pct`                                  | Node rows only, as in section 5                                      |
-| `success`, `failed`                                       | Request outcomes                                                     |
-
-Every run sends the same 50 inputs; `--seed` only changes their order, and with it the node assignment. Thinking is off because Gemma 4 would otherwise spend all 128 tokens reasoning and return no answer; Qwen is unaffected. Replies can stop before 128 tokens and text sizes are counted with the Qwen tokenizer, so compare `output_tokens` and `decode_tok_s` alongside `e2e_s` across models. Results are written only when a run finishes.
+`results/benchmark.csv` (a first c8g.4xlarge run) and `results/roundrobin*.csv` (an early closed-loop round-robin baseline, `roundrobin.py`) predate this setup and are not used in the report.
