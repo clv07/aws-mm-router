@@ -224,3 +224,6 @@ dataset/
 
 # experiment logs belong with the results
 !results/**/*.log
+
+# Office lock files
+~$*
