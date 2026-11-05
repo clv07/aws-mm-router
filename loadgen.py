@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 2 open-loop load generator and router over several llama-server nodes.
+"""Routing benchmarks: open-loop load generator and router over several llama-server nodes.
 
   python loadgen.py trace --rate 0.2 --duration 900 --seed 1     # writes traces/<name>.csv
   python loadgen.py capacity --nodes nodes.json                   # predicted cost per node, capacity
@@ -28,7 +28,7 @@ from benchmark import (RESULTS_DIR, RUNS, RemoteSamples, append_rows, derived, m
                        request_once, server_info)
 
 TRACES_DIR = Path("traces")
-OUT_DIR = Path("results/phase2")
+OUT_DIR = Path("results/routing")
 DEFAULT_MIX = "chat=50,text=20,image=15,audio=15"   # percent per modality; sizes uniform within it
 POLICIES = ("random", "rr", "least", "ect")
 TRACE_FIELDS = ["id", "arrival_s", "run", "modality", "size", "input"]
@@ -393,7 +393,7 @@ def run(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Phase 2 open-loop load generator and router.')
+    parser = argparse.ArgumentParser(description='Open-loop load generator and router for the routing benchmarks.')
     sub = parser.add_subparsers(dest='command', required=True)
     p = sub.add_parser('trace', help='write a seeded Poisson trace')
     p.add_argument('--rate', type=float, required=True, help='mean arrivals per second')
