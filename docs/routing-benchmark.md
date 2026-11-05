@@ -1,7 +1,9 @@
 # Phase 1 Routing Benchmarks: Routing Multimodal Requests over Heterogeneous CPU Nodes
 
 **Code:** `loadgen.py`. 
+
 Step-by-step cluster setup: `docs/routing-cluster-runbook.md`. 
+
 The baseline benchmarks it builds on: `docs/benchmark.md`.
 
 ## 1. Question
