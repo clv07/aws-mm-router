@@ -164,8 +164,8 @@ python src/loadgen.py capacity --nodes nodes.json
 Check that every node has a row, that nothing important is marked `*` (estimated), and that the gains look plausible (1.0–1.4). Take the printed 60% and 90% rates (ours: 0.089 and 0.134 req/s):
 
 ```bash
-python src/loadgen.py trace --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
-python src/loadgen.py trace --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
+python src/tracegen.py phase1 --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
+python src/tracegen.py phase1 --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
 ```
 
 Both traces use the same seed: the same requests in the same order, only closer together at 90%. To replay exactly our traffic, use the traces in `traces/` instead.

@@ -122,8 +122,8 @@ The cluster setup (instances, llama-server, SSH tunnels, profiling) is in `docs/
 
 ```bash
 python src/loadgen.py capacity --nodes nodes.json        # predicted time per workload and node, capacity
-python src/loadgen.py trace --rate 0.089 --duration 900 --seed 1 --out traces/cluster-load60.csv
-python src/loadgen.py trace --rate 0.134 --duration 900 --seed 1 --out traces/cluster-load90.csv
+python src/tracegen.py phase1 --rate 0.089 --duration 900 --seed 1 --out traces/cluster-load60.csv
+python src/tracegen.py phase1 --rate 0.134 --duration 900 --seed 1 --out traces/cluster-load90.csv
 ```
 
 `--mix` changes the mix (default `chat=50,text=20,image=15,audio=15`); a key is a modality or a workload id, e.g. `03=10` for 3,072-token text.

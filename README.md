@@ -153,8 +153,8 @@ These steps match the runs in `results/routing/`; [`docs/routing-cluster-runbook
 7. **Pick the loads.** Copy the other two profiles to the c7a, then:
    ```bash
    python src/loadgen.py capacity --nodes nodes.json
-   python src/loadgen.py trace --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
-   python src/loadgen.py trace --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
+   python src/tracegen.py phase1 --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
+   python src/tracegen.py phase1 --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
    ```
 
 8. **Quick test.** `python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6` should return 6 `ok` requests, two per node; then delete the test output (`rm -rf results/routing`).

@@ -7,10 +7,12 @@ src/
   benchmark.py      Phase 1 single-node benchmark: sends the 9 workloads to one llama-server and records
                     latency, prefill/decode speed, CPU and memory
   quality.py        answer quality per quantization (ROUGE-L vs f16, word error rate)
-  loadgen.py        routing: replays a trace over the cluster with a routing policy (rr, least, ect);
-                    also `capacity` (predicted cluster capacity) and `trace` (simple Poisson traces)
-  tracegen.py       Phase 2 traffic generator: steady, bursty, step, ramp and replayed arrivals, mixes,
-                    deadlines (docs/phase2-traffic-generation.md)
+  loadgen.py        routing: the routing policies (rr, least, ect, and new ones) and the runner that
+                    replays a trace over the cluster with one of them; also `capacity` (predicted
+                    cluster capacity from the node profiles)
+  tracegen.py       all trace generation: steady, bursty, step, ramp and replayed arrivals, mixes,
+                    deadlines (`make`), and the routing benchmarks' traces (`phase1`)
+                    (docs/phase2-traffic-generation.md)
   run.sh            builds llama.cpp, downloads the model, starts llama-server (runs on each instance)
   experiment.sh     the full single-node concurrency sweep in one command
   perplexity.sh     perplexity of each quantization

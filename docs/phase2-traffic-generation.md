@@ -2,7 +2,7 @@
 
 `tracegen.py` creates the request traffic for the Phase 2 routing experiments. It writes a **trace**: a list of requests, each with an arrival time, a workload (chat, text, image or audio, at one of the 9 benchmark sizes), which dataset input to use, and a deadline. `loadgen.py run` replays a trace against the cluster, sending each request at its arrival time whatever the cluster is doing (open loop), so every routing policy faces exactly the same traffic.
 
-What it adds over the Phase 1 traces (`loadgen.py trace`, steady Poisson arrivals only):
+What it adds over the Phase 1 traces (steady Poisson arrivals only; still available as `tracegen.py phase1`, which reproduces them exactly):
 
 - **Arrival patterns:** steady, bursty, a sudden spike, a gradual ramp, or the timing of a real trace.
 - **Load as a fraction of capacity:** `--load 0.9` means 90% of what the cluster can sustain for that mix, computed from the node profiles.
@@ -81,6 +81,7 @@ This makes differences between runs attributable to the arrival pattern or load,
 | Command | Does |
 | --- | --- |
 | `make` | Write one trace (CSV + JSON). Options above, plus `--duration` (900 s), `--seed` (1), `--out` (default `traces/phase2/<arrivals>-<mix>-<load or rate>-dur<duration>-seed<seed>.csv`). |
+| `phase1` | The steady Poisson generator the routing benchmarks used (moved here from `loadgen.py trace`). `--rate`, `--duration`, `--seed`, `--mix`, `--out`. `phase1 --rate 0.089 --seed 1` and `--rate 0.134 --seed 1` reproduce `traces/cluster-load60.csv` and `cluster-load90.csv` exactly. |
 | `describe TRACE...` | Print each trace's requests, span, mean rate, interarrival CV, peak 60 s load and requests per modality. Works on Phase 1 traces too. |
 | `plot TRACE... [-o out.png] [--bin 30] [--labels ...]` | Arrivals per time bin, one panel per trace, bursts shaded (from the JSON file). |
 

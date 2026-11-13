@@ -6,6 +6,7 @@ arrivals, named workload mixes, and per-request deadlines.
   python src/tracegen.py make --arrivals onoff --rate 0.13 --burst-factor 3 --burst-fraction 0.2 --mix image-heavy
   python src/tracegen.py make --arrivals replay --replay times.csv --replay-column timestamp --rate 0.13
   python src/tracegen.py describe traces/phase2/*.csv
+  python src/tracegen.py phase1 --rate 0.089 --seed 1 --out traces/cluster-load60.csv   # routing benchmarks' traces
 
 A trace is a CSV that `loadgen.py run` replays unchanged (it reads id, arrival_s, run, modality,
 size and input, and ignores the other columns), plus a JSON file next to it with every parameter
@@ -29,7 +30,9 @@ from pathlib import Path
 import random
 import statistics
 
-from loadgen import RUNS, TRACES_DIR, node_model, load_nodes, parse_mix
+from loadgen import DEFAULT_MIX, RUNS, node_model, load_nodes, parse_mix
+
+TRACES_DIR = Path("traces")
 
 MIXES = {   # percent per modality; sizes share their modality's weight equally
     'default':      'chat=50,text=20,image=15,audio=15',   # the routing benchmarks' mix
@@ -215,6 +218,39 @@ def default_name(args, rate):
     return '-'.join(parts) + '.csv'
 
 
+# ---------------------------------------------------------------- phase1 (routing benchmarks)
+# The generator that made traces/cluster-load60.csv and cluster-load90.csv, moved here from
+# loadgen.py unchanged so those traces stay reproducible. New traces should use `make`.
+
+TRACE_FIELDS = ["id", "arrival_s", "run", "modality", "size", "input"]
+
+
+def make_trace(args):
+    mix = parse_mix(args.mix)
+    rng = random.Random(args.seed)
+    rows, t, used = [], 0.0, {}
+    while True:
+        # Poisson arrivals. Two draws per request, so the same seed at another --rate gives the
+        # same requests in the same order, with every gap scaled by the rate ratio.
+        t += rng.expovariate(args.rate)
+        run = rng.choices(list(mix), weights=list(mix.values()))[0]
+        if t > args.duration:
+            break
+        modality, size = RUNS[run]
+        used[modality] = used.get(modality, 0) + 1   # a new input per request; input 0 = warm-up
+        rows.append({'id': len(rows) + 1, 'arrival_s': f'{t:.3f}', 'run': run,
+                     'modality': modality, 'size': size, 'input': used[modality]})
+    out = Path(args.out or TRACES_DIR / f'rate{args.rate:g}-dur{args.duration:g}-seed{args.seed}.csv')
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open('w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=TRACE_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+    counts = {m: sum(r['modality'] == m for r in rows) for m in ('chat', 'text', 'image', 'audio')}
+    print(f'wrote {out}: {len(rows)} requests over {args.duration:g} s '
+          f'({len(rows) / args.duration:.3f} req/s), {counts}')
+
+
 # ---------------------------------------------------------------- describe
 
 def stats(rows, duration=None):
@@ -327,6 +363,13 @@ def main():
     g.add_argument('--replay-offset', type=int, default=0, help='first arrival to use (pick another window)')
     p.add_argument('--out', help='trace file (default traces/phase2/<arrivals>-<mix>-<load>-<dur>-<seed>.csv)')
     p.set_defaults(func=make)
+    p = sub.add_parser('phase1', help='steady Poisson trace exactly as the routing benchmarks made them')
+    p.add_argument('--rate', type=float, required=True, help='mean arrivals per second')
+    p.add_argument('--duration', type=float, default=900, help='seconds of arrivals (default 900)')
+    p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--mix', default=DEFAULT_MIX, help=f'workload mix (default {DEFAULT_MIX})')
+    p.add_argument('--out', help='trace file (default traces/rate<r>-dur<d>-seed<s>.csv)')
+    p.set_defaults(func=make_trace)
     p = sub.add_parser('describe', help='summary statistics of existing traces')
     p.add_argument('traces', nargs='+')
     p.set_defaults(func=describe)

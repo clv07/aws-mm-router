@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Routing benchmarks: open-loop load generator and router over several llama-server nodes.
 
-  python src/loadgen.py trace --rate 0.2 --duration 900 --seed 1     # writes traces/<name>.csv
   python src/loadgen.py capacity --nodes nodes.json                   # predicted cost per node, capacity
   python src/loadgen.py run --trace traces/<name>.csv --nodes nodes.json --policy ect --cluster C
 
-A trace fixes every request's arrival time, workload (benchmark.py RUNS) and input, so every
+Traces are made with tracegen.py. A trace fixes every request's arrival time, workload (benchmark.py RUNS) and input, so every
 policy and cluster replays exactly the same traffic. Each request is sent at its arrival time
 whether or not earlier ones have finished (open loop). The policy picks the node on arrival;
 the request then waits in that node's llama-server queue if all of its slots are busy.
@@ -27,11 +26,9 @@ import requests
 from benchmark import (RESULTS_DIR, RUNS, RemoteSamples, append_rows, derived, median, payload,
                        request_once, server_info)
 
-TRACES_DIR = Path("traces")
 OUT_DIR = Path("results/routing")
 DEFAULT_MIX = "chat=50,text=20,image=15,audio=15"   # percent per modality; sizes uniform within it
 POLICIES = ("random", "rr", "least", "ect")
-TRACE_FIELDS = ["id", "arrival_s", "run", "modality", "size", "input"]
 REQUEST_FIELDS = ["run_id", "timestamp_utc", "cluster", "trace", "policy", "seed", "output_mode",
                   "id", "arrival_s", "sent_s", "node", "model", "node_inflight", "predicted_s",
                   "predicted_e2e_s", "run", "modality", "size", "input", "status", "error",
@@ -76,32 +73,6 @@ def parse_mix(text):
             weights[r] = weights.get(r, 0) + float(weight) / len(runs)
     total = sum(weights.values())
     return {r: w / total for r, w in sorted(weights.items())}
-
-
-def make_trace(args):
-    mix = parse_mix(args.mix)
-    rng = random.Random(args.seed)
-    rows, t, used = [], 0.0, {}
-    while True:
-        # Poisson arrivals. Two draws per request, so the same seed at another --rate gives the
-        # same requests in the same order, with every gap scaled by the rate ratio.
-        t += rng.expovariate(args.rate)
-        run = rng.choices(list(mix), weights=list(mix.values()))[0]
-        if t > args.duration:
-            break
-        modality, size = RUNS[run]
-        used[modality] = used.get(modality, 0) + 1   # a new input per request; input 0 = warm-up
-        rows.append({'id': len(rows) + 1, 'arrival_s': f'{t:.3f}', 'run': run,
-                     'modality': modality, 'size': size, 'input': used[modality]})
-    out = Path(args.out or TRACES_DIR / f'rate{args.rate:g}-dur{args.duration:g}-seed{args.seed}.csv')
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open('w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=TRACE_FIELDS)
-        writer.writeheader()
-        writer.writerows(rows)
-    counts = {m: sum(r['modality'] == m for r in rows) for m in ('chat', 'text', 'image', 'audio')}
-    print(f'wrote {out}: {len(rows)} requests over {args.duration:g} s '
-          f'({len(rows) / args.duration:.3f} req/s), {counts}')
 
 
 # ---------------------------------------------------------------- node costs from Phase 1
@@ -395,12 +366,6 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description='Open-loop load generator and router for the routing benchmarks.')
     sub = parser.add_subparsers(dest='command', required=True)
-    p = sub.add_parser('trace', help='write a seeded Poisson trace')
-    p.add_argument('--rate', type=float, required=True, help='mean arrivals per second')
-    p.add_argument('--duration', type=float, default=900, help='seconds of arrivals (default 900)')
-    p.add_argument('--seed', type=int, default=0)
-    p.add_argument('--mix', default=DEFAULT_MIX, help=f'workload mix (default {DEFAULT_MIX})')
-    p.add_argument('--out', help='trace file (default traces/rate<r>-dur<d>-seed<s>.csv)')
     p = sub.add_parser('capacity', help='print predicted per-node costs and cluster capacity')
     p.add_argument('--nodes', default='nodes.json')
     p.add_argument('--mix', default=DEFAULT_MIX)
@@ -414,7 +379,7 @@ def main():
     p.add_argument('--requests', type=int, help='replay only the first N requests (quick test)')
     p.add_argument('--no-warmup', action='store_true')
     args = parser.parse_args()
-    {'trace': make_trace, 'capacity': capacity, 'run': run}[args.command](args)
+    {'capacity': capacity, 'run': run}[args.command](args)
 
 
 if __name__ == '__main__':
