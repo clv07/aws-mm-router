@@ -252,6 +252,50 @@ def describe(args):
             print_stats(path, stats(list(csv.DictReader(f))))
 
 
+def plot(args):
+    """Arrivals per time bin for each trace, one panel per trace, bursts shaded."""
+    import matplotlib
+    import matplotlib.ticker
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    traces = []
+    for path in args.traces:
+        with open(path, newline='', encoding='utf-8') as f:
+            traces.append((Path(path), list(csv.DictReader(f))))
+    span = max(float(r['arrival_s']) for _, rows in traces for r in rows)
+    bins = [i * args.bin for i in range(int(span // args.bin) + 2)]
+    fig, axes = plt.subplots(len(traces), 1, figsize=(6.5, 1.25 * len(traces)), sharex=True, sharey=True,
+                             squeeze=False, gridspec_kw={'hspace': 0.55})
+    if args.labels and len(args.labels) != len(traces):
+        raise SystemExit('--labels needs one label per trace')
+    for i, (ax, (path, rows)) in enumerate(zip(axes[:, 0], traces)):
+        times = [float(r['arrival_s']) for r in rows]
+        bursts = [float(r['arrival_s']) for r in rows if r.get('burst') == '1']
+        meta = path.with_suffix('.json')
+        segments = json.loads(meta.read_text()).get('segments') if meta.exists() else None
+        for s, e, _r, on in segments or []:
+            if on:
+                ax.axvspan(s, e, color='#eb6834', alpha=0.12, linewidth=0)
+        ax.hist(times, bins=bins, color='#2a78d6', edgecolor='white', linewidth=0.6)
+        if bursts and not segments:
+            ax.hist(bursts, bins=bins, color='#eb6834', edgecolor='white', linewidth=0.6)
+        st = stats(rows)
+        label = args.labels[i] if args.labels else path.stem
+        ax.set_title(f'{label}  ({st["requests"]} requests, interarrival CV {st.get("interarrival_cv", "-")})',
+                     loc='left', fontsize=8)
+        ax.tick_params(labelsize=7)
+        ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(nbins=3, integer=True))
+        for side in ('top', 'right'):
+            ax.spines[side].set_visible(False)
+        ax.yaxis.grid(True, color='#e6e5e1', linewidth=0.5)
+        ax.set_axisbelow(True)
+    axes[-1, 0].set_xlabel('time (s)', fontsize=7)
+    fig.text(0.04, 0.5, f'arrivals per {args.bin:g} s', rotation=90, va='center', fontsize=7)
+    fig.savefig(args.out, dpi=200, bbox_inches='tight')
+    print('wrote', args.out)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     sub = parser.add_subparsers(dest='cmd', required=True)
@@ -286,6 +330,12 @@ def main():
     p = sub.add_parser('describe', help='summary statistics of existing traces')
     p.add_argument('traces', nargs='+')
     p.set_defaults(func=describe)
+    p = sub.add_parser('plot', help='arrivals over time for one or more traces (PNG)')
+    p.add_argument('traces', nargs='+')
+    p.add_argument('--bin', type=float, default=30.0, help='bin width, s (default 30)')
+    p.add_argument('--labels', nargs='+', help='panel titles, one per trace (default: file names)')
+    p.add_argument('-o', '--out', default='arrivals.png')
+    p.set_defaults(func=plot)
     args = parser.parse_args()
     args.func(args)
 

@@ -1,61 +1,154 @@
-# Phase 2: Traffic Generation
+# Phase 2: Traffic Generation (`src/tracegen.py`)
 
-How we generate the request traffic for Phase 2, what is implemented in `src/tracegen.py`, and what still needs changes in the runner (`src/loadgen.py run`) or the router.
+`tracegen.py` creates the request traffic for the Phase 2 routing experiments. It writes a **trace**: a list of requests, each with an arrival time, a workload (chat, text, image or audio, at one of the 9 benchmark sizes), which dataset input to use, and a deadline. `loadgen.py run` replays a trace against the cluster, sending each request at its arrival time whatever the cluster is doing (open loop), so every routing policy faces exactly the same traffic.
 
-The Phase 1 routing benchmarks used one kind of trace: Poisson arrivals, one 4-modality mix, the 9 benchmark workloads, 15 minutes, one seed. Phase 2 must evaluate "steady and bursty arrivals and held-out workload mixtures", and the new router needs deadlines and, eventually, real token counts.
+What it adds over the Phase 1 traces (`loadgen.py trace`, steady Poisson arrivals only):
 
-## Plan
+- **Arrival patterns:** steady, bursty, a sudden spike, a gradual ramp, or the timing of a real trace.
+- **Load as a fraction of capacity:** `--load 0.9` means 90% of what the cluster can sustain for that mix, computed from the node profiles.
+- **Workload mixes:** named presets for training and held-out evaluation, or any custom mix.
+- **Deadlines:** a deadline per request, so SLO attainment can be measured the same way for every policy.
+- **Comparable traces:** with one seed, every trace contains the same requests in the same order; only the arrival times differ.
+- **Inspection:** `describe` prints a trace's rate, burstiness and mix; `plot` draws its arrivals over time.
 
-| Addition | Why | How | Status |
+## Quick start
+
+From the repository root (Python 3 with the packages in `requirements.txt`):
+
+```bash
+# 15 minutes of steady traffic at 90% of the cluster's capacity, default mix, seed 1
+python src/tracegen.py make --arrivals poisson --load 0.9 --nodes nodes.json --seed 1
+#   -> traces/phase2/poisson-default-load0.9-dur900-seed1.csv  (+ .json)
+
+# the same requests, arriving in bursts
+python src/tracegen.py make --arrivals onoff --load 0.9 --nodes nodes.json --seed 1
+
+# check them, then replay one with a routing policy
+python src/tracegen.py describe traces/phase2/*.csv
+python src/tracegen.py plot traces/phase2/*.csv -o arrivals.png
+python src/loadgen.py run --trace traces/phase2/onoff-default-load0.9-dur900-seed1.csv --nodes nodes.json --policy ect --cluster C
+```
+
+`--nodes` points to the cluster's `nodes.json` (the same file `loadgen.py` uses). It provides the capacity for `--load` and the solo times for deadlines. Without it, give `--rate` in requests per second (or `--load` with `--capacity`), and deadlines are left empty.
+
+## How it works
+
+### Arrival patterns
+
+![Arrivals per 30 s for the four generated patterns](figs/phase2-arrivals.png)
+
+*Arrivals per 30 s for four traces made with seed 1 on the routing cluster. Shaded: bursts and the step. The steady and bursty traces contain the same 128 requests.*
+
+| `--arrivals` | Pattern | Rate meaning | Options (defaults) |
 | --- | --- | --- | --- |
-| **Bursty arrivals** | Required by the project. A router queue only pays off when arrivals bunch up. | On/off process with the same mean rate as the steady trace, so steady and bursty are directly comparable. Parameters: burst rate multiplier, share of time in bursts, mean burst length. Plus a flash-crowd step and a ramp. | Done: `--arrivals onoff / step / ramp` |
-| **Load sweep** | One 60% and one 90% run is too thin. | Rates from ~30% to ~110% of capacity, including periods above capacity (bursts, steps). | Done: `--load` with `--nodes` (capacity for the chosen mix) |
-| **Held-out mixes** | Required: tune on one mix, test on others. | Training mix (`default`) plus held-out mixes (`chat-heavy`, `text-heavy`, `image-heavy`, `audio-heavy`, `uniform`). Decide which are held out before anyone tunes. | Done: `--mix` presets or a custom mix |
-| **Deadlines in the trace** | The SLO-aware router needs them, and every policy must be judged against the same deadlines. | `deadline_s` per request = factor × the workload's fastest solo time on any node, factor per modality. | Done: `--slo`; needs the runner to log SLO met |
-| **Continuous request sizes** | The new cost model uses actual prompt tokens; fixed sizes favour a lookup table like `ect`'s. | Text ~100–3,500 tokens, 1–4 images, 5–40 s audio, drawn from distributions. | To do: needs the dataset scripts to accept any size, and the runner to read `size` |
-| **Multi-turn sessions** | The project asks for "the cost of sending accumulated context" and to "avoid moving an active session". | `session_id`, `turn`, think time between turns; each turn's prompt includes the earlier turns. Turns within a session run one after another; sessions arrive independently. | To do: needs runner support (send turn k+1 after turn k's answer) |
-| **Real trace replay** | Realistic burstiness. | Replay arrival times from a public trace (e.g. Azure LLM inference traces, BurstGPT), rescaled to our cluster's rate. Check the current format of each trace before using it. | Done for arrival times: `--arrivals replay`; token counts to map later |
-| **Seeds and length** | 85–122 requests per run gives a noisy p95. | 3 seeds per configuration, longer runs, and leave out a warm-up and the drain at the end when computing statistics. | Done: `--seed`, `--duration`; warm-up/drain trimming belongs in the analysis |
+| `poisson` | Steady: independent arrivals at a constant mean rate | Mean rate | none |
+| `onoff` | Bursty: alternates between bursts and quieter periods, both of random length | Mean rate over the whole trace; bursty and steady at the same load carry the same total work | `--burst-factor` (3): rate in a burst ÷ mean rate; `--burst-fraction` (0.2): share of time in bursts; `--burst-length` (60 s): mean burst length |
+| `step` | Flash crowd: steady, then a sudden multiple of the rate for a while, then steady again | Rate outside the step | `--step-at` (300 s), `--step-length` (120 s), `--step-factor` (3) |
+| `ramp` | Load that rises (or falls) linearly over the trace | `--rate` is multiplied by the ramp | `--ramp-from` (0.3), `--ramp-to` (1.2) |
+| `replay` | The timing of a real trace, scaled to our rate | Mean rate | `--replay` (CSV), `--replay-column` (`timestamp`), `--replay-unit` (`s`/`ms`/`us`), `--replay-offset` (0) |
 
-## Trace format
+**Replay** takes `rate × duration` consecutive arrivals from the real trace, starting at `--replay-offset`, and stretches them to fill the duration. That keeps the real trace's burstiness and ordering at a rate our small cluster can handle; a different offset gives a different window. It replays arrival times only: workloads still come from `--mix`.
 
-A trace is a CSV plus a JSON file with the same name. `loadgen.py run` replays the CSV unchanged: it reads `id`, `arrival_s`, `run`, `modality`, `size`, `input`, and ignores the rest.
+### Workload mixes
+
+| `--mix` | chat / text / image / audio (%) | Intended use |
+| --- | --- | --- |
+| `default` | 50 / 20 / 15 / 15 | The routing benchmarks' mix; training mix |
+| `chat-heavy` | 80 / 10 / 5 / 5 | Held out (proposed) |
+| `text-heavy` | 20 / 60 / 10 / 10 | Held out (proposed) |
+| `image-heavy` | 20 / 10 / 60 / 10 | Held out (proposed) |
+| `audio-heavy` | 20 / 10 / 10 / 60 | Held out (proposed) |
+| `uniform` | 25 / 25 / 25 / 25 | Balanced reference |
+
+Within a modality, its sizes are equally likely (e.g. text is 512, 1,024 or 3,072 tokens). A custom mix uses the same syntax as `loadgen.py`: `--mix chat=40,text=40,image=20`, or workload ids for single sizes, e.g. `--mix 00=50,03=50` (chat and 3,072-token text only).
+
+### Deadlines
+
+Each request gets `deadline_s` = its modality's factor × the fastest solo time of its workload on any node (from the profiles in `nodes.json`). The default `--slo chat=3,text=4,image=4,audio=4` gives, on the routing cluster, 17.8 s for chat (3 × 5.9 s on the m8g) and 127 s for 3,072-token text (4 × 31.9 s on the c7a). The deadline is relative to arrival. A request meets its SLO if it finishes within `deadline_s` of arriving.
+
+### Comparable traces
+
+All arrival patterns are built from the same random stream (a time-rescaled unit-rate Poisson process), and the workloads are drawn from a second, separate stream in arrival order. So with one `--seed`:
+
+- request *k* has the same workload and dataset input in every trace, whatever the pattern, load or rate;
+- steady and bursty traces at the same load contain exactly the same requests;
+- different seeds give independent traces, for repeated runs.
+
+This makes differences between runs attributable to the arrival pattern or load, not to a different set of requests.
+
+## Commands
+
+| Command | Does |
+| --- | --- |
+| `make` | Write one trace (CSV + JSON). Options above, plus `--duration` (900 s), `--seed` (1), `--out` (default `traces/phase2/<arrivals>-<mix>-<load or rate>-dur<duration>-seed<seed>.csv`). |
+| `describe TRACE...` | Print each trace's requests, span, mean rate, interarrival CV, peak 60 s load and requests per modality. Works on Phase 1 traces too. |
+| `plot TRACE... [-o out.png] [--bin 30] [--labels ...]` | Arrivals per time bin, one panel per trace, bursts shaded (from the JSON file). |
+
+`python src/tracegen.py make --help` lists every option.
+
+## Output
+
+**Trace CSV.** `loadgen.py run` replays it unchanged: it reads the first six columns and ignores the rest.
 
 | Column | Meaning |
 | --- | --- |
 | `id` | Request number, in arrival order |
-| `arrival_s` | Arrival time in seconds from the start of the run |
-| `run`, `modality`, `size` | Workload (one of the 9 in `benchmark.py` `RUNS`) |
-| `input` | Which input of that modality's dataset; a new one per request (0 is the warm-up) |
+| `arrival_s` | Arrival time, seconds from the start of the run |
+| `run`, `modality`, `size` | Workload: one of the 9 in `benchmark.py` `RUNS` |
+| `input` | Which input of that modality's dataset; a new one per request (0 is kept for the warm-up) |
 | `slo_factor` | Deadline as a multiple of the workload's fastest solo time |
-| `deadline_s` | Deadline relative to arrival, s (empty if no `--nodes` was given) |
+| `deadline_s` | Deadline relative to arrival, s (empty without `--nodes`) |
 | `burst` | 1 if the request arrived during a burst or step, for analysing latency in bursts |
 
-The JSON file records every parameter, the mix, the rate, the capacity used, the rate segments (when bursts happened), and summary statistics: requests, mean rate, interarrival CV (1 = Poisson, above 1 = bursty), peak 60 s load relative to the mean, and requests per modality.
+**JSON file** (same name): every parameter, the mix, the rate and capacity used, the rate segments (when bursts happened), and summary statistics:
+- requests and mean rate;
+- **interarrival CV:** the spread of gaps between arrivals; 1 for Poisson, above 1 for bursty traffic;
+- **peak 60 s load:** the busiest minute relative to the average;
+- requests per modality.
 
-**Comparability.** Every arrival process is a time-rescaling of the same unit-rate Poisson stream, and workloads are drawn from a separate random stream in arrival order. With one seed, request *k* has the same workload and input in every trace (steady, bursty, any load); traces differ only in when requests arrive. Steady and bursty traces at the same load have exactly the same requests.
+## What depends on the cluster
 
-## Usage
+Arrival patterns, mixes and the request sequence don't depend on the hardware. Two things do, because they come from the node profiles in `nodes.json`:
+- the request rate for a given `--load`;
+- `deadline_s`.
+
+If the cluster changes, profile the new nodes and regenerate traces with the new `nodes.json` and the same seeds. The requests stay the same; only rates and deadlines move.
+
+## Example: a standard set of traces
 
 ```bash
-# steady and bursty at 90% of capacity for the default mix (capacity and deadlines from nodes.json)
-python src/tracegen.py make --arrivals poisson --load 0.9 --nodes nodes.json --seed 1
-python src/tracegen.py make --arrivals onoff   --load 0.9 --nodes nodes.json --seed 1 \
-       --burst-factor 3 --burst-fraction 0.2 --burst-length 60
-
-# flash crowd: 60% load with a 3x step for 2 minutes from t = 300 s
-python src/tracegen.py make --arrivals step --load 0.6 --nodes nodes.json --step-at 300 --step-length 120 --step-factor 3
-
-# held-out mix
-python src/tracegen.py make --arrivals poisson --load 0.9 --nodes nodes.json --mix image-heavy
-
-# arrival times from a real trace, rescaled to 0.13 req/s
-python src/tracegen.py make --arrivals replay --replay real.csv --replay-column timestamp --rate 0.13
-
-# summary of any trace, including the Phase 1 ones
-python src/tracegen.py describe traces/cluster-load90.csv traces/phase2/*.csv
+for seed in 1 2 3; do
+  for load in 0.3 0.6 0.9 1.1; do
+    for arr in poisson onoff; do
+      python src/tracegen.py make --arrivals $arr --load $load --nodes nodes.json --seed $seed
+    done
+  done
+  for mix in image-heavy audio-heavy text-heavy; do
+    python src/tracegen.py make --arrivals poisson --load 0.9 --nodes nodes.json --mix $mix --seed $seed
+  done
+done
 ```
 
-Traces go to `traces/phase2/<arrivals>-<mix>-<load>-<duration>-<seed>.csv` unless `--out` is given. Without `--nodes`, use `--rate` (or `--load` with `--capacity`), and `deadline_s` is left empty.
+At ~17 minutes per run and policy, a full set takes many hours on AWS. Pick a subset for AWS runs and use a simulator for the rest.
 
-**What depends on the cluster.** Arrival patterns, mixes and the request sequence don't depend on the hardware. Two things do: the rate for a given `--load` (capacity comes from the node profiles) and `deadline_s` (from the fastest node's solo times). If the cluster changes, regenerate with the new `nodes.json` and the same seeds: the requests stay the same, only rates and deadlines move.
+## Not supported yet
+
+- **Continuous request sizes** (any token count, 1–4 images, any audio length): needs the dataset scripts to accept any size, and `loadgen.py run` to read `size` from the trace.
+- **Multi-turn sessions** with growing context: needs `loadgen.py run` to send turn *k*+1 only after turn *k*'s answer, with the earlier turns in the prompt.
+- **Token counts from real traces:** `replay` uses only arrival times.
+- **Trimming warm-up and drain:** belongs in the analysis, not the trace.
+
+## Plan
+
+The full list of planned additions and their status.
+
+| Addition | Why | How | Status |
+| --- | --- | --- | --- |
+| **Bursty arrivals** | Required by the project. A router queue only pays off when arrivals bunch up. | On/off process with the same mean rate as the steady trace; plus a flash-crowd step and a ramp. | Done |
+| **Load sweep** | One 60% and one 90% run is too thin. | Rates from ~30% to ~110% of capacity, including periods above capacity. | Done (`--load`) |
+| **Held-out mixes** | Required: tune on one mix, test on others. | Training mix plus held-out mixes; decide which are held out before anyone tunes. | Done (`--mix`) |
+| **Deadlines in the trace** | The SLO-aware router needs them, and every policy must be judged against the same deadlines. | Factor × fastest solo time, per modality. | Done (`--slo`); the runner still needs to log SLO met |
+| **Continuous request sizes** | The new cost model uses actual prompt tokens; fixed sizes favour a lookup table like `ect`'s. | Sizes drawn from distributions. | To do |
+| **Multi-turn sessions** | The project asks for "the cost of sending accumulated context" and to "avoid moving an active session". | `session_id`, `turn`, think time; prompts include earlier turns. | To do |
+| **Real trace replay** | Realistic burstiness. | Arrival times from a public trace (e.g. Azure LLM inference traces, BurstGPT), rescaled. Check each trace's format first. | Done for arrival times |
+| **Seeds and length** | 85–122 requests per run gives a noisy p95. | 3 seeds per configuration, longer runs, trim warm-up and drain in the analysis. | Done (`--seed`, `--duration`) |
