@@ -121,7 +121,7 @@ git clone https://github.com/clv07/aws-mm-router && cd aws-mm-router
 ./src/run.sh qwen                                   # builds llama.cpp, downloads Q8_0 + encoder, starts llama-server
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python src/dolly.py --download && python src/cnn_dailymail.py --download && python src/coco.py --download && python src/librispeech.py --download
+python src/loaders/dolly.py --download && python src/loaders/cnn_dailymail.py --download && python src/loaders/coco.py --download && python src/loaders/librispeech.py --download
 tmux new -s bench
 NODE=<label> ./src/experiment.sh qwen               # full sweep, ~5–6 h; results in results/phase1/<label>__<model>/
 ```
@@ -185,10 +185,10 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
 
 **Datasets** (each script downloads its data into `dataset/`, which git ignores)
 
-- [`dolly.py`](src/dolly.py): Dolly-15k short questions (chat, run 00).
-- [`cnn_dailymail.py`](src/cnn_dailymail.py): CNN/DailyMail news articles cut to 512, 1,024, or 3,072 tokens (text, runs 01–03).
-- [`coco.py`](src/coco.py): COCO 2017 validation images (image, runs 04–06).
-- [`librispeech.py`](src/librispeech.py): Mini LibriSpeech recordings as 10 s and 40 s clips (audio, runs 07–08).
+- [`dolly.py`](src/loaders/dolly.py): Dolly-15k short questions (chat, run 00).
+- [`cnn_dailymail.py`](src/loaders/cnn_dailymail.py): CNN/DailyMail news articles cut to 512, 1,024, or 3,072 tokens (text, runs 01–03).
+- [`coco.py`](src/loaders/coco.py): COCO 2017 validation images (image, runs 04–06).
+- [`librispeech.py`](src/loaders/librispeech.py): Mini LibriSpeech recordings as 10 s and 40 s clips (audio, runs 07–08).
 
 **Answer quality**
 

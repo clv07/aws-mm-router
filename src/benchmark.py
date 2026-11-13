@@ -24,10 +24,10 @@ from pathlib import Path
 
 import requests
 
-from coco import COCODataset
-from cnn_dailymail import CNNDailyMailDataset
-from dolly import DollyQADataset
-from librispeech import LibriSpeechDataset
+from loaders.coco import COCODataset
+from loaders.cnn_dailymail import CNNDailyMailDataset
+from loaders.dolly import DollyQADataset
+from loaders.librispeech import LibriSpeechDataset
 
 REPEATS = 5          # measured requests per workload (each a different input), times --concurrency
 WARMUPS = 1

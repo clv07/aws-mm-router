@@ -104,7 +104,7 @@ SLOTS=1 ./src/run.sh qwen      # 8 GB instances (c7i.xlarge): see below
 ```
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python src/dolly.py --download && python src/cnn_dailymail.py --download && python src/coco.py --download && python src/librispeech.py --download
+python src/loaders/dolly.py --download && python src/loaders/cnn_dailymail.py --download && python src/loaders/coco.py --download && python src/loaders/librispeech.py --download
 ```
 
 The datasets (~3 GB) go to `dataset/`, which git ignores.

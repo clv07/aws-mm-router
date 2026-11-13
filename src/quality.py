@@ -29,10 +29,10 @@ from pathlib import Path
 import requests
 
 from benchmark import append_rows, payload, server_info
-from cnn_dailymail import CNNDailyMailDataset
-from coco import COCODataset
-from dolly import DollyQADataset
-from librispeech import LibriSpeechDataset
+from loaders.cnn_dailymail import CNNDailyMailDataset
+from loaders.coco import COCODataset
+from loaders.dolly import DollyQADataset
+from loaders.librispeech import LibriSpeechDataset
 
 INPUTS = 10                  # inputs per task
 TASKS = ("chat", "summarize", "image", "transcribe")

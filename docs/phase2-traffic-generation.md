@@ -140,15 +140,20 @@ At ~17 minutes per run and policy, a full set takes many hours on AWS. Pick a su
 
 ## Plan
 
-The full list of planned additions and their status.
+How we're expanding the traffic generator beyond the Phase 1 traces.
 
-| Addition | Why | How | Status |
-| --- | --- | --- | --- |
-| **Bursty arrivals** | Required by the project. A router queue only pays off when arrivals bunch up. | On/off process with the same mean rate as the steady trace; plus a flash-crowd step and a ramp. | Done |
-| **Load sweep** | One 60% and one 90% run is too thin. | Rates from ~30% to ~110% of capacity, including periods above capacity. | Done (`--load`) |
-| **Held-out mixes** | Required: tune on one mix, test on others. | Training mix plus held-out mixes; decide which are held out before anyone tunes. | Done (`--mix`) |
-| **Deadlines in the trace** | The SLO-aware router needs them, and every policy must be judged against the same deadlines. | Factor × fastest solo time, per modality. | Done (`--slo`); the runner still needs to log SLO met |
-| **Continuous request sizes** | The new cost model uses actual prompt tokens; fixed sizes favour a lookup table like `ect`'s. | Sizes drawn from distributions. | To do |
-| **Multi-turn sessions** | The project asks for "the cost of sending accumulated context" and to "avoid moving an active session". | `session_id`, `turn`, think time; prompts include earlier turns. | To do |
-| **Real trace replay** | Realistic burstiness. | Arrival times from a public trace (e.g. Azure LLM inference traces, BurstGPT), rescaled. Check each trace's format first. | Done for arrival times |
-| **Seeds and length** | 85–122 requests per run gives a noisy p95. | 3 seeds per configuration, longer runs, trim warm-up and drain in the analysis. | Done (`--seed`, `--duration`) |
+| Addition | Why | How |
+|---|---|---|
+| **Bursty arrivals** | Required by the project. A router queue only pays off when arrivals bunch up. | An on/off (two-state) process with the **same mean rate** as the Poisson trace, so steady and bursty are directly comparable. Parameters: burst rate multiplier (e.g. 3×), burst length, idle length. Also a single step ("flash crowd") trace. |
+| **Load sweep** | One 60% and one 90% run is too thin. | Rates from about 30% to about 110% of capacity, including short periods above capacity. |
+| **Held-out mixes** | Required: tune on one mix, test on others. | A training mix (today's) plus held-out mixes: chat-heavy, image-heavy, audio-heavy, long-text-heavy. Fix which ones are held out before anyone tunes. |
+| **Continuous request sizes** | The new cost model uses actual prompt tokens, and fixed sizes favour a lookup table like `ect`'s. | Text from about 100 to 3,500 tokens, 1–4 images, audio from 5 to 40 s, drawn from distributions. Keep the 9 fixed sizes as one option. |
+| **Deadlines in the trace** | The SLO-aware router needs them, and every policy must be judged against the same deadlines. | A `deadline_s` column per request, e.g. k × the request's best solo time on any node, with k per type (tight for chat, looser for audio). |
+| **Multi-turn sessions** | The spec asks for "the cost of sending accumulated context" and to "avoid moving an active session". | Sessions with a `session_id` and turn number, think time between turns, and prompts that include the earlier turns. Turns within a session run one after another; sessions arrive independently of each other. |
+| **Real trace replay** | The "live trace replay" task: realistic burstiness. | Public LLM traces with arrival times and token counts, e.g. the Azure LLM inference traces or BurstGPT. Rescale their rate to our cluster (about 0.15 req/s) and map token counts onto our workloads. Check each trace's current format before relying on it. |
+| **Seeds and length** | 85–122 requests per run gives a noisy p95. | 3 seeds per configuration, longer runs, and leave out a warm-up and the drain at the end when computing statistics. |
+
+**Status:**
+- **Done in `tracegen.py`:** bursty arrivals (plus step and ramp), load sweep (`--load`), held-out mixes (`--mix`), deadlines (`--slo`), real trace replay for arrival times (`--arrivals replay`), seeds and duration.
+- **Still needed:** the runner logging whether each request met its deadline; trimming warm-up and drain in the analysis.
+- **To do:** continuous request sizes, multi-turn sessions, token counts from real traces (see "Not supported yet").

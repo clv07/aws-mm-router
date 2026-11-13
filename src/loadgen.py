@@ -265,10 +265,10 @@ class Router:
 # ---------------------------------------------------------------- replay
 
 def load_datasets(modalities):
-    from coco import COCODataset
-    from cnn_dailymail import CNNDailyMailDataset
-    from dolly import DollyQADataset
-    from librispeech import LibriSpeechDataset
+    from loaders.coco import COCODataset
+    from loaders.cnn_dailymail import CNNDailyMailDataset
+    from loaders.dolly import DollyQADataset
+    from loaders.librispeech import LibriSpeechDataset
     classes = {'chat': DollyQADataset, 'text': CNNDailyMailDataset,
                'image': COCODataset, 'audio': LibriSpeechDataset}
     return {m: classes[m]() for m in modalities}

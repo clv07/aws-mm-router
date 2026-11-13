@@ -66,7 +66,7 @@ git clone https://github.com/clv07/aws-mm-router && cd aws-mm-router
 ./src/run.sh qwen                        # builds llama.cpp, downloads Q8_0 + mmproj, starts llama-server (2 slots)
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python src/dolly.py --download && python src/cnn_dailymail.py --download && python src/coco.py --download && python src/librispeech.py --download
+python src/loaders/dolly.py --download && python src/loaders/cnn_dailymail.py --download && python src/loaders/coco.py --download && python src/loaders/librispeech.py --download
 ```
 
 ## 4. Profile all three in parallel (~1–1.5 h, set by the slowest node)
