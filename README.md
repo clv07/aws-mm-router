@@ -118,12 +118,12 @@ On the instance, inside tmux so the run continues if SSH disconnects:
 
 ```bash
 git clone https://github.com/clv07/aws-mm-router && cd aws-mm-router
-./run.sh qwen                                   # builds llama.cpp, downloads Q8_0 + encoder, starts llama-server
+./src/run.sh qwen                                   # builds llama.cpp, downloads Q8_0 + encoder, starts llama-server
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python dolly.py --download && python cnn_dailymail.py --download && python coco.py --download && python librispeech.py --download
+python src/loaders/dolly.py --download && python src/loaders/cnn_dailymail.py --download && python src/loaders/coco.py --download && python src/loaders/librispeech.py --download
 tmux new -s bench
-NODE=<label> ./experiment.sh qwen               # full sweep, ~5–6 h; results in results/phase1/<label>__<model>/
+NODE=<label> ./src/experiment.sh qwen               # full sweep, ~5–6 h; results in results/phase1/<label>__<model>/
 ```
 
 Copy the results folder off the instance (`scp -r`) before terminating it; stopping it keeps the disk. Variants (quantization rows, AMX off, the 8 GB c7i.xlarge, answer quality) are in [`docs/baseline-benchmark.md`](docs/baseline-benchmark.md) (section 5).
@@ -136,13 +136,13 @@ These steps match the runs in `results/routing/`; [`docs/routing-cluster-runbook
 
 2. **Start the nodes.** Start or launch the c7a.2xlarge, c7i.xlarge, and m8g.xlarge (ARM image, 30 GiB) in the c7a's subnet, with shutdown behavior set to **Stop**. Note each node's public and private IP; public IPs change on every start.
 
-3. **Set up each node.** Clone the repo, start the server with `./run.sh qwen` (2 slots), create the venv, and download the datasets, as in the baseline benchmarks.
+3. **Set up each node.** Clone the repo, start the server with `./src/run.sh qwen` (2 slots), create the venv, and download the datasets, as in the baseline benchmarks.
 
 4. **Profile each node** in tmux, with nothing else running on it (~1–1.5 h, all three in parallel):
    ```bash
    L=<node>-p2      # c7a.2xlarge-p2, c7i.xlarge-p2, or m8g.xlarge-p2
-   python benchmark.py --node $L --repeats 2 --concurrency 1 --output natural && \
-   python benchmark.py --node $L --repeats 2 --concurrency 1 2 --output fixed
+   python src/benchmark.py --node $L --repeats 2 --concurrency 1 --output natural && \
+   python src/benchmark.py --node $L --repeats 2 --concurrency 1 2 --output fixed
    ```
    The first command gives `ect` its time per workload; the second gives each node's slot gain.
 
@@ -152,18 +152,18 @@ These steps match the runs in `results/routing/`; [`docs/routing-cluster-runbook
 
 7. **Pick the loads.** Copy the other two profiles to the c7a, then:
    ```bash
-   python loadgen.py capacity --nodes nodes.json
-   python loadgen.py trace --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
-   python loadgen.py trace --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
+   python src/loadgen.py capacity --nodes nodes.json
+   python src/tracegen.py phase1 --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
+   python src/tracegen.py phase1 --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
    ```
 
-8. **Quick test.** `python loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6` should return 6 `ok` requests, two per node; then delete the test output (`rm -rf results/routing`).
+8. **Quick test.** `python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6` should return 6 `ok` requests, two per node; then delete the test output (`rm -rf results/routing`).
 
 9. **Run the three policies at both loads** on the c7a, in tmux (~1.7 h, about 17 minutes per run), then stop all three nodes:
    ```bash
    for load in 60 90; do
      for p in rr least ect; do
-       python loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
+       python src/loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
          2>&1 | tee -a results/routing-console.log
      done
    done; \
@@ -178,26 +178,26 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
 
 **Server and baseline benchmarks**
 
-- [`run.sh`](run.sh): builds llama.cpp (commit `8642541b2`, CPU only), downloads Qwen2.5-Omni-3B (`Q8_0` by default, or `Q4_K_M` / `f16`) with its Q8_0 image/audio encoder, and starts `llama-server` in tmux. `SLOTS=4` changes the number of requests it processes at once (default 2).
-- [`benchmark.py`](benchmark.py): the single-node benchmark. Runs on the instance next to the server, sends workloads 00–08, samples `llama-server`'s CPU and memory, and writes one row per request and one summary row per workload.
-- [`experiment.sh`](experiment.sh): the full concurrency sweep in one command (2 slots at concurrency 1 and 2, the queue at 5 and 10, 4 slots at concurrency 4), with a log and a final request count check.
+- [`run.sh`](src/run.sh): builds llama.cpp (commit `8642541b2`, CPU only), downloads Qwen2.5-Omni-3B (`Q8_0` by default, or `Q4_K_M` / `f16`) with its Q8_0 image/audio encoder, and starts `llama-server` in tmux. `SLOTS=4` changes the number of requests it processes at once (default 2).
+- [`benchmark.py`](src/benchmark.py): the single-node benchmark. Runs on the instance next to the server, sends workloads 00–08, samples `llama-server`'s CPU and memory, and writes one row per request and one summary row per workload.
+- [`experiment.sh`](src/experiment.sh): the full concurrency sweep in one command (2 slots at concurrency 1 and 2, the queue at 5 and 10, 4 slots at concurrency 4), with a log and a final request count check.
 - [`requirements.txt`](requirements.txt): Python packages for the client scripts.
 
 **Datasets** (each script downloads its data into `dataset/`, which git ignores)
 
-- [`dolly.py`](dolly.py): Dolly-15k short questions (chat, run 00).
-- [`cnn_dailymail.py`](cnn_dailymail.py): CNN/DailyMail news articles cut to 512, 1,024, or 3,072 tokens (text, runs 01–03).
-- [`coco.py`](coco.py): COCO 2017 validation images (image, runs 04–06).
-- [`librispeech.py`](librispeech.py): Mini LibriSpeech recordings as 10 s and 40 s clips (audio, runs 07–08).
+- [`dolly.py`](src/loaders/dolly.py): Dolly-15k short questions (chat, run 00).
+- [`cnn_dailymail.py`](src/loaders/cnn_dailymail.py): CNN/DailyMail news articles cut to 512, 1,024, or 3,072 tokens (text, runs 01–03).
+- [`coco.py`](src/loaders/coco.py): COCO 2017 validation images (image, runs 04–06).
+- [`librispeech.py`](src/loaders/librispeech.py): Mini LibriSpeech recordings as 10 s and 40 s clips (audio, runs 07–08).
 
 **Answer quality**
 
-- [`quality.py`](quality.py): collects answers from the served quantization and scores them against f16 (ROUGE-L) and the human transcripts (word error rate).
-- [`perplexity.sh`](perplexity.sh): perplexity of each quantization on wikitext-2.
+- [`quality.py`](src/quality.py): collects answers from the served quantization and scores them against f16 (ROUGE-L) and the human transcripts (word error rate).
+- [`perplexity.sh`](src/perplexity.sh): perplexity of each quantization on wikitext-2.
 
 **Routing**
 
-- [`loadgen.py`](loadgen.py): generates traffic traces, estimates cluster capacity, and runs the routing policies (`rr`, `least`, `ect`).
+- [`loadgen.py`](src/loadgen.py): generates traffic traces, estimates cluster capacity, and runs the routing policies (`rr`, `least`, `ect`).
 - [`nodes.example.json`](nodes.example.json): template for the cluster's node list (`nodes.json`).
 - [`traces/`](traces/): the two traffic traces replayed by every policy, [`cluster-load60.csv`](traces/cluster-load60.csv) and [`cluster-load90.csv`](traces/cluster-load90.csv).
 

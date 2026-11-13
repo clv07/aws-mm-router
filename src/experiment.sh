@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run on the AWS instance, inside tmux:  [REPEATS=5] [QUEUE_REPEATS=2] [NODE=label] ./experiment.sh <qwen|gemma> [quant]
+# Run on the AWS instance, inside tmux:  [REPEATS=5] [QUEUE_REPEATS=2] [NODE=label] ./src/experiment.sh <qwen|gemma> [quant]
 # NODE labels a variant of the same instance type, e.g. NODE=c7i.2xlarge-noamx (default: the instance type).
 # The whole Phase 1 sweep in one command:
 #   llama-server with 2 slots: concurrency 1, then 2           natural and fixed (ignore_eos) output
@@ -9,9 +9,9 @@
 # Results are only ever appended (results/phase1/<node>__<model>/*_v2.csv); the log of this
 # experiment goes to <that folder>/logs/experiment-<run_id>.log.
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # repository root: results/ and dataset/ are relative to it
 
-MODEL_KEY=${1:?usage: [REPEATS=5] [QUEUE_REPEATS=2] ./experiment.sh <qwen|gemma> [Q8_0|Q4_K_M|f16]}
+MODEL_KEY=${1:?usage: [REPEATS=5] [QUEUE_REPEATS=2] ./src/experiment.sh <qwen|gemma> [Q8_0|Q4_K_M|f16]}
 QUANT=${2:-Q8_0}
 REPEATS=${REPEATS:-5}
 QUEUE_REPEATS=${QUEUE_REPEATS:-2}
@@ -50,10 +50,10 @@ EXPECTED=()   # "<slots> <concurrency> <output mode> <repeats>" for the final ch
 for cfg in "${CONFIGS[@]}"; do
   IFS='|' read -r slots concurrency outputs repeats flags <<< "$cfg"
   echo "=== llama-server with $slots slots: concurrency $concurrency, output $outputs, repeats $repeats"
-  CTX="" SLOTS=$slots ./run.sh "$MODEL_KEY" "$QUANT"
-  [ -n "$OUT" ] || OUT=$(python3 benchmark.py --where ${NODE_ARGS[@]+"${NODE_ARGS[@]}"} | tail -1)
+  CTX="" SLOTS=$slots ./src/run.sh "$MODEL_KEY" "$QUANT"
+  [ -n "$OUT" ] || OUT=$(python3 src/benchmark.py --where ${NODE_ARGS[@]+"${NODE_ARGS[@]}"} | tail -1)
   # shellcheck disable=SC2086  # $concurrency, $outputs and $flags are word lists
-  python3 benchmark.py --repeats "$repeats" --concurrency $concurrency \
+  python3 src/benchmark.py --repeats "$repeats" --concurrency $concurrency \
                       --output $outputs --run-id "$RUN_ID" $flags ${NODE_ARGS[@]+"${NODE_ARGS[@]}"}
   for c in $concurrency; do
     for o in $outputs; do EXPECTED+=("$slots $c $o $repeats"); done

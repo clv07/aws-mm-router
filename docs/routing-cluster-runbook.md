@@ -63,10 +63,10 @@ On each node (`ssh -i ~/.ssh/<KEY>.pem ubuntu@<NODE_IP>`):
 
 ```bash
 git clone https://github.com/clv07/aws-mm-router && cd aws-mm-router
-./run.sh qwen                        # builds llama.cpp, downloads Q8_0 + mmproj, starts llama-server (2 slots)
+./src/run.sh qwen                        # builds llama.cpp, downloads Q8_0 + mmproj, starts llama-server (2 slots)
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python dolly.py --download && python cnn_dailymail.py --download && python coco.py --download && python librispeech.py --download
+python src/loaders/dolly.py --download && python src/loaders/cnn_dailymail.py --download && python src/loaders/coco.py --download && python src/loaders/librispeech.py --download
 ```
 
 ## 4. Profile all three in parallel (~1–1.5 h, set by the slowest node)
@@ -75,8 +75,8 @@ On **each** node, in tmux (`tmux new -s profile`), with its own label:
 
 ```bash
 L=c7a.2xlarge-p2     # c7i.xlarge-p2 on the c7i, m8g.xlarge-p2 on the m8g
-python benchmark.py --node $L --repeats 2 --concurrency 1 --output natural && \
-python benchmark.py --node $L --repeats 2 --concurrency 1 2 --output fixed
+python src/benchmark.py --node $L --repeats 2 --concurrency 1 --output natural && \
+python src/benchmark.py --node $L --repeats 2 --concurrency 1 2 --output fixed
 ```
 
 - The first command gives `ect` its costs: the time of each workload when a request runs alone.
@@ -97,7 +97,7 @@ tmux new -d -s llama "$HOME/llama.cpp/build/bin/llama-server -m $HOME/models/Qwe
 until curl -sf localhost:8080/health; do sleep 2; done; echo
 ```
 
-Don't run `./run.sh` on this node afterwards: it would restart the server with 2 slots and the cache on. Every input in a trace is different, so the cache never gets a hit, and turning it off does not change speed.
+Don't run `./src/run.sh` on this node afterwards: it would restart the server with 2 slots and the cache on. Every input in a trace is different, so the cache never gets a hit, and turning it off does not change speed.
 
 ## 6. Router setup on the c7a (~10 min; can start while step 4 runs)
 
@@ -158,14 +158,14 @@ Copy the two remote profiles to the router, then check the cost model:
 ```bash
 scp -r node-c7i:aws-mm-router/results/phase1/c7i.xlarge-p2__Qwen2.5-Omni-3B-Q8_0 results/phase1/
 scp -r node-m8g:aws-mm-router/results/phase1/m8g.xlarge-p2__Qwen2.5-Omni-3B-Q8_0 results/phase1/
-python loadgen.py capacity --nodes nodes.json
+python src/loadgen.py capacity --nodes nodes.json
 ```
 
 Check that every node has a row, that nothing important is marked `*` (estimated), and that the gains look plausible (1.0–1.4). Take the printed 60% and 90% rates (ours: 0.089 and 0.134 req/s):
 
 ```bash
-python loadgen.py trace --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
-python loadgen.py trace --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
+python src/tracegen.py phase1 --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
+python src/tracegen.py phase1 --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
 ```
 
 Both traces use the same seed: the same requests in the same order, only closer together at 90%. To replay exactly our traffic, use the traces in `traces/` instead.
@@ -176,7 +176,7 @@ The repository already contains our results in `results/routing/`, and `loadgen.
 
 ```bash
 mv results/routing results/routing-original
-python loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6
+python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6
 ```
 
 You should see 6 `ok` requests, two per node, and a summary. Then delete the test output (only the new folder; ours is in `results/routing-original`): `rm -rf results/routing`.
@@ -188,7 +188,7 @@ On the c7a, in tmux (`tmux new -s routing`):
 ```bash
 for load in 60 90; do
   for p in rr least ect; do
-    python loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
+    python src/loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
       2>&1 | tee -a routing-console.log
   done
 done
