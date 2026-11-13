@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run on the AWS instance, after quality.py: ./perplexity.sh [quant ...]
+# Run on the AWS instance, after quality.py: ./src/perplexity.sh [quant ...]
 # Perplexity of each downloaded Qwen2.5-Omni-3B quantization on the wikitext-2 test text,
 # the standard llama.cpp measure of quantization quality (lower is better; f16 is the reference).
 # Stops llama-server first so the two don't compete for CPU and memory.
@@ -49,4 +49,4 @@ for q in $QUANTS; do
   echo "  PPL = $PPL +/- $ERR"
   echo "$(date -u +%Y-%m-%dT%H:%M:%S+00:00),Qwen2.5-Omni-3B-$q,$CHUNKS,512,$PPL,$ERR,$BUILD_INFO" >> "$OUT"
 done
-echo "Appended to $OUT; llama-server is stopped (start it again with ./run.sh qwen)"
+echo "Appended to $OUT; llama-server is stopped (start it again with ./src/run.sh qwen)"

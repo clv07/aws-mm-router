@@ -4,9 +4,9 @@
 Quality depends on the weights, not the machine, so this runs once per quantization
 (on any one node), not on every instance. Run it on the node, next to llama-server:
 
-  python quality.py            # collect answers from the model llama-server is serving
-  ./run.sh qwen Q4_K_M         # switch model, collect again; repeat for every quantization
-  python quality.py --score    # compare all collected models
+  python src/quality.py            # collect answers from the model llama-server is serving
+  ./src/run.sh qwen Q4_K_M         # switch model, collect again; repeat for every quantization
+  python src/quality.py --score    # compare all collected models
 
 Four tasks, the same inputs for every model, temperature 0:
   chat        Dolly questions (run 00)               ROUGE-L vs the reference model's answer

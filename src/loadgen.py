@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Routing benchmarks: open-loop load generator and router over several llama-server nodes.
 
-  python loadgen.py trace --rate 0.2 --duration 900 --seed 1     # writes traces/<name>.csv
-  python loadgen.py capacity --nodes nodes.json                   # predicted cost per node, capacity
-  python loadgen.py run --trace traces/<name>.csv --nodes nodes.json --policy ect --cluster C
+  python src/loadgen.py trace --rate 0.2 --duration 900 --seed 1     # writes traces/<name>.csv
+  python src/loadgen.py capacity --nodes nodes.json                   # predicted cost per node, capacity
+  python src/loadgen.py run --trace traces/<name>.csv --nodes nodes.json --policy ect --cluster C
 
 A trace fixes every request's arrival time, workload (benchmark.py RUNS) and input, so every
 policy and cluster replays exactly the same traffic. Each request is sent at its arrival time
