@@ -215,7 +215,9 @@ class RemoteSamples:
         return median(cpu) if cpu else None, max(ram) if ram else None
 
 
-def request_once(session, url, payload):
+def request_once(session, url, payload, on_token=None):
+    """One streamed request. on_token, if given, is called with time.perf_counter() at each
+    output text token (interference.py uses it for the gaps between tokens)."""
     start = time.perf_counter()
     first = None
     usage, timing = {}, {}
@@ -243,6 +245,8 @@ def request_once(session, url, payload):
                         if first is None:
                             first = time.perf_counter() - start
                         count += 1
+                        if on_token is not None:
+                            on_token(time.perf_counter())
         elapsed = time.perf_counter() - start
         if first is None:
             raise RuntimeError('No output text token returned in stream')

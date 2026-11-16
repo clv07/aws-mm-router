@@ -13,6 +13,9 @@ src/
   tracegen.py       all trace generation: steady, bursty, step, ramp and replayed arrivals, mixes,
                     deadlines (`make`), and the routing benchmarks' traces (`phase1`)
                     (docs/phase2-traffic-generation.md)
+  interference.py   how much two workloads slow each other down on one node: each workload alone,
+                    then every pair, one per slot; `summarize` writes the slowdown matrix
+                    (docs/phase2-interference.md)
   run.sh            builds llama.cpp, downloads the model, starts llama-server (runs on each instance)
   experiment.sh     the full single-node concurrency sweep in one command
   perplexity.sh     perplexity of each quantization
@@ -39,6 +42,7 @@ Then, for example:
 python src/benchmark.py --node c7i.2xlarge                  # profile one node
 python src/tracegen.py make --arrivals onoff --load 0.9 --nodes nodes.json
 python src/loadgen.py run --trace traces/phase2/... --nodes nodes.json --policy ect --cluster C
+python src/interference.py run --runs 02 04 07 --pairs 02+04 04+07   # text+image, image+audio
 ```
 
 Scripts import each other by file name (`from benchmark import ...`, `from loaders.coco import ...`), which works because Python puts the running script's folder (`src/`) on the import path. New code goes directly in `src/`.
