@@ -24,10 +24,10 @@ from pathlib import Path
 
 import requests
 
-from coco import COCODataset
-from cnn_dailymail import CNNDailyMailDataset
-from dolly import DollyQADataset
-from librispeech import LibriSpeechDataset
+from loaders.coco import COCODataset
+from loaders.cnn_dailymail import CNNDailyMailDataset
+from loaders.dolly import DollyQADataset
+from loaders.librispeech import LibriSpeechDataset
 
 REPEATS = 5          # measured requests per workload (each a different input), times --concurrency
 WARMUPS = 1
@@ -357,7 +357,7 @@ def main():
         print('warning: llama-server did not report its slot count; slots column left empty', flush=True)
     elif max(args.concurrency) > slots and not args.allow_queue:
         parser.error(f'--concurrency {max(args.concurrency)} exceeds the server\'s {slots} slots; '
-                     f'restart it with SLOTS={max(args.concurrency)} ./run.sh <model>, '
+                     f'restart it with SLOTS={max(args.concurrency)} ./src/run.sh <model>, '
                      'or pass --allow-queue to measure waiting in the queue')
     run_id = args.run_id or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     print(f'run_id={run_id} node={node} model={model} build={build} slots={slots} ctx_per_slot={ctx} '

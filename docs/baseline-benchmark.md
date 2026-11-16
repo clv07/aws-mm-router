@@ -90,9 +90,9 @@ Launch an instance from the table in section 2 (Ubuntu, 30 GiB gp3, inbound SSH 
 
 ```
 git clone https://github.com/clv07/aws-mm-router && cd aws-mm-router
-./run.sh qwen              # builds llama.cpp, downloads Q8_0 + mmproj, starts llama-server (2 slots) in tmux
-./run.sh qwen Q4_K_M       # quantization rows: Q4_K_M or f16
-SLOTS=1 ./run.sh qwen      # 8 GB instances (c7i.xlarge): see below
+./src/run.sh qwen              # builds llama.cpp, downloads Q8_0 + mmproj, starts llama-server (2 slots) in tmux
+./src/run.sh qwen Q4_K_M       # quantization rows: Q4_K_M or f16
+SLOTS=1 ./src/run.sh qwen      # 8 GB instances (c7i.xlarge): see below
 ```
 
 `run.sh` returns once the model is loaded; `tmux attach -t llama` shows the server and `~/llama-server.log` its output. Rerun it after an instance stop/start.
@@ -104,7 +104,7 @@ SLOTS=1 ./run.sh qwen      # 8 GB instances (c7i.xlarge): see below
 ```
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python dolly.py --download && python cnn_dailymail.py --download && python coco.py --download && python librispeech.py --download
+python src/loaders/dolly.py --download && python src/loaders/cnn_dailymail.py --download && python src/loaders/coco.py --download && python src/loaders/librispeech.py --download
 ```
 
 The datasets (~3 GB) go to `dataset/`, which git ignores.
@@ -116,7 +116,7 @@ Run inside tmux (`tmux new -s bench`), so the run continues if SSH disconnects. 
 **One request at a time (section 2 matrix).**
 
 ```bash
-python benchmark.py --node <label>
+python src/benchmark.py --node <label>
 ```
 
 For the AMX-off row, first disable AMX (**TODO: how AMX was disabled**), then run with `--node c7i.2xlarge-noamx`.
@@ -126,8 +126,8 @@ Results: `summary.csv` (one row per workload) and `requests.csv` (one row per re
 **Concurrency sweep.**
 
 ```bash
-./experiment.sh qwen            # Q8_0
-./experiment.sh qwen Q4_K_M     # Q4_K_M
+./src/experiment.sh qwen            # Q8_0
+./src/experiment.sh qwen Q4_K_M     # Q4_K_M
 ```
 
 `experiment.sh` runs the whole sweep in one command (~5 h, 900 measured requests):
@@ -139,9 +139,9 @@ Results: `summary.csv` (one row per workload) and `requests.csv` (one row per re
 The c7a.2xlarge and c8g.2xlarge ran a shorter version with `benchmark.py` directly:
 
 ```bash
-python benchmark.py --concurrency 1 2 --output natural fixed      # c7a
-python benchmark.py --repeats 2 --concurrency 5 --output fixed --allow-queue
-python benchmark.py --concurrency 1 2 --output fixed               # c8g
+python src/benchmark.py --concurrency 1 2 --output natural fixed      # c7a
+python src/benchmark.py --repeats 2 --concurrency 5 --output fixed --allow-queue
+python src/benchmark.py --concurrency 1 2 --output fixed               # c8g
 ```
 
 Results: `summary_v2.csv` and `requests_v2.csv` (one row per workload × concurrency × output mode), plus the server logs in `logs/`, in these folders:
@@ -161,11 +161,11 @@ Results: `summary_v2.csv` and `requests_v2.csv` (one row per workload × concurr
 On one node, with each quantization in turn:
 
 ```
-./run.sh qwen f16 && python quality.py
-./run.sh qwen Q8_0 && python quality.py
-./run.sh qwen Q4_K_M && python quality.py
-python quality.py --score      # compare every model with the f16 answers
-./perplexity.sh                # perplexity of every downloaded quantization (stops llama-server)
+./src/run.sh qwen f16 && python src/quality.py
+./src/run.sh qwen Q8_0 && python src/quality.py
+./src/run.sh qwen Q4_K_M && python src/quality.py
+python src/quality.py --score      # compare every model with the f16 answers
+./src/perplexity.sh                # perplexity of every downloaded quantization (stops llama-server)
 ```
 
 ### 5.5 Where results go
