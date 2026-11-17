@@ -33,7 +33,7 @@ def read_gpu_log(path):
     samples = []
     with path.open(newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
-        header = [h.strip().split(' [')[0] for h in next(reader, [])]
+        header = [h.strip().split(' [')[0].replace('clocks.current.', 'clocks.') for h in next(reader, [])]
         for row in reader:
             if len(row) != len(header):
                 continue
