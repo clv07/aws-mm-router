@@ -6,6 +6,8 @@ The result is a **slowdown matrix** per node: slowdown(A | B) = A's latency whil
 
 The Phase 1 sweep only ran one workload at a time (`benchmark.py --concurrency 2` runs two requests of the same workload), so it covers the diagonal of this matrix but nothing off it.
 
+First results, from a test run on a lab server rather than AWS: [`analysis/interference/`](../analysis/interference/README.md).
+
 ## How it works
 
 For each workload alone, then for each pair (A, B) on a llama-server with 2 slots:
