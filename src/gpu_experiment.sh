@@ -23,7 +23,7 @@ QUANT=${2:-Q8_0}
 REPEATS=${REPEATS:-5}
 BATCH_REPEATS=${BATCH_REPEATS:-3}
 SWEEP=${SWEEP:-8 16 32}
-export GPU=1 CUDA_ARCH=${CUDA_ARCH:-75}
+export GPU=1   # CUDA_ARCH: run.sh reads it from nvidia-smi unless set
 
 if [ -z "${NODE:-}" ]; then
   TOKEN=$(curl -s -X PUT http://169.254.169.254/latest/api/token --max-time 2 \
