@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run on the AWS instance: [SLOTS=2|4] ./run.sh <qwen|gemma> [quant]
+# Run on the AWS instance: [SLOTS=2|4] ./src/run.sh <qwen|gemma> [quant]
 #   quant = weights file: Q8_0 (default), Q4_K_M or f16. The image/audio encoder (mmproj)
 #   stays Q8_0 for every quant, so only the language model's weights change.
 #   SLOTS = requests llama-server processes at once (-np, default 2); the context grows with it
@@ -8,7 +8,7 @@
 # isn't already serving this model with these flags, and wait until it is ready.
 set -euo pipefail
 
-MODEL_KEY=${1:?usage: ./run.sh <qwen|gemma> [Q8_0|Q4_K_M|f16]}
+MODEL_KEY=${1:?usage: ./src/run.sh <qwen|gemma> [Q8_0|Q4_K_M|f16]}
 QUANT=${2:-Q8_0}
 case $MODEL_KEY in
   qwen)  REPO=ggml-org/Qwen2.5-Omni-3B-GGUF; NAME=Qwen2.5-Omni-3B ;;

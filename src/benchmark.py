@@ -24,10 +24,10 @@ from pathlib import Path
 
 import requests
 
-from coco import COCODataset
-from cnn_dailymail import CNNDailyMailDataset
-from dolly import DollyQADataset
-from librispeech import LibriSpeechDataset
+from loaders.coco import COCODataset
+from loaders.cnn_dailymail import CNNDailyMailDataset
+from loaders.dolly import DollyQADataset
+from loaders.librispeech import LibriSpeechDataset
 
 REPEATS = 5          # measured requests per workload (each a different input), times --concurrency
 WARMUPS = 1
@@ -215,7 +215,9 @@ class RemoteSamples:
         return median(cpu) if cpu else None, max(ram) if ram else None
 
 
-def request_once(session, url, payload):
+def request_once(session, url, payload, on_token=None):
+    """One streamed request. on_token, if given, is called with time.perf_counter() at each
+    output text token (interference.py uses it for the gaps between tokens)."""
     start = time.perf_counter()
     first = None
     usage, timing = {}, {}
@@ -243,6 +245,8 @@ def request_once(session, url, payload):
                         if first is None:
                             first = time.perf_counter() - start
                         count += 1
+                        if on_token is not None:
+                            on_token(time.perf_counter())
         elapsed = time.perf_counter() - start
         if first is None:
             raise RuntimeError('No output text token returned in stream')
@@ -357,7 +361,7 @@ def main():
         print('warning: llama-server did not report its slot count; slots column left empty', flush=True)
     elif max(args.concurrency) > slots and not args.allow_queue:
         parser.error(f'--concurrency {max(args.concurrency)} exceeds the server\'s {slots} slots; '
-                     f'restart it with SLOTS={max(args.concurrency)} ./run.sh <model>, '
+                     f'restart it with SLOTS={max(args.concurrency)} ./src/run.sh <model>, '
                      'or pass --allow-queue to measure waiting in the queue')
     run_id = args.run_id or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     print(f'run_id={run_id} node={node} model={model} build={build} slots={slots} ctx_per_slot={ctx} '

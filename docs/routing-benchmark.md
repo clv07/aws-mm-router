@@ -121,9 +121,9 @@ The cluster setup (instances, llama-server, SSH tunnels, profiling) is in `docs/
 **Capacity and traces.**
 
 ```bash
-python loadgen.py capacity --nodes nodes.json        # predicted time per workload and node, capacity
-python loadgen.py trace --rate 0.089 --duration 900 --seed 1 --out traces/cluster-load60.csv
-python loadgen.py trace --rate 0.134 --duration 900 --seed 1 --out traces/cluster-load90.csv
+python src/loadgen.py capacity --nodes nodes.json        # predicted time per workload and node, capacity
+python src/tracegen.py phase1 --rate 0.089 --duration 900 --seed 1 --out traces/cluster-load60.csv
+python src/tracegen.py phase1 --rate 0.134 --duration 900 --seed 1 --out traces/cluster-load90.csv
 ```
 
 `--mix` changes the mix (default `chat=50,text=20,image=15,audio=15`); a key is a modality or a workload id, e.g. `03=10` for 3,072-token text.
@@ -131,10 +131,10 @@ python loadgen.py trace --rate 0.134 --duration 900 --seed 1 --out traces/cluste
 **Runs.**
 
 ```bash
-python loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy ect --cluster c7a-c7i-m8g --requests 10   # quick test
+python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy ect --cluster c7a-c7i-m8g --requests 10   # quick test
 for load in 60 90; do
   for p in rr least ect; do
-    python loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g
+    python src/loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g
   done
 done
 ```
