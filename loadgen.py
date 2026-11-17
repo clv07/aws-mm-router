@@ -4,6 +4,7 @@
   python loadgen.py trace --rate 0.2 --duration 900 --seed 1     # writes traces/<name>.csv
   python loadgen.py capacity --nodes nodes.json                   # predicted cost per node, capacity
   python loadgen.py run --trace traces/<name>.csv --nodes nodes.json --policy ect --cluster C
+  python loadgen.py sim --trace traces/<name>.csv --nodes nodes.json   # every policy, simulated
 
 A trace fixes every request's arrival time, workload (benchmark.py RUNS) and input, so every
 policy and cluster replays exactly the same traffic. Each request is sent at its arrival time
@@ -13,8 +14,10 @@ the request then waits in that node's llama-server queue if all of its slots are
 from __future__ import annotations
 
 import argparse
+from collections import deque
 from contextlib import ExitStack
 import csv
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -30,7 +33,9 @@ from benchmark import (RESULTS_DIR, RUNS, RemoteSamples, append_rows, derived, m
 TRACES_DIR = Path("traces")
 OUT_DIR = Path("results/routing")
 DEFAULT_MIX = "chat=50,text=20,image=15,audio=15"   # percent per modality; sizes uniform within it
-POLICIES = ("random", "rr", "least", "ect")
+POLICIES = ("random", "rr", "least", "ect")      # commit on arrival; `run` and `sim`
+QUEUE_POLICIES = ("slo",)                         # router queue, dispatch when a slot frees; `sim` only
+INF = float('inf')
 TRACE_FIELDS = ["id", "arrival_s", "run", "modality", "size", "input"]
 REQUEST_FIELDS = ["run_id", "timestamp_utc", "cluster", "trace", "policy", "seed", "output_mode",
                   "id", "arrival_s", "sent_s", "node", "model", "node_inflight", "predicted_s",
@@ -202,11 +207,76 @@ def capacity(args):
     print_model(nodes, *node_model(nodes), parse_mix(args.mix))
 
 
+def phase1_requests(profile):
+    """Successful concurrency-1 requests (both output modes) in one Phase 1 results folder."""
+    rows = []
+    for file in ('requests.csv', 'requests_v2.csv'):
+        path = RESULTS_DIR / profile / file
+        rows += [r for r in (read_csv(path) if path.exists() else [])
+                 if r.get('concurrency') == '1' and r['status'] == 'ok' and r['e2e_s']
+                 and r['prompt_tokens'] and r['output_tokens']]
+    return rows
+
+
+def fit_service_model(nodes):
+    """Token-based service time per node, S(r, n) = a[n, m] + b[n, m] * prompt_tokens
+    + d[n] * est_output_tokens, fit on the node's Phase 1 concurrency-1 requests. d is the median
+    time per output token (tpot); a and b are a least-squares line per modality through
+    e2e - d * output_tokens. Also keeps, per workload, the median prompt and natural output
+    length, the natural e2e samples (for the simulator), and the workloads that failed (won't fit)."""
+    model = {}
+    for name, cfg in nodes.items():
+        rows = phase1_requests(cfg['profile'])
+        if not rows:
+            raise SystemExit(f'node {name!r}: no concurrency-1 requests in {cfg["profile"]}')
+        d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+        a, b = {}, {}
+        for m in {r['modality'] for r in rows}:
+            xs = [float(r['prompt_tokens']) for r in rows if r['modality'] == m]
+            ys = [float(r['e2e_s']) - d * float(r['output_tokens']) for r in rows if r['modality'] == m]
+            mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+            var = sum((x - mx) ** 2 for x in xs)
+            b[m] = max(0.0, sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / var) if var else 0.0
+            a[m] = my - b[m] * mx
+        natural = [r for r in rows if r['output_mode'] == 'natural']
+        failed = set()
+        for file in ('summary.csv', 'summary_v2.csv'):
+            path = RESULTS_DIR / cfg['profile'] / file
+            failed |= {r['run'] for r in (read_csv(path) if path.exists() else [])
+                       if r.get('concurrency') == '1' and r['failed'] not in ('', '0')}
+        model[name] = {
+            'a': a, 'b': b, 'd': d, 'infeasible': failed,
+            'prompt': {run: median([float(r['prompt_tokens']) for r in rows if r['run'] == run])
+                       for run in RUNS if any(r['run'] == run for r in rows)},
+            'out': {run: median([float(r['output_tokens']) for r in natural if r['run'] == run])
+                    for run in RUNS if any(r['run'] == run for r in natural)},
+            'samples': {run: [float(r['e2e_s']) for r in natural if r['run'] == run]
+                        for run in RUNS if any(r['run'] == run for r in natural)}}
+    return model
+
+
 # ---------------------------------------------------------------- routing
 
-class Router:
-    """Picks the node for each request on arrival and tracks what every node has been given.
+@dataclass(eq=False)
+class Request:
+    id: int
+    run: str
+    modality: str
+    prompt_tokens: float
+    arrival: float
+    deadline: float
 
+
+# Defaults of the full method (SLO-aware Sufferage); the ect baseline is
+# dict(service='median', slowdown='ect', wait='backlog', correction=False, feasibility=False).
+COST_DEFAULTS = dict(service='token', slowdown='fixed', wait='slot', correction=True, feasibility=True)
+DECISION_DEFAULTS = dict(order='slack', tiebreak='sufferage', aging=0.0, wait_for_best=True)
+
+
+class Router:
+    """Picks the node for each request and tracks what every node has been given.
+
+    Commit on arrival (assign/done):
     random: uniform at random (seeded).
     rr:     nodes in nodes.json order, in turn.
     least:  fewest requests in flight per slot (ties broken at random).
@@ -216,8 +286,13 @@ class Router:
             nothing in flight. A request r finishes on node n at about
                 now + (backlog_n + cost_n(r)) / slot_gain_n
             and goes to the node where that is smallest.
+
+    Router queue (dispatch), requests wait here until a slot frees:
+    slo:    SLO-aware Sufferage. cost_model() gives T(r, n) = now + W_n + S(r, n) * f_n(k) * c_n;
+            pick() sends the queued request with the least slack (deadline - best T, ties to the
+            largest sufferage, second-best T - best T) to its best node.
     """
-    def __init__(self, policy, nodes, costs, gains, seed):
+    def __init__(self, policy, nodes, costs, gains, seed, model=None, cost=None, decision=None):
         self.policy = policy
         self.names = list(nodes)
         self.slots = {n: nodes[n]['slots'] for n in nodes}
@@ -228,6 +303,16 @@ class Router:
         self.backlog = {n: 0.0 for n in self.names}
         self.updated = {n: 0.0 for n in self.names}
         self.lock = threading.Lock()
+        # Router queue and node state.
+        self.model = model
+        self.cost = {**COST_DEFAULTS, **(cost or {})}
+        self.decision = {**DECISION_DEFAULTS, **(decision or {})}
+        self.queue = []
+        self.running = {n: {} for n in self.names}     # request id -> predicted finish
+        self.started = {}                              # request id -> (dispatch time, predicted S * f)
+        self.healthy = {n: True for n in self.names}
+        self.mem_limit = {n: model[n]['infeasible'] if model else set() for n in self.names}
+        self.c = {n: 1.0 for n in self.names}
 
     def _backlog(self, n, now):
         self.backlog[n] = max(0.0, self.backlog[n] - self.gains[n] * (now - self.updated[n]))
@@ -260,6 +345,117 @@ class Router:
             self._backlog(n, now)
             if self.inflight[n] == 0:
                 self.backlog[n] = 0.0
+
+    def cost_model(self, r, n, now, service='token', slowdown='fixed', wait='slot',
+                   correction=True, feasibility=True):
+        """
+        Returns (T, S * f): predicted finish time T(r, n) = now + W_n + S(r, n) * f_n(k) * c_n,
+        and the uncorrected run time S * f. (inf, inf) if request r can't run on node n.
+          W_n     wait: time until r gets a slot on n
+          S(r, n) service: time r takes on n when running alone
+          f_n(k)  slowdown: how much slower r runs while sharing n with k-1 others
+          c_n     correction: learned ratio of actual to predicted run time on n
+        """
+        # feasibility: node is healthy and r fits in its memory
+        if feasibility and (not self.healthy[n] or r.run in self.mem_limit[n]):
+            return INF, INF
+
+        fit = self.model[n] if self.model else {}
+        n_running = len(self.running[n])
+        has_free_slot = n_running < self.slots[n]
+        
+        # S: token-based fit, or the Phase 1 median if there is no fit
+        service_time = (fit['a'][r.modality] + fit['b'][r.modality] * r.prompt_tokens
+                        + fit['d'] * fit['out'][r.run]
+                        if service == 'token' and r.modality in fit['a'] and r.run in fit['out']
+                        else self.costs[n][r.run])
+        
+        # f: k = requests sharing n once r starts
+        k = n_running + 1 if has_free_slot else self.slots[n]
+        slowdown_factor = (1 / self.gains[n] if slowdown == 'ect'
+                           else 1.0 if k == 1 else k / self.gains[n])
+        
+        # W: ect backlog, or until the first running request finishes if n is full
+        wait_time = (self._backlog(n, now) / self.gains[n] if wait == 'backlog'
+                     else max(0.0, min(self.running[n].values()) - now)
+                     if wait == 'slot' and not has_free_slot else 0.0)
+        
+        correction_factor = self.c[n] if correction else 1.0
+        run_time = service_time * slowdown_factor
+
+        return now + wait_time + run_time * correction_factor, run_time
+
+    # decision rule
+    def pick(self, now, order='slack', tiebreak='sufferage', aging=0.0, wait_for_best=True):
+        """
+        Select node to run the request.
+        Most urgent (smallest priority) queued request that can start now, with its target node.
+        """
+        best = None
+        for r in self.queue:
+            ts = sorted((self.cost_model(r, n, now, **self.cost)[0], i, n)
+                        for i, n in enumerate(self.names))
+            best_t, second_t = ts[0][0], ts[1][0] if len(ts) > 1 else INF
+
+            # doesn't fit in any node now
+            if best_t == INF: 
+                continue
+            
+            # sufferage: how much later r finishes if it misses its best node
+            sufferage = second_t - best_t
+            
+            # order: 
+            # slack = time to spare before the deadline
+            # sufferage = most to lose first
+            # fifo = earliest arrival first
+            priority = {'slack': r.deadline - best_t, 'sufferage': -sufferage,
+                        'fifo': r.arrival}[order]
+            
+            # aging: the longer r waits, the more urgent it gets
+            priority -= aging * (now - r.arrival)
+            
+            # wait_for_best: only the best node, even if busy; else the best node with a free slot
+            free = [n for t, _, n in ts if t < INF and len(self.running[n]) < self.slots[n]]
+            target = (ts[0][2] if ts[0][2] in free else None) if wait_for_best else \
+                     (free[0] if free else None)
+            if target is None:
+                continue
+            
+            # tiebreak: equal priority goes to the larger sufferage, then the earlier arrival
+            key = (priority, -sufferage if tiebreak == 'sufferage' else 0.0, r.arrival)
+            if best is None or key < best[0]:
+                best = (key, r, target)
+        return best[1:] if best else None
+
+    # queue
+    def dispatch(self, now, arrived=None, finished=None):
+        """Handles one event, then sends queued requests to free slots while pick() finds one.
+        arrived: a new request. 
+        finished: (request, node, seconds from dispatch to finish, ok).
+        Returns [(request, node)] for the caller to forward (HTTP or simulator).
+        """
+        if arrived:
+            self.queue.append(arrived)
+        if finished:
+            r, n, actual, ok = finished
+            del self.running[n][r.id]
+            _, predicted = self.started.pop(r.id)
+            if not ok:   # a failed request marks the node unhealthy
+                self.healthy[n] = False
+            elif predicted > 0:   # c_n: moving average of actual / predicted run time
+                self.c[n] = 0.9 * self.c[n] + 0.1 * actual / predicted
+            self._backlog(n, now)
+            if not self.running[n]:
+                self.backlog[n] = 0.0
+        out = []
+        while (choice := self.pick(now, **self.decision)) is not None:
+            r, n = choice
+            self.queue.remove(r)
+            self.running[n][r.id], sf = self.cost_model(r, n, now, **{**self.cost, 'feasibility': False})
+            self.started[r.id] = (now, sf)
+            self.backlog[n] += self.costs[n][r.run]
+            out.append((r, n))
+        return out
 
 
 # ---------------------------------------------------------------- replay
@@ -392,6 +588,155 @@ def run(args):
     print(f'Appended results to {OUT_DIR}/requests.csv and summary.csv (run_id={run_id})')
 
 
+# ---------------------------------------------------------------- simulation
+
+SIM_FIELDS = ["run_id", "timestamp_utc", "trace", "policy", "seed", "slo_mult", "group", "requests",
+              "median_e2e_s", "p95_e2e_s", "slo_attainment", "req_s", "usd_per_1k_requests",
+              "decision_us"]
+
+
+def sim_policy(policy, nodes, costs, gains, model, reqs, actual, seed):
+    """Replays reqs on simulated nodes; returns ({id: {node, dispatch, finish}}, decision times in s).
+    A node runs up to `slots` requests at once: alone at full speed, k at once at slot_gain / k
+    each. Commit-on-arrival policies wait in the node's own FIFO queue when its slots are busy;
+    the slo policy waits in the router queue."""
+    router = Router(policy, nodes, costs, gains, seed, model)
+    running = {n: {} for n in nodes}   # id -> remaining seconds of work at full speed
+    waiting = {n: deque() for n in nodes}
+    by_id = {r.id: r for r in reqs}
+    arrivals = deque(sorted(reqs, key=lambda r: r.arrival))
+    log, decisions, now = {}, [], 0.0
+
+    def rate(n):
+        return 1.0 if len(running[n]) <= 1 else gains[n] / len(running[n])
+
+    def start(r, n):
+        running[n][r.id] = actual[r.id, n]
+        log[r.id] = {'node': n, 'dispatch': now}
+
+    def timed(fn, *a):
+        t0 = time.perf_counter()
+        out = fn(*a)
+        decisions.append(time.perf_counter() - t0)
+        return out
+
+    while arrivals or any(running.values()):
+        finish, who = INF, None
+        for n in nodes:
+            if running[n]:
+                i = min(running[n], key=running[n].get)
+                t = now + running[n][i] / rate(n)
+                if t < finish:
+                    finish, who = t, (n, i)
+        arrival = arrivals[0].arrival if arrivals else INF
+        t = min(finish, arrival)
+        for n in nodes:
+            k = rate(n) * (t - now)
+            for i in running[n]:
+                running[n][i] -= k
+        now = t
+        if finish <= arrival:
+            n, i = who
+            del running[n][i]
+            log[i]['finish'] = now
+            if policy in POLICIES:
+                router.done(n, now)
+                if waiting[n]:
+                    start(waiting[n].popleft(), n)
+            else:
+                for r, m in timed(router.dispatch, now, None,
+                                  (by_id[i], n, now - log[i]['dispatch'], True)):
+                    start(r, m)
+        else:
+            r = arrivals.popleft()
+            if policy in POLICIES:
+                n = timed(router.assign, r.run, now)[0]
+                if len(running[n]) < nodes[n]['slots']:
+                    start(r, n)
+                else:
+                    waiting[n].append(r)
+            else:
+                for q, m in timed(router.dispatch, now, r):
+                    start(q, m)
+    return log, decisions
+
+
+def simulate(args):
+    nodes = load_nodes(args.nodes)
+    slots = {k: int(v) for k, _, v in (p.partition('=') for p in args.slots.split(',') if p)}
+    for name, cfg in nodes.items():
+        cfg['slots'] = slots.get(name, 2)
+    costs, estimated, gains = node_model(nodes)
+    model = fit_service_model(nodes)
+    trace = read_csv(args.trace)[:args.requests]
+    if not trace:
+        raise SystemExit(f'{args.trace} has no requests')
+    policies = args.policies.split(',')
+    for p in policies:
+        if p not in POLICIES + QUEUE_POLICIES:
+            raise SystemExit(f'unknown policy {p!r}: use {", ".join(POLICIES + QUEUE_POLICIES)}')
+
+    # Prompt tokens per request: as logged when this trace ran on the cluster (tokenizing is
+    # deterministic, so the router could count them on arrival), else the Phase 1 median.
+    stem = Path(args.trace).stem
+    logged = {}
+    if (OUT_DIR / 'requests.csv').exists():
+        for r in read_csv(OUT_DIR / 'requests.csv'):
+            if r['trace'] == stem and r['status'] == 'ok' and r['prompt_tokens']:
+                logged.setdefault(r['id'], float(r['prompt_tokens']))
+    first = model[next(iter(nodes))]
+    reqs = []
+    for q in trace:
+        arrival = float(q['arrival_s'])
+        slo = args.slo * min(costs[n][q['run']] for n in nodes)   # x alone time on the fastest node
+        reqs.append(Request(int(q['id']), q['run'], q['modality'],
+                            logged.get(q['id'], first['prompt'].get(q['run'], 0.0)),
+                            arrival, arrival + slo))
+    # Actual time alone, drawn once from Phase 1 requests (not from the cost model) so every
+    # policy sees the same service times; the Phase 1 median if a node has no sample.
+    rng = random.Random(args.seed)
+    actual = {(r.id, n): rng.choice(model[n]['samples'].get(r.run) or [costs[n][r.run]])
+              for r in reqs for n in nodes}
+    print(f'simulating {len(reqs)} requests of {args.trace} over '
+          + ', '.join(f'{n} ({c["slots"]} slots, gain {gains[n]:.2f})' for n, c in nodes.items())
+          + f'; SLO = {args.slo:g} x alone time on the fastest node; '
+          f'{sum(q["id"] in logged for q in trace)} prompt token counts from {OUT_DIR}/requests.csv')
+
+    run_id = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    price = sum(c.get('price_per_hour') or 0 for c in nodes.values())
+    has_price = all(c.get('price_per_hour') for c in nodes.values())
+    summaries = []
+    print(f'  {"policy":<7}{"group":<7}{"n":>5}{"p50 s":>9}{"p95 s":>9}{"SLO met":>9}'
+          f'{"req/s":>8}{"$/1k":>7}{"decide µs":>11}  share per node')
+    for policy in policies:
+        log, decisions = sim_policy(policy, nodes, costs, gains, model, reqs, actual, args.seed)
+        makespan = max(e['finish'] for e in log.values())
+        decide_us = sum(decisions) / len(decisions) * 1e6
+        groups = {'all': reqs, **{m: [r for r in reqs if r.modality == m]
+                                  for m in ('chat', 'text', 'image', 'audio')}}
+        for group, members in groups.items():
+            if not members:
+                continue
+            e2e = [log[r.id]['finish'] - r.arrival for r in members]
+            met = sum(log[r.id]['finish'] <= r.deadline for r in members) / len(members)
+            usd = price * makespan / 3600 / len(reqs) * 1000 if group == 'all' and has_price else None
+            share = ' '.join(f'{n.split(".")[0]}={sum(log[r.id]["node"] == n for r in members) / len(members):.0%}'
+                             for n in nodes)
+            summaries.append({
+                'run_id': run_id, 'timestamp_utc': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                'trace': stem, 'policy': policy, 'seed': args.seed, 'slo_mult': args.slo,
+                'group': group, 'requests': len(members), 'median_e2e_s': median(e2e),
+                'p95_e2e_s': percentile(e2e, .95), 'slo_attainment': met,
+                'req_s': len(members) / makespan if group == 'all' else None,
+                'usd_per_1k_requests': usd, 'decision_us': decide_us if group == 'all' else None})
+            print(f'  {policy if group == "all" else "":<7}{group:<7}{len(members):>5}'
+                  f'{median(e2e):>9.1f}{percentile(e2e, .95):>9.1f}{met:>9.0%}'
+                  + (f'{len(members) / makespan:>8.3f}{usd or 0:>7.2f}{decide_us:>11.1f}'
+                     if group == 'all' else ' ' * 26) + f'  {share}')
+    append_rows(OUT_DIR / 'sim_summary.csv', SIM_FIELDS, summaries)
+    print(f'Appended results to {OUT_DIR}/sim_summary.csv (run_id={run_id})')
+
+
 def main():
     parser = argparse.ArgumentParser(description='Open-loop load generator and router for the routing benchmarks.')
     sub = parser.add_subparsers(dest='command', required=True)
@@ -413,8 +758,19 @@ def main():
     p.add_argument('--output', choices=('natural', 'fixed'), default='natural')
     p.add_argument('--requests', type=int, help='replay only the first N requests (quick test)')
     p.add_argument('--no-warmup', action='store_true')
+    p = sub.add_parser('sim', help='simulate a trace over the nodes with every policy')
+    p.add_argument('--trace', required=True)
+    p.add_argument('--nodes', default='nodes.json')
+    p.add_argument('--policies', default='rr,least,ect,slo',
+                   help='comma-separated, from ' + ', '.join(POLICIES + QUEUE_POLICIES))
+    p.add_argument('--slots', default='c7i.xlarge=1',
+                   help='slots per node as name=k,... (default 2 for nodes not listed)')
+    p.add_argument('--slo', type=float, default=5.0,
+                   help='SLO as a multiple of the alone time on the fastest node (default 5)')
+    p.add_argument('--seed', type=int, default=0, help='service time draws and tie-breaks')
+    p.add_argument('--requests', type=int, help='simulate only the first N requests')
     args = parser.parse_args()
-    {'trace': make_trace, 'capacity': capacity, 'run': run}[args.command](args)
+    {'trace': make_trace, 'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
 
 
 if __name__ == '__main__':
