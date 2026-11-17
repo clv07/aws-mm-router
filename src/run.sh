@@ -4,6 +4,11 @@
 #   stays Q8_0 for every quant, so only the language model's weights change.
 #   SLOTS = requests llama-server processes at once (-np, default 2); the context grows with it
 #   so every slot keeps 4096 tokens. Override the total with CTX=... if needed.
+#   GPU=1 = build llama.cpp with CUDA (into ~/llama.cpp/build-cuda) and offload every layer and the
+#   image/audio encoder to the GPU (-ngl 99). Needs nvcc and nvidia-smi: use the AWS "Deep Learning
+#   Base OSS Nvidia Driver GPU AMI (Ubuntu 24.04)". CUDA_ARCH = GPU compute capability to compile
+#   for (default 75 = Tesla T4 on g4dn; 86 = A10G on g5, 89 = L4 on g6).
+#   EXTRA_ARGS = more llama-server flags, e.g. EXTRA_ARGS="-ub 1024" (default: none).
 # Build llama.cpp and download the model if missing, (re)start llama-server in tmux only if it
 # isn't already serving this model with these flags, and wait until it is ready.
 set -euo pipefail
@@ -20,15 +25,28 @@ MMPROJ=mmproj-$NAME-Q8_0.gguf
 LLAMA_COMMIT=8642541b2     # the llama.cpp build in README.md
 SLOTS=${SLOTS:-2}               # llama-server -np: requests processed at once
 CTX=${CTX:-$((4096 * SLOTS))}   # llama-server -c: each slot gets CTX / SLOTS tokens (4096 by default)
+GPU=${GPU:-0}
+if [ "$GPU" = 1 ]; then
+  BUILD=build-cuda   # separate from the CPU build, so one machine can run both
+  CMAKE_FLAGS=(-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCH:-75}")
+  OFFLOAD="-ngl 99"  # every layer on the GPU; the encoder (mmproj) goes to the GPU by default
+  export PATH=/usr/local/cuda/bin:$PATH
+  nvidia-smi >/dev/null 2>&1 || { echo "GPU=1 but nvidia-smi fails: no NVIDIA driver (use the Deep Learning Base GPU AMI)" >&2; exit 1; }
+else
+  BUILD=build; CMAKE_FLAGS=(); OFFLOAD=""
+fi
 
 # 1. llama.cpp
-if [ ! -x ~/llama.cpp/build/bin/llama-server ]; then
-  echo "building llama.cpp $LLAMA_COMMIT"
+if [ ! -x ~/llama.cpp/$BUILD/bin/llama-server ]; then
+  echo "building llama.cpp $LLAMA_COMMIT ($BUILD)"
   sudo apt-get update -qq && sudo apt-get install -y -qq git cmake build-essential tmux curl python3-venv
+  if [ "$GPU" = 1 ] && ! command -v nvcc >/dev/null; then
+    echo "GPU=1 but nvcc (CUDA toolkit) is not in /usr/local/cuda/bin" >&2; exit 1
+  fi
   [ -d ~/llama.cpp ] || git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
   (cd ~/llama.cpp && git checkout -q "$LLAMA_COMMIT" &&
-   cmake -B build -DLLAMA_CURL=OFF >~/llama-build.log 2>&1 &&
-   cmake --build build -j"$(nproc)" --target llama-server >>~/llama-build.log 2>&1) ||
+   cmake -B $BUILD -DLLAMA_CURL=OFF ${CMAKE_FLAGS[@]+"${CMAKE_FLAGS[@]}"} >~/llama-build.log 2>&1 &&
+   cmake --build $BUILD -j"$(nproc)" --target llama-server >>~/llama-build.log 2>&1) ||
     { echo "llama.cpp build failed, last lines of ~/llama-build.log:" >&2; tail -20 ~/llama-build.log >&2; exit 1; }
 fi
 
@@ -43,7 +61,7 @@ for f in "$MODEL" "$MMPROJ"; do
 done
 
 # 3. llama-server, listening on localhost only (benchmark.py runs on the node; loadgen.py reaches it through SSH tunnels)
-CMD="$HOME/llama.cpp/build/bin/llama-server -m $HOME/models/$MODEL --mmproj $HOME/models/$MMPROJ --host 127.0.0.1 --port 8080 -c $CTX -np $SLOTS -t $(nproc)"
+CMD="$HOME/llama.cpp/$BUILD/bin/llama-server -m $HOME/models/$MODEL --mmproj $HOME/models/$MMPROJ --host 127.0.0.1 --port 8080 -c $CTX -np $SLOTS -t $(nproc)${OFFLOAD:+ $OFFLOAD}${EXTRA_ARGS:+ $EXTRA_ARGS}"
 PID=$(pgrep -x llama-server || true)
 if [ -z "$PID" ] || [ "$(ps -o args= -p "$PID")" != "$CMD" ]; then
   echo "starting llama-server"
@@ -63,4 +81,4 @@ until curl -sf localhost:8080/health >/dev/null; do
   fi
   sleep 1
 done
-echo "llama-server ready (pid $(pgrep -x llama-server), $SLOTS slots, context $CTX); watch it with: tmux attach -t llama"
+echo "llama-server ready (pid $(pgrep -x llama-server), $SLOTS slots, context $CTX, $([ "$GPU" = 1 ] && echo GPU || echo CPU)); watch it with: tmux attach -t llama"
