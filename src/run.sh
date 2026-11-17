@@ -6,8 +6,9 @@
 #   so every slot keeps 4096 tokens. Override the total with CTX=... if needed.
 #   GPU=1 = build llama.cpp with CUDA (into ~/llama.cpp/build-cuda) and offload every layer and the
 #   image/audio encoder to the GPU (-ngl 99). Needs nvcc and nvidia-smi: use the AWS "Deep Learning
-#   Base OSS Nvidia Driver GPU AMI (Ubuntu 24.04)". CUDA_ARCH = GPU compute capability to compile
-#   for (default 75 = Tesla T4 on g4dn; 86 = A10G on g5, 89 = L4 on g6).
+#   Base OSS Nvidia Driver GPU AMI (Ubuntu 24.04)", or run ./src/setup.sh once. CUDA_ARCH = GPU
+#   compute capability to compile for (default: read from nvidia-smi, e.g. 75 = Tesla T4 on g4dn,
+#   86 = A10G on g5, 89 = L4 on g6).
 #   EXTRA_ARGS = more llama-server flags, e.g. EXTRA_ARGS="-ub 1024" (default: none).
 # Build llama.cpp and download the model if missing, (re)start llama-server in tmux only if it
 # isn't already serving this model with these flags, and wait until it is ready.
@@ -27,11 +28,12 @@ SLOTS=${SLOTS:-2}               # llama-server -np: requests processed at once
 CTX=${CTX:-$((4096 * SLOTS))}   # llama-server -c: each slot gets CTX / SLOTS tokens (4096 by default)
 GPU=${GPU:-0}
 if [ "$GPU" = 1 ]; then
-  BUILD=build-cuda   # separate from the CPU build, so one machine can run both
-  CMAKE_FLAGS=(-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCH:-75}")
-  OFFLOAD="-ngl 99"  # every layer on the GPU; the encoder (mmproj) goes to the GPU by default
   export PATH=/usr/local/cuda/bin:$PATH
-  nvidia-smi >/dev/null 2>&1 || { echo "GPU=1 but nvidia-smi fails: no NVIDIA driver (use the Deep Learning Base GPU AMI)" >&2; exit 1; }
+  nvidia-smi >/dev/null 2>&1 || { echo "GPU=1 but nvidia-smi fails: no NVIDIA driver (run ./src/setup.sh, or use the Deep Learning Base GPU AMI)" >&2; exit 1; }
+  CUDA_ARCH=${CUDA_ARCH:-$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1 | tr -d '.[:space:]')}
+  BUILD=build-cuda   # separate from the CPU build, so one machine can run both
+  CMAKE_FLAGS=(-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES="$CUDA_ARCH")
+  OFFLOAD="-ngl 99"  # every layer on the GPU; the encoder (mmproj) goes to the GPU by default
 else
   BUILD=build; CMAKE_FLAGS=(); OFFLOAD=""
 fi
@@ -41,7 +43,7 @@ if [ ! -x ~/llama.cpp/$BUILD/bin/llama-server ]; then
   echo "building llama.cpp $LLAMA_COMMIT ($BUILD)"
   sudo apt-get update -qq && sudo apt-get install -y -qq git cmake build-essential tmux curl python3-venv
   if [ "$GPU" = 1 ] && ! command -v nvcc >/dev/null; then
-    echo "GPU=1 but nvcc (CUDA toolkit) is not in /usr/local/cuda/bin" >&2; exit 1
+    echo "GPU=1 but nvcc (CUDA toolkit) is not installed: run ./src/setup.sh" >&2; exit 1
   fi
   [ -d ~/llama.cpp ] || git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
   (cd ~/llama.cpp && git checkout -q "$LLAMA_COMMIT" &&
