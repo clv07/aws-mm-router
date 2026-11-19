@@ -30,7 +30,9 @@ from benchmark import (RESULTS_DIR, RUNS, RemoteSamples, append_rows, derived, m
 
 OUT_DIR = Path("results/routing")
 DEFAULT_MIX = "chat=50,text=20,image=15,audio=15"   # percent per modality; sizes uniform within it
-POLICIES = ("random", "rr", "least", "ect")
+POLICIES = ("random", "rr", "least", "ect")      # commit on arrival; `run` and `sim`
+QUEUE_POLICIES = ("slo",)                         # router queue, dispatch when a slot frees; `sim` only
+INF = float('inf')
 REQUEST_FIELDS = ["run_id", "timestamp_utc", "cluster", "trace", "policy", "seed", "output_mode",
                   "id", "arrival_s", "sent_s", "node", "model", "node_inflight", "predicted_s",
                   "predicted_e2e_s", "run", "modality", "size", "input", "status", "error",
@@ -732,7 +734,7 @@ def main():
     p.add_argument('--seed', type=int, default=0, help='service time draws and tie-breaks')
     p.add_argument('--requests', type=int, help='simulate only the first N requests')
     args = parser.parse_args()
-    {'capacity': capacity, 'run': run}[args.command](args)
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
 
 
 if __name__ == '__main__':
