@@ -7,9 +7,12 @@ src/
   benchmark.py      Phase 1 single-node benchmark: sends the 9 workloads to one llama-server and records
                     latency, prefill/decode speed, CPU and memory
   quality.py        answer quality per quantization (ROUGE-L vs f16, word error rate)
-  loadgen.py        routing: the routing policies (rr, least, ect, and new ones) and the runner that
-                    replays a trace over the cluster with one of them; also `capacity` (predicted
-                    cluster capacity from the node profiles)
+  router.py         the routing algorithm: Router with the policies (random, rr, least, ect, slo),
+                    its cost model, and the node models it is built from (Phase 1 profiles +
+                    nodes.json); a library, no command line
+  main.py           the routing runner: `capacity` (predicted cluster capacity), `run` (replays a
+                    trace over the live cluster with one policy), `sim` (simulates every policy);
+                    summary metrics are in its evaluation stage (evaluate_run / evaluate_sim)
   tracegen.py       all trace generation: steady, bursty, step, ramp and replayed arrivals, mixes,
                     deadlines (`make`), and the routing benchmarks' traces (`phase1`)
                     (docs/phase2-traffic-generation.md)
@@ -41,7 +44,7 @@ Then, for example:
 ./src/run.sh qwen                                           # start llama-server
 python src/benchmark.py --node c7i.2xlarge                  # profile one node
 python src/tracegen.py make --arrivals onoff --load 0.9 --nodes nodes.json
-python src/loadgen.py run --trace traces/phase2/... --nodes nodes.json --policy ect --cluster C
+python src/main.py run --trace traces/phase2/... --nodes nodes.json --policy ect --cluster C
 python src/interference.py run --runs 02 04 07 --pairs 02+04 04+07   # text+image, image+audio
 ```
 

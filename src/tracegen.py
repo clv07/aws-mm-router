@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 2 traffic generator: traces for loadgen.py with steady, bursty, step, ramp or replayed
+"""Phase 2 traffic generator: traces for main.py with steady, bursty, step, ramp or replayed
 arrivals, named workload mixes, and per-request deadlines.
 
   python src/tracegen.py make --arrivals poisson --load 0.9 --nodes nodes.json --mix default --seed 1
@@ -8,7 +8,7 @@ arrivals, named workload mixes, and per-request deadlines.
   python src/tracegen.py describe traces/phase2/*.csv
   python src/tracegen.py phase1 --rate 0.089 --seed 1 --out traces/cluster-load60.csv   # routing benchmarks' traces
 
-A trace is a CSV that `loadgen.py run` replays unchanged (it reads id, arrival_s, run, modality,
+A trace is a CSV that `main.py run` replays unchanged (it reads id, arrival_s, run, modality,
 size and input, and ignores the other columns), plus a JSON file next to it with every parameter
 and summary statistics, so each result can be traced back to how its traffic was made.
 
@@ -30,7 +30,8 @@ from pathlib import Path
 import random
 import statistics
 
-from loadgen import DEFAULT_MIX, RUNS, node_model, load_nodes, parse_mix
+from benchmark import RUNS
+from router import load_nodes, node_model
 
 TRACES_DIR = Path("traces")
 
@@ -42,9 +43,26 @@ MIXES = {   # percent per modality; sizes share their modality's weight equally
     'image-heavy':  'chat=20,text=10,image=60,audio=10',
     'audio-heavy':  'chat=20,text=10,image=10,audio=60',
 }
+DEFAULT_MIX = MIXES['default']   # also main.py capacity's default
 SLO_DEFAULT = 'chat=3,text=4,image=4,audio=4'   # deadline = factor x fastest solo time of that workload
 FIELDS = ['id', 'arrival_s', 'run', 'modality', 'size', 'input', 'slo_factor', 'deadline_s', 'burst']
 SEED_STREAMS = {'arrivals': 0, 'workloads': 1, 'bursts': 2}   # independent random streams per seed
+
+
+def parse_mix(text):
+    """'chat=50,text=20,...' -> probability per run id; a key is a modality (its sizes share the weight) or a run id."""
+    weights = {}
+    for part in text.split(','):
+        key, _, weight = part.partition('=')
+        key = key.strip()
+        runs = [key] if key in RUNS else [r for r, (m, _) in RUNS.items() if m == key]
+        if not runs or not weight:
+            raise SystemExit(f'bad --mix entry {part!r}: use <modality>=<weight> '
+                             f'(chat, text, image, audio) or <run id>=<weight> (00-08)')
+        for r in runs:
+            weights[r] = weights.get(r, 0) + float(weight) / len(runs)
+    total = sum(weights.values())
+    return {r: w / total for r, w in sorted(weights.items())}
 
 
 # ---------------------------------------------------------------- rate shapes
@@ -219,8 +237,9 @@ def default_name(args, rate):
 
 
 # ---------------------------------------------------------------- phase1 (routing benchmarks)
-# The generator that made traces/cluster-load60.csv and cluster-load90.csv, moved here from
-# loadgen.py unchanged so those traces stay reproducible. New traces should use `make`.
+# The generator that made traces/cluster-load60.csv and cluster-load90.csv, moved here unchanged
+# from loadgen.py (since split into router.py and main.py) so those traces stay reproducible.
+# New traces should use `make`.
 
 TRACE_FIELDS = ["id", "arrival_s", "run", "modality", "size", "input"]
 

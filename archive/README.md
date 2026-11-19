@@ -5,7 +5,7 @@ Early test runs from before the baseline and routing benchmarks were set up. The
 | File                                  | What it is |
 | ------------------------------------- | ---------- |
 | `results/benchmark.csv`               | A first test of `benchmark.py` (Oct 29): 9 workloads, one request each, on a c8g.4xlarge, in an older results format. |
-| `roundrobin.py`                       | An early closed-loop round-robin baseline over two nodes over SSH tunnels: at most `--inflight` requests outstanding, request *i* goes to node *i* mod 2. Replaced by `loadgen.py` (`--policy rr`, open loop). |
+| `roundrobin.py`                       | An early closed-loop round-robin baseline over two nodes over SSH tunnels: at most `--inflight` requests outstanding, request *i* goes to node *i* mod 2. Replaced by `main.py run` (`--policy rr`, open loop). |
 | `results/roundrobin.csv`, `results/roundrobin_requests.csv` | Its results (Oct 29): 50 requests over a c7a.2xlarge and a c7i.2xlarge with 4 in flight, per group and per request. |
 
 `roundrobin.py` was written for the original flat layout, where `benchmark.py` and the dataset scripts sat at the repository root. To run it, check out commit `fdb940d` (the last commit with that layout) and run it from the root after moving it back there.

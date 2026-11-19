@@ -152,18 +152,18 @@ These steps match the runs in `results/routing/`; [`docs/routing-cluster-runbook
 
 7. **Pick the loads.** Copy the other two profiles to the c7a, then:
    ```bash
-   python src/loadgen.py capacity --nodes nodes.json
+   python src/main.py capacity --nodes nodes.json
    python src/tracegen.py phase1 --rate <R60> --duration 900 --seed 1 --out traces/cluster-load60.csv
    python src/tracegen.py phase1 --rate <R90> --duration 900 --seed 1 --out traces/cluster-load90.csv
    ```
 
-8. **Quick test.** `python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6` should return 6 `ok` requests, two per node; then delete the test output (`rm -rf results/routing`).
+8. **Quick test.** `python src/main.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6` should return 6 `ok` requests, two per node; then delete the test output (`rm -rf results/routing`).
 
 9. **Run the three policies at both loads** on the c7a, in tmux (~1.7 h, about 17 minutes per run), then stop all three nodes:
    ```bash
    for load in 60 90; do
      for p in rr least ect; do
-       python src/loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
+       python src/main.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
          2>&1 | tee -a results/routing-console.log
      done
    done; \
@@ -197,7 +197,8 @@ Policies, metrics, and result files: [`docs/routing-benchmark.md`](docs/routing-
 
 **Routing**
 
-- [`loadgen.py`](src/loadgen.py): generates traffic traces, estimates cluster capacity, and runs the routing policies (`rr`, `least`, `ect`).
+- [`router.py`](src/router.py): the routing policies (`rr`, `least`, `ect`, and the draft `slo`) and their cost model, built from the node profiles.
+- [`main.py`](src/main.py): estimates cluster capacity (`capacity`), replays a trace over the cluster with one policy (`run`), and simulates every policy on a trace (`sim`).
 - [`nodes.example.json`](nodes.example.json): template for the cluster's node list (`nodes.json`).
 - [`traces/`](traces/): the two traffic traces replayed by every policy, [`cluster-load60.csv`](traces/cluster-load60.csv) and [`cluster-load90.csv`](traces/cluster-load90.csv).
 

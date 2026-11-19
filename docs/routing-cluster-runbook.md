@@ -158,7 +158,7 @@ Copy the two remote profiles to the router, then check the cost model:
 ```bash
 scp -r node-c7i:aws-mm-router/results/phase1/c7i.xlarge-p2__Qwen2.5-Omni-3B-Q8_0 results/phase1/
 scp -r node-m8g:aws-mm-router/results/phase1/m8g.xlarge-p2__Qwen2.5-Omni-3B-Q8_0 results/phase1/
-python src/loadgen.py capacity --nodes nodes.json
+python src/main.py capacity --nodes nodes.json
 ```
 
 Check that every node has a row, that nothing important is marked `*` (estimated), and that the gains look plausible (1.0–1.4). Take the printed 60% and 90% rates (ours: 0.089 and 0.134 req/s):
@@ -172,11 +172,11 @@ Both traces use the same seed: the same requests in the same order, only closer 
 
 ## 8. Quick test (~5 min)
 
-The repository already contains our results in `results/routing/`, and `loadgen.py` appends to them. Move them aside first so your runs start fresh files:
+The repository already contains our results in `results/routing/`, and `main.py` appends to them. Move them aside first so your runs start fresh files:
 
 ```bash
 mv results/routing results/routing-original
-python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6
+python src/main.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy rr --cluster test --requests 6
 ```
 
 You should see 6 `ok` requests, two per node, and a summary. Then delete the test output (only the new folder; ours is in `results/routing-original`): `rm -rf results/routing`.
@@ -188,7 +188,7 @@ On the c7a, in tmux (`tmux new -s routing`):
 ```bash
 for load in 60 90; do
   for p in rr least ect; do
-    python src/loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
+    python src/main.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g \
       2>&1 | tee -a routing-console.log
   done
 done

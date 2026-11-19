@@ -1,6 +1,6 @@
 # Phase 2: Traffic Generation (`src/tracegen.py`)
 
-`tracegen.py` creates the request traffic for the Phase 2 routing experiments. It writes a **trace**: a list of requests, each with an arrival time, a workload (chat, text, image or audio, at one of the 9 benchmark sizes), which dataset input to use, and a deadline. `loadgen.py run` replays a trace against the cluster, sending each request at its arrival time whatever the cluster is doing (open loop), so every routing policy faces exactly the same traffic.
+`tracegen.py` creates the request traffic for the Phase 2 routing experiments. It writes a **trace**: a list of requests, each with an arrival time, a workload (chat, text, image or audio, at one of the 9 benchmark sizes), which dataset input to use, and a deadline. `main.py run` replays a trace against the cluster, sending each request at its arrival time whatever the cluster is doing (open loop), so every routing policy faces exactly the same traffic.
 
 What it adds over the Phase 1 traces (steady Poisson arrivals only; still available as `tracegen.py phase1`, which reproduces them exactly):
 
@@ -26,10 +26,10 @@ python src/tracegen.py make --arrivals onoff --load 0.9 --nodes nodes.json --see
 # check them, then replay one with a routing policy
 python src/tracegen.py describe traces/phase2/*.csv
 python src/tracegen.py plot traces/phase2/*.csv -o arrivals.png
-python src/loadgen.py run --trace traces/phase2/onoff-default-load0.9-dur900-seed1.csv --nodes nodes.json --policy ect --cluster C
+python src/main.py run --trace traces/phase2/onoff-default-load0.9-dur900-seed1.csv --nodes nodes.json --policy ect --cluster C
 ```
 
-`--nodes` points to the cluster's `nodes.json` (the same file `loadgen.py` uses). It provides the capacity for `--load` and the solo times for deadlines. Without it, give `--rate` in requests per second (or `--load` with `--capacity`), and deadlines are left empty.
+`--nodes` points to the cluster's `nodes.json` (the same file `main.py` uses). It provides the capacity for `--load` and the solo times for deadlines. Without it, give `--rate` in requests per second (or `--load` with `--capacity`), and deadlines are left empty.
 
 ## How it works
 
@@ -60,7 +60,7 @@ python src/loadgen.py run --trace traces/phase2/onoff-default-load0.9-dur900-see
 | `audio-heavy` | 20 / 10 / 10 / 60 | Held out (proposed) |
 | `uniform` | 25 / 25 / 25 / 25 | Balanced reference |
 
-Within a modality, its sizes are equally likely (e.g. text is 512, 1,024 or 3,072 tokens). A custom mix uses the same syntax as `loadgen.py`: `--mix chat=40,text=40,image=20`, or workload ids for single sizes, e.g. `--mix 00=50,03=50` (chat and 3,072-token text only).
+Within a modality, its sizes are equally likely (e.g. text is 512, 1,024 or 3,072 tokens). A custom mix uses the same syntax as `main.py capacity`: `--mix chat=40,text=40,image=20`, or workload ids for single sizes, e.g. `--mix 00=50,03=50` (chat and 3,072-token text only).
 
 ### Deadlines
 
@@ -81,7 +81,7 @@ This makes differences between runs attributable to the arrival pattern or load,
 | Command | Does |
 | --- | --- |
 | `make` | Write one trace (CSV + JSON). Options above, plus `--duration` (900 s), `--seed` (1), `--out` (default `traces/phase2/<arrivals>-<mix>-<load or rate>-dur<duration>-seed<seed>.csv`). |
-| `phase1` | The steady Poisson generator the routing benchmarks used (moved here from `loadgen.py trace`). `--rate`, `--duration`, `--seed`, `--mix`, `--out`. `phase1 --rate 0.089 --seed 1` and `--rate 0.134 --seed 1` reproduce `traces/cluster-load60.csv` and `cluster-load90.csv` exactly. |
+| `phase1` | The steady Poisson generator the routing benchmarks used (moved here from the old `loadgen.py trace` command). `--rate`, `--duration`, `--seed`, `--mix`, `--out`. `phase1 --rate 0.089 --seed 1` and `--rate 0.134 --seed 1` reproduce `traces/cluster-load60.csv` and `cluster-load90.csv` exactly. |
 | `describe TRACE...` | Print each trace's requests, span, mean rate, interarrival CV, peak 60 s load and requests per modality. Works on Phase 1 traces too. |
 | `plot TRACE... [-o out.png] [--bin 30] [--labels ...]` | Arrivals per time bin, one panel per trace, bursts shaded (from the JSON file). |
 
@@ -89,7 +89,7 @@ This makes differences between runs attributable to the arrival pattern or load,
 
 ## Output
 
-**Trace CSV.** `loadgen.py run` replays it unchanged: it reads the first six columns and ignores the rest.
+**Trace CSV.** `main.py run` replays it unchanged: it reads the first six columns and ignores the rest.
 
 | Column | Meaning |
 | --- | --- |
@@ -134,8 +134,8 @@ At ~17 minutes per run and policy, a full set takes many hours on AWS. Pick a su
 
 ## Not supported yet
 
-- **Continuous request sizes** (any token count, 1–4 images, any audio length): needs the dataset scripts to accept any size, and `loadgen.py run` to read `size` from the trace.
-- **Multi-turn sessions** with growing context: needs `loadgen.py run` to send turn *k*+1 only after turn *k*'s answer, with the earlier turns in the prompt.
+- **Continuous request sizes** (any token count, 1–4 images, any audio length): needs the dataset scripts to accept any size, and `main.py run` to read `size` from the trace.
+- **Multi-turn sessions** with growing context: needs `main.py run` to send turn *k*+1 only after turn *k*'s answer, with the earlier turns in the prompt.
 - **Token counts from real traces:** `replay` uses only arrival times.
 - **Trimming warm-up and drain:** belongs in the analysis, not the trace.
 

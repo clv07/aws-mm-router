@@ -1,4 +1,4 @@
-# Client side (benchmark.py, quality.py, the dataset scripts, loadgen.py). Versions are the ones
+# Client side (benchmark.py, quality.py, the dataset scripts, router.py, main.py). Versions are the ones
 # installed on the routing cluster nodes (Python 3.14); llama.cpp itself is built by run.sh.
 requests==2.34.2
 datasets==5.1.0

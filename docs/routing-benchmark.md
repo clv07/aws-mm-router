@@ -1,6 +1,6 @@
 # Phase 1 Routing Benchmarks: Routing Multimodal Requests over Heterogeneous CPU Nodes
 
-**Code:** `loadgen.py`. 
+**Code:** `main.py` (runner), `router.py` (routing policies). 
 
 Step-by-step cluster setup: `docs/routing-cluster-runbook.md`. 
 
@@ -121,7 +121,7 @@ The cluster setup (instances, llama-server, SSH tunnels, profiling) is in `docs/
 **Capacity and traces.**
 
 ```bash
-python src/loadgen.py capacity --nodes nodes.json        # predicted time per workload and node, capacity
+python src/main.py capacity --nodes nodes.json        # predicted time per workload and node, capacity
 python src/tracegen.py phase1 --rate 0.089 --duration 900 --seed 1 --out traces/cluster-load60.csv
 python src/tracegen.py phase1 --rate 0.134 --duration 900 --seed 1 --out traces/cluster-load90.csv
 ```
@@ -131,10 +131,10 @@ python src/tracegen.py phase1 --rate 0.134 --duration 900 --seed 1 --out traces/
 **Runs.**
 
 ```bash
-python src/loadgen.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy ect --cluster c7a-c7i-m8g --requests 10   # quick test
+python src/main.py run --trace traces/cluster-load60.csv --nodes nodes.json --policy ect --cluster c7a-c7i-m8g --requests 10   # quick test
 for load in 60 90; do
   for p in rr least ect; do
-    python src/loadgen.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g
+    python src/main.py run --trace traces/cluster-load$load.csv --nodes nodes.json --policy $p --cluster c7a-c7i-m8g
   done
 done
 ```

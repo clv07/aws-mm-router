@@ -93,7 +93,7 @@ python src/interference.py run --runs 02 04 05 06 --pairs 02+04 02+05 02+06
 python src/interference.py summarize results/interference/c7a.2xlarge-p2__Qwen2.5-Omni-3B-Q8_0
 ```
 
-**Why there are no percentage mixes here.** A node has 2 slots, so at most two requests ever run together. This script measures each pair directly rather than mixes like 50% text / 50% image. Mixes belong in the cluster test: `tracegen.py make --mix text=50,image=50` makes the trace and `loadgen.py run` replays it (see "Using it in the router"). That checks whether the pair measurements predict what happens under mixed traffic.
+**Why there are no percentage mixes here.** A node has 2 slots, so at most two requests ever run together. This script measures each pair directly rather than mixes like 50% text / 50% image. Mixes belong in the cluster test: `tracegen.py make --mix text=50,image=50` makes the trace and `main.py run` replays it (see "Using it in the router"). That checks whether the pair measurements predict what happens under mixed traffic.
 
 ## Commands
 

@@ -62,7 +62,7 @@ for f in "$MODEL" "$MMPROJ"; do
   fi
 done
 
-# 3. llama-server, listening on localhost only (benchmark.py runs on the node; loadgen.py reaches it through SSH tunnels)
+# 3. llama-server, listening on localhost only (benchmark.py runs on the node; main.py reaches it through SSH tunnels)
 CMD="$HOME/llama.cpp/$BUILD/bin/llama-server -m $HOME/models/$MODEL --mmproj $HOME/models/$MMPROJ --host 127.0.0.1 --port 8080 -c $CTX -np $SLOTS -t $(nproc)${OFFLOAD:+ $OFFLOAD}${EXTRA_ARGS:+ $EXTRA_ARGS}"
 PID=$(pgrep -x llama-server || true)
 if [ -z "$PID" ] || [ "$(ps -o args= -p "$PID")" != "$CMD" ]; then
