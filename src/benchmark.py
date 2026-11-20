@@ -217,7 +217,7 @@ class RemoteSamples:
 
 def request_once(session, url, payload, on_token=None):
     """One streamed request. on_token, if given, is called with time.perf_counter() at each
-    output text token (interference.py uses it for the gaps between tokens)."""
+    output text token (corun.py uses it for the gaps between tokens)."""
     start = time.perf_counter()
     first = None
     usage, timing = {}, {}
