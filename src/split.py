@@ -40,11 +40,11 @@ from benchmark import OUTPUT_TOKENS, RUNS, TIMEOUT_SECONDS, append_rows, median,
 OUT_DIR = Path("results/split")
 ALONE_FIELDS = ["run_id", "timestamp_utc", "label", "node", "model", "run", "modality", "size", "input",
                 "repeat", "status", "error", "request_bytes", "response_bytes", "e2e_s", "prompt_tokens",
-                "prompt_n", "prompt_s", "decode_s", "decode_tok_s", "output_tokens"]
+                "prompt_n", "prompt_s", "encoding_ms", "decode_s", "decode_tok_s", "output_tokens"]
 SPLIT_FIELDS = ["run_id", "timestamp_utc", "label", "src", "dst", "model", "run", "modality", "size",
                 "input", "repeat", "status", "error", "prompt_tokens", "src_prompt_n", "src_prefill_s",
-                "src_prompt_s", "save_s", "kv_bytes", "copy_s", "restore_s", "dst_continue_s",
-                "dst_prompt_n", "dst_decode_s", "dst_decode_tok_s", "split_s", "same_prefix_chars",
+                "src_prompt_s", "src_encoding_ms", "save_s", "kv_bytes", "copy_s", "restore_s",
+                "dst_continue_s", "dst_prompt_n", "dst_encoding_ms", "dst_decode_s", "dst_decode_tok_s", "split_s", "same_prefix_chars",
                 "answer_chars"]
 ALONE_CSV, SPLIT_CSV, COSTS_JSON = "alone.csv", "split.csv", "costs.json"
 TRANSPORTS = {
@@ -96,6 +96,8 @@ def split_request(src_url, dst_url, body, filename, copy, cleanup='', slot=0):
     out['src_prefill_s'], first, _ = complete(src_url, first_body)
     out['src_prompt_n'] = first.get('timings', {}).get('prompt_n')
     out['src_prompt_s'] = first.get('timings', {}).get('prompt_ms', 0) / 1000
+    # Encoder time inside prompt_s (patched llama-server only); dst's should be 0 after a restore.
+    out['src_encoding_ms'] = first.get('timings', {}).get('encoding_ms')
     out['prompt_tokens'] = first.get('usage', {}).get('prompt_tokens')
     out['save_s'], saved = slot_action(src_url, slot, 'save', filename)
     out['kv_bytes'] = saved['n_written']
@@ -107,7 +109,8 @@ def split_request(src_url, dst_url, body, filename, copy, cleanup='', slot=0):
             subprocess.run(cleanup, shell=True)
     out['dst_continue_s'], rest, _ = complete(dst_url, {**body, 'cache_prompt': True, 'id_slot': slot})
     timings = rest.get('timings', {})
-    out.update({'dst_prompt_n': timings.get('prompt_n'), 'dst_decode_s': timings.get('predicted_ms', 0) / 1000,
+    out.update({'dst_prompt_n': timings.get('prompt_n'), 'dst_encoding_ms': timings.get('encoding_ms'),
+                'dst_decode_s': timings.get('predicted_ms', 0) / 1000,
                 'dst_decode_tok_s': timings.get('predicted_per_second')})
     out['split_s'] = sum(out[k] for k in ('src_prefill_s', 'save_s', 'copy_s', 'restore_s', 'dst_continue_s'))
     return out, rest
@@ -179,6 +182,7 @@ def run(args):
                     t = resp.get('timings', {})
                     row.update({'prompt_tokens': resp.get('usage', {}).get('prompt_tokens'),
                                 'prompt_n': t.get('prompt_n'), 'prompt_s': t.get('prompt_ms', 0) / 1000,
+                                'encoding_ms': t.get('encoding_ms'),
                                 'decode_s': t.get('predicted_ms', 0) / 1000,
                                 'decode_tok_s': t.get('predicted_per_second'),
                                 'output_tokens': t.get('predicted_n')})
@@ -223,6 +227,8 @@ def run(args):
                 note += ('  WARNING: src hit a prompt cache (start the servers with CACHE_RAM=0)'
                          if row['src_prompt_n'] is not None and row['prompt_tokens'] and
                          row['src_prompt_n'] < 0.5 * row['prompt_tokens'] else '')
+                note += ('  WARNING: dst encoded the image/audio again'
+                         if row['dst_encoding_ms'] else '')
                 print(f"  {a}->{b} {run} {modality}={setting} #{k + 1}: {row['split_s']:.1f}s = prompt "
                       f"{row['src_prefill_s']:.1f} + save {row['save_s']:.2f} + copy {row['copy_s']:.2f} "
                       f"+ restore {row['restore_s']:.2f} + answer {row['dst_continue_s']:.1f}  "
@@ -256,6 +262,10 @@ def fit_link(rows):
     return max(0.0, my - slope * mx), 1 / slope
 
 
+def ms_to_s(ms):
+    return ms / 1000 if ms is not None else None
+
+
 def summarize(args):
     folder = Path(args.folder)
     alone = [r for r in read_csv(folder / ALONE_CSV) if r['status'] == 'ok']
@@ -269,6 +279,8 @@ def summarize(args):
         costs['nodes'].setdefault(n, {})[run] = {
             'e2e_s': median(fnum(rows, 'e2e_s')), 'prompt_s': median(fnum(rows, 'prompt_s')),
             'decode_s': median(fnum(rows, 'decode_s')), 'prompt_tokens': median(fnum(rows, 'prompt_tokens')),
+            # encoder share of prompt_s; None unless the servers run the stage-profiling patch
+            'encode_s': ms_to_s(median(fnum(rows, 'encoding_ms'))),
             'request_bytes': median(fnum(rows, 'request_bytes')), 'requests': len(rows)}
     kv_per_token = median([float(r['kv_bytes']) / float(r['prompt_tokens']) for r in split if r['prompt_tokens']])
     costs['kv_bytes_per_prompt_token'] = kv_per_token
@@ -285,6 +297,7 @@ def summarize(args):
         for run, rs in sorted(per_run.items()):
             entry['runs'][run] = {'split_s': median(fnum(rs, 'split_s')),
                                   'prefill_s': median(fnum(rs, 'src_prefill_s')),
+                                  'src_encode_s': ms_to_s(median(fnum(rs, 'src_encoding_ms'))),
                                   'continue_s': median(fnum(rs, 'dst_continue_s')),
                                   'kv_mb': median(fnum(rs, 'kv_bytes')) / 1e6,
                                   'copy_s': median(fnum(rs, 'copy_s')),
