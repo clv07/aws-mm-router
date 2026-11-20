@@ -19,7 +19,15 @@ src/
   interference.py   how much two workloads slow each other down on one node: each workload alone,
                     then every pair, one per slot; `summarize` writes the slowdown matrix
                     (docs/phase2-interference.md)
-  run.sh            builds llama.cpp, downloads the model, starts llama-server (runs on each instance)
+  movement.py       network: time vs size through the request path (`payload`, with `sink` on the
+                    other end) and network byte counters per node (`netdev`)
+  split.py          prompt on one node, answer on another: every workload alone on every node and
+                    split over every pair, KV saved/copied/restored; `summarize` writes costs.json
+                    for the routers (docs/phase2-experiment-plan.md)
+  stages.py         where an image or audio request's time goes on this node: encoding, prompt
+                    processing, decoding (with llama-mtmd-cli); `summarize` gives the encoding share
+  run.sh            builds llama.cpp (llama-server, llama-mtmd-cli), downloads the model, starts
+                    llama-server with slot saving to ~/slots (runs on each instance)
   experiment.sh     the full single-node concurrency sweep in one command
   perplexity.sh     perplexity of each quantization
   loaders/          dataset loaders, one per modality; each downloads its data with --download
