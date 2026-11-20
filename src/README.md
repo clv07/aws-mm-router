@@ -28,7 +28,7 @@ src/
                     other end) and network byte counters per node (`netdev`)
   split.py          prompt on one node, answer on another: every workload alone on every node and
                     split over every pair, KV saved/copied/restored; `summarize` writes costs.json
-                    for the routers (docs/phase2-experiment-plan.md)
+                    for the routers (docs/phase2-split.md)
   run.sh            builds llama.cpp with patches/llama-stage-profiling.patch (llama-server reports
                     each request's encoding time), downloads the model, starts llama-server with
                     slot saving to ~/slots (runs on each instance)
