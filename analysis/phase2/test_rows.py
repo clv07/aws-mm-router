@@ -1,5 +1,4 @@
 """Hand-made request tests for wait attribution, clipped utilization and window boundaries."""
-import json
 from pathlib import Path
 import tempfile
 import unittest

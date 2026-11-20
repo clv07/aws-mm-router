@@ -1,6 +1,4 @@
 """Generate a Phase 2 trace, replay 50 requests in isolation and check exported metrics."""
-import contextlib
-import io
 from pathlib import Path
 import sys
 import tempfile

@@ -200,7 +200,7 @@ def analyze(args):
             first = rs[0]
             labels = {k:first.get(k,'') for k in ('batch','source','run_id','trace','policy','seed','trace_seed','cluster','output_mode','load','pattern','mix','deadline_rule','slo_mult')}
             # Resolved slots distinguish simulations with different concurrency limits.
-            configuration = {n:dict(c) for n,c in nodes.items()}
+            configuration = {n:dict(c, measured_slots=c.get('slots')) for n,c in nodes.items()}
             for n, members in groups(rs, ('node',)).items():
                 slots = {number(r,'node_slots') for r in members if r.get('node_slots')}
                 configuration[n[0]]['measured_slots'] = next(iter(slots)) if len(slots)==1 else None
@@ -232,6 +232,10 @@ def analyze(args):
             tables['headline'].append(head)
             for table, keys in [('per_modality',('modality',)),('bursts',('burst',)),('placement',('modality','size','node')),('nodes',('node',)),('prediction',('node','modality')),('breakdown',('modality',)),('residuals',('node',))]:
                 partitions = groups(rs,keys)
+                if table == 'nodes':
+                    # Include configured idle nodes so unused capacity remains visible.
+                    for node in nodes:
+                        partitions.setdefault((node,), [])
                 if table == 'prediction':
                     partitions[('all','all')] = rs
                 if table == 'placement':
@@ -249,9 +253,13 @@ def analyze(args):
                         out['share'] = len(ok)/sum(r['status']=='ok' and r['modality']==group[0] and (group[1]=='all' or r.get('size','')==group[1]) for r in rs) if ok else 0
                     if table=='nodes':
                         slots = {number(r,'node_slots') for r in members if r.get('node_slots')}
-                        out['busy_fraction'],out['slot_utilization'] = intervals(members,lo,hi,next(iter(slots)) if len(slots)==1 else None)
+                        slot_count = next(iter(slots)) if len(slots)==1 else nodes[group[0]].get('slots')
+                        out['busy_fraction'],out['slot_utilization'] = intervals(members,lo,hi,slot_count)
+                        if not members and hi > lo:
+                            out['busy_fraction'] = 0.0
+                            out['slot_utilization'] = 0.0 if slot_count else None
                         out['first_failure_s'] = min((r['finish'] for r in members if r['status']=='error'),default=None)
-                        out['failure_rate'] = (len(members)-len(ok))/len(members)
+                        out['failure_rate'] = (len(members)-len(ok))/len(members) if members else None
                         out['errors'] = json.dumps(dict((g[0],len(v)) for g,v in groups([r for r in members if r['status']!='ok'],('error',)).items()))
                         out['output_tokens_s'] = sum(number(r,'output_tokens') or 0 for r in members if r['status']=='ok' and lo<=r['finish']<hi)/(hi-lo) if hi>lo and key[0]=='aws' else None
                         observations = [r for r in samples if r['node']==group[0] and lo<=float(r['t_s'])<hi]
@@ -263,8 +271,11 @@ def analyze(args):
                         out['prediction_n']=len(measured)
                         out['median_abs_rel']=median([abs(r['prediction_error'])/float(r['e2e_s']) for r in measured if float(r['e2e_s'])>0])
                     if table=='breakdown':
+                        # Use the same successful arrival cohort as steady-state latency.
+                        cohort = [r for r in ok if lo <= r['arrival'] < hi]
+                        out['breakdown_requests'] = len(cohort) if hi > lo else None
                         for field in ('router_wait_s','node_wait_net_s','node_wait_s','prefill_s','decode_s','service_s'):
-                            xs=[r[field] for r in ok if r.get(field) is not None]; out[field]=sum(xs)/len(xs) if xs else None
+                            xs=[r[field] for r in cohort if r.get(field) is not None]; out[field]=sum(xs)/len(xs) if xs else None
                     if table=='residuals':
                         residual=[float(r['queue_s']) for r in ok if r.get('node_inflight')=='1' and r.get('queue_s')]; out.update(n=len(residual),median_queue_s=median(residual))
                     out['req_bytes'] = sum(float(r['req_bytes']) for r in members if r.get('req_bytes')) if any(r.get('req_bytes') for r in members) else None
