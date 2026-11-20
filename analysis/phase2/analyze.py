@@ -53,7 +53,7 @@ def stats(rows, field, prefix):
 
 def intervals(rows, lo, hi, slots=None):
     """Integrate clipped busy intervals, including work present at window start."""
-    if hi <= lo:
+    if hi <= lo or not any(r.get('busy') is not None for r in rows):
         return None, None
     events = defaultdict(int)
     for r in rows:
@@ -115,6 +115,7 @@ def normalize(batch, traces, costs):
             cache[r['trace']] = (unique(read(path), ('id',)), meta)
         trace, meta = cache[r['trace']]
         q = trace[(r['id'],)]
+        r.setdefault('size', q.get('size',''))
         if r['source'] == 'aws':
             r.update(extra.get((r['run_id'],r['id']), {}))
             r['finish'] = float(r['sent_s']) + float(r['e2e_s'])
@@ -167,7 +168,13 @@ def analyze(args):
         for key, rs in groups(rows, ('source','run_id','policy')).items():
             first = rs[0]
             labels = {k:first.get(k,'') for k in ('batch','source','run_id','trace','policy','seed','trace_seed','cluster','output_mode','load','pattern','mix','deadline_rule','slo_mult')}
-            labels['configuration'] = json.dumps(nodes,sort_keys=True)
+            # Resolved slots distinguish simulations with different concurrency limits.
+            configuration = {n:dict(c) for n,c in nodes.items()}
+            for n, members in groups(rs, ('node',)).items():
+                slots = {number(r,'node_slots') for r in members if r.get('node_slots')}
+                configuration[n[0]]['measured_slots'] = next(iter(slots)) if len(slots)==1 else None
+            labels['configuration'] = json.dumps(configuration,sort_keys=True)
+            labels['latest'] = first['run_id'] == max(r['run_id'] for r in rows if tuple(r.get(k,'') for k in ('source','trace','policy','seed','cluster','output_mode')) == tuple(first.get(k,'') for k in ('source','trace','policy','seed','cluster','output_mode')))
             end = float(first['duration']) if first['duration'] and len(rs)==first['trace_count'] else max(r['arrival'] for r in rs)
             lo,hi = args.trim_start,end-args.trim_end
             price = sum(c.get('price_per_hour',0) for c in nodes.values()) if all(c.get('price_per_hour') for c in nodes.values()) else None
@@ -193,7 +200,11 @@ def analyze(args):
                         samples = [r for r in read(batch/'node_samples.csv') if r['run_id']==key[1] and r['node']==group[0] and lo<=float(r['t_s'])<hi]
                         out['cpu_pct'] = median([float(r['cpu_pct']) for r in samples if r['cpu_pct']])
                         out['peak_ram_gb'] = max((float(r['ram_gb']) for r in samples if r['ram_gb']),default=None)
-                    if table=='prediction': out.update(stats(ok,'prediction_error','signed_error_s'))
+                    if table=='prediction':
+                        out.update(stats(ok,'prediction_error','signed_error_s'))
+                        measured=[r for r in ok if r.get('prediction_error') is not None]
+                        out['prediction_n']=len(measured)
+                        out['median_abs_rel']=median([abs(r['prediction_error'])/float(r['e2e_s']) for r in measured if float(r['e2e_s'])>0])
                     if table=='breakdown':
                         for field in ('router_wait_s','node_wait_net_s','node_wait_s','prefill_s','decode_s','service_s'):
                             xs=[r[field] for r in ok if r.get(field) is not None]; out[field]=sum(xs)/len(xs) if xs else None
@@ -209,7 +220,7 @@ def analyze(args):
     # Trace seed and run seed remain explicit; repeated draws on one trace are not independent traces.
     spread=[]
     keys=('source','configuration','output_mode','load','pattern','mix','deadline_rule','slo_mult','policy','trace')
-    for key,rows in groups(tables['headline'],keys).items():
+    for key,rows in groups([r for r in tables['headline'] if r['latest']],keys).items():
         out=dict(zip(keys,key)); out.update(runs=len(rows),trace_seeds=len({r['trace_seed'] for r in rows if r['trace_seed']!=''}),requests=sum(r.get('requests',0) for r in rows))
         for metric in ('attainment','goodput','slowdown_p95','latency_p95','usd_per_1k_met','decision_us_p99'):
             xs=[r[metric] for r in rows if r.get(metric) is not None]
