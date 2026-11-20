@@ -15,6 +15,12 @@ import loadgen as lg
 from benchmark import median
 
 
+HISTORICAL_RUNS = {
+    '20261105T001442Z', '20261105T003211Z', '20261105T004841Z', '20261105T010506Z',
+    '20261105T012551Z', '20261105T020543Z', '20261105T022419Z',
+}
+
+
 def number(row, key):
     """Return a numeric measurement, or None when unavailable."""
     return float(row[key]) if row.get(key) not in (None, '') else None
@@ -77,24 +83,33 @@ def metrics(rows, lo, hi, price):
     ok = [r for r in cohort if r['status'] == 'ok']
     done = [r for r in rows if r['status'] == 'ok' and lo <= r['finish'] < hi]
     deadlines = [r for r in cohort if r.get('deadline') is not None]
+    has_deadlines = any(r.get('deadline') is not None for r in rows)
     met = [r for r in done if r.get('met')]
     # Failures stay in the attainment denominator; slowdown uses fastest solo baseline.
     result = {'requests': len(cohort), 'success': len(ok),
               'attainment': sum(bool(r.get('met')) for r in deadlines)/len(deadlines) if deadlines else None,
-              'starvation': sum(r['latency'] > 2*r['deadline'] for r in ok if r.get('deadline') is not None),
+              'starvation': sum(r['latency'] > 2*r['deadline'] for r in ok if r.get('deadline') is not None) if has_deadlines else None,
+              'completions': len(done), 'deadline_requests': len(deadlines), 'met_completions': len(met) if has_deadlines else None,
               'throughput': len(done)/(hi-lo), 'offered': len(cohort)/(hi-lo),
-              'goodput': len(met)/(hi-lo) if deadlines else None,
+              'goodput': len(met)/(hi-lo) if has_deadlines else None,
               'usd_per_1k': price*(hi-lo)/3600*1000/len(done) if price and done else None,
               'usd_per_1k_met': price*(hi-lo)/3600*1000/len(met) if price and met else None}
     for field in ('latency', 'slowdown', 'ttft'):
         result.update(stats(ok, field, field))
     # Exact least-squares slope of the continuous backlog step function.
-    events = sorted({lo, hi, *[max(lo,min(hi,r[k])) for r in rows for k in ('arrival','finish')]})
-    integral = 0
+    events = defaultdict(int)
+    events[lo] = events[hi] = 0
+    for r in rows:
+        start, stop = max(lo, r['arrival']), min(hi, r['finish'])
+        if start < stop:
+            events[start] += 1
+            events[stop] -= 1
+    integral, n, last = 0, 0, lo
     mid = (lo+hi)/2
-    for a,b in zip(events, events[1:]):
-        n = sum(r['arrival'] <= a < r['finish'] for r in rows)
-        integral += n * ((b-mid)**2-(a-mid)**2)/2
+    for t, change in sorted(events.items()):
+        integral += n * ((t-mid)**2-(last-mid)**2)/2
+        n += change
+        last = t
     result['backlog_slope'] = integral / ((hi-lo)**3/12)
     return result
 
@@ -103,6 +118,7 @@ def normalize(batch, traces, costs):
     """Join side files from original requests, then derive comparable timestamps."""
     extra = unique(read(batch/'requests_extra.csv'), ('run_id','id'))
     rows = [dict(r, source='aws') for r in read(batch/'requests.csv')] + read(batch/'sim_requests.csv')
+    unique([r for r in rows if r['source'] == 'aws'], ('run_id', 'id'))
     unique(rows, ('source','run_id','policy','id'))
     cache = {}
     for r in rows:
@@ -111,13 +127,21 @@ def normalize(batch, traces, costs):
             if len(paths) != 1:
                 raise ValueError(f'ambiguous/missing trace {r["trace"]}: {paths}')
             path = paths.pop()
-            meta = json.loads(path.with_suffix('.json').read_text()).get('params', {}) if path.with_suffix('.json').exists() else {}
+            companion = path.with_suffix('.json')
+            metadata = json.loads(companion.read_text()) if companion.exists() else {}
+            meta = dict(metadata.get('params', {}), segments=metadata.get('segments'))
             cache[r['trace']] = (unique(read(path), ('id',)), meta)
         trace, meta = cache[r['trace']]
         q = trace[(r['id'],)]
+        r['segments'] = meta['segments']
         r.setdefault('size', q.get('size',''))
         if r['source'] == 'aws':
             r.update(extra.get((r['run_id'],r['id']), {}))
+            # docs/routing-benchmark.md section 2 records slots for the historical cluster.
+            if (not r.get('node_slots') and r.get('cluster') == 'c7a-c7i-m8g'
+                    and r['trace'] in ('cluster-load60', 'cluster-load90')
+                    and r['run_id'] in HISTORICAL_RUNS):
+                r['node_slots'] = {'c7a.2xlarge': 2, 'c7i.xlarge': 1, 'm8g.xlarge': 2}.get(r['node'])
             r['finish'] = float(r['sent_s']) + float(r['e2e_s'])
             r['sent'] = float(r['sent_s'])
             r['busy'] = r['sent'] + float(r['queue_s']) if r.get('queue_s') and r.get('server_prompt_ms') else None
@@ -159,12 +183,18 @@ def write(path, rows):
 
 def analyze(args):
     """Produce per-run tables and seed spread without combining incompatible runs."""
-    nodes = lg.load_nodes(args.nodes)
-    costs,_ = lg.load_costs(nodes)
     tables = defaultdict(list)
     for batch in args.batches:
+        profile = args.nodes or (batch/'nodes.json' if (batch/'nodes.json').exists() else 'results/routing/nodes.json')
+        nodes = lg.load_nodes(profile)
+        costs, _ = lg.load_costs(nodes)
         rows = normalize(batch,args.traces,costs)
-        decisions = read(batch/'sim_decisions.csv')
+        decisions = {}
+        for source, filename in [('sim', 'sim_decisions.csv'), ('aws', 'decisions.csv')]:
+            calls = read(batch/filename)
+            unique(calls, ('run_id','policy','n'))
+            decisions[source] = groups(calls, ('run_id','policy'))
+        samples_by_run = groups(read(batch/'node_samples.csv'), ('run_id',))
         for key, rs in groups(rows, ('source','run_id','policy')).items():
             first = rs[0]
             labels = {k:first.get(k,'') for k in ('batch','source','run_id','trace','policy','seed','trace_seed','cluster','output_mode','load','pattern','mix','deadline_rule','slo_mult')}
@@ -174,22 +204,48 @@ def analyze(args):
                 slots = {number(r,'node_slots') for r in members if r.get('node_slots')}
                 configuration[n[0]]['measured_slots'] = next(iter(slots)) if len(slots)==1 else None
             labels['configuration'] = json.dumps(configuration,sort_keys=True)
-            labels['latest'] = first['run_id'] == max(r['run_id'] for r in rows if tuple(r.get(k,'') for k in ('source','trace','policy','seed','cluster','output_mode')) == tuple(first.get(k,'') for k in ('source','trace','policy','seed','cluster','output_mode')))
+            # Only historical reruns replace earlier comparisons. Other seeds remain observations.
+            labels['latest'] = (key[0] != 'aws' or key[1] not in HISTORICAL_RUNS or
+                                key[1] == max(r['run_id'] for r in rows if r['source'] == 'aws'
+                                              and r['run_id'] in HISTORICAL_RUNS
+                                              and (r['trace'], r['policy']) == (first['trace'], key[2])))
+            # Complete replays use the declared duration. Truncated runs stop at the last arrival.
             end = float(first['duration']) if first['duration'] and len(rs)==first['trace_count'] else max(r['arrival'] for r in rs)
             lo,hi = args.trim_start,end-args.trim_end
             price = sum(c.get('price_per_hour',0) for c in nodes.values()) if all(c.get('price_per_hour') for c in nodes.values()) else None
             head = {**labels, **metrics(rs,lo,hi,price), 'window_start':lo,'window_end':hi}
-            ds = [{'duration':float(d['duration_us'])} for d in decisions if (d['run_id'],d['policy'])==key[1:]] if key[0]=='sim' else [{'duration':float(r['decision_us'])} for r in rs if r.get('decision_us')]
+            if key[0] == 'sim' or key[2] in lg.QUEUE_POLICIES:
+                ds = [{'duration': float(d['duration_us'])} for d in decisions[key[0]][key[1:]]]
+            else:
+                ds = [{'duration': float(r['decision_us'])} for r in rs if r.get('decision_us')]
+            head['decision_calls'] = len(ds)
+            samples = samples_by_run[(key[1],)] if key[0] == 'aws' else []
+            for sample in samples:
+                t = float(sample['t_s'])
+                burst = next((int(on) for start, stop, _, on in first['segments'] or []
+                              if start <= t < stop), None)
+                tables['sample_context'].append({**labels, **sample, 'burst': burst,
+                    'backlog': sum(r['arrival'] <= t < r['finish'] for r in rs)})
             head.update(stats(ds,'duration','decision_us'))
             head['decision_us_max'] = max((d['duration'] for d in ds),default=None)
             tables['headline'].append(head)
             for table, keys in [('per_modality',('modality',)),('bursts',('burst',)),('placement',('modality','size','node')),('nodes',('node',)),('prediction',('node','modality')),('breakdown',('modality',)),('residuals',('node',))]:
-                for group, members in groups(rs,keys).items():
+                partitions = groups(rs,keys)
+                if table == 'prediction':
+                    partitions[('all','all')] = rs
+                if table == 'placement':
+                    for (modality,node), members in groups(rs,('modality','node')).items():
+                        partitions[(modality,'all',node)] = members
+                for group, members in partitions.items():
                     out = {**labels, **dict(zip(keys,group)), **metrics(members,lo,hi,price)}
                     ok = [r for r in members if r['status']=='ok']
                     out['full_success'] = len(ok)
+                    if table == 'per_modality' and key[0] == 'aws':
+                        # Legacy latency uses successful sends over the full run.
+                        xs = [float(r['e2e_s']) for r in ok]
+                        out.update(full_send_p50=median(xs), full_send_p95=lg.percentile(xs, .95))
                     if table=='placement':
-                        out['share'] = len(ok)/sum(r['status']=='ok' and r['modality']==group[0] and r.get('size','')==group[1] for r in rs) if ok else 0
+                        out['share'] = len(ok)/sum(r['status']=='ok' and r['modality']==group[0] and (group[1]=='all' or r.get('size','')==group[1]) for r in rs) if ok else 0
                     if table=='nodes':
                         slots = {number(r,'node_slots') for r in members if r.get('node_slots')}
                         out['busy_fraction'],out['slot_utilization'] = intervals(members,lo,hi,next(iter(slots)) if len(slots)==1 else None)
@@ -197,9 +253,9 @@ def analyze(args):
                         out['failure_rate'] = (len(members)-len(ok))/len(members)
                         out['errors'] = json.dumps(dict((g[0],len(v)) for g,v in groups([r for r in members if r['status']!='ok'],('error',)).items()))
                         out['output_tokens_s'] = sum(number(r,'output_tokens') or 0 for r in members if r['status']=='ok' and lo<=r['finish']<hi)/(hi-lo) if hi>lo and key[0]=='aws' else None
-                        samples = [r for r in read(batch/'node_samples.csv') if r['run_id']==key[1] and r['node']==group[0] and lo<=float(r['t_s'])<hi]
-                        out['cpu_pct'] = median([float(r['cpu_pct']) for r in samples if r['cpu_pct']])
-                        out['peak_ram_gb'] = max((float(r['ram_gb']) for r in samples if r['ram_gb']),default=None)
+                        observations = [r for r in samples if r['node']==group[0] and lo<=float(r['t_s'])<hi]
+                        out['cpu_pct'] = median([float(r['cpu_pct']) for r in observations if r['cpu_pct']])
+                        out['peak_ram_gb'] = max((float(r['ram_gb']) for r in observations if r['ram_gb']),default=None)
                     if table=='prediction':
                         out.update(stats(ok,'prediction_error','signed_error_s'))
                         measured=[r for r in ok if r.get('prediction_error') is not None]
@@ -216,16 +272,31 @@ def analyze(args):
             for s in read(batch/('summary.csv' if key[0]=='aws' else 'sim_summary.csv')):
                 if s['run_id']==key[1] and s['policy']==key[2]: tables['full_run'].append(dict(s,batch=str(batch),source=key[0]))
     args.out.mkdir(parents=True,exist_ok=True)
-    for name, rows in tables.items(): write(args.out/(name+'.csv'),rows)
     # Trace seed and run seed remain explicit; repeated draws on one trace are not independent traces.
     spread=[]
-    keys=('source','configuration','output_mode','load','pattern','mix','deadline_rule','slo_mult','policy','trace')
+    keys=('source','cluster','configuration','output_mode','load','pattern','mix','deadline_rule','slo_mult','policy')
     for key,rows in groups([r for r in tables['headline'] if r['latest']],keys).items():
         out=dict(zip(keys,key)); out.update(runs=len(rows),trace_seeds=len({r['trace_seed'] for r in rows if r['trace_seed']!=''}),requests=sum(r.get('requests',0) for r in rows))
         for metric in ('attainment','goodput','slowdown_p95','latency_p95','usd_per_1k_met','decision_us_p99'):
-            xs=[r[metric] for r in rows if r.get(metric) is not None]
+            measured = [r for r in rows if r.get(metric) is not None]
+            # Average repeats within a trace seed first, so one trace cannot outweigh another.
+            by_seed = defaultdict(list)
+            for r in measured:
+                seed = r['trace_seed'] if r['trace_seed'] != '' else (r['trace'], r['seed'])
+                by_seed[seed].append(r[metric])
+            xs = [sum(values)/len(values) for values in by_seed.values()]
+            count_field = {'attainment':'deadline_requests', 'goodput':'met_completions',
+                           'slowdown_p95':'success', 'latency_p95':'success',
+                           'usd_per_1k_met':'met_completions', 'decision_us_p99':'decision_calls'}[metric]
+            out[metric+'_n'] = sum(r[count_field] for r in measured)
             for suffix,value in [('mean',sum(xs)/len(xs) if xs else None),('min',min(xs) if xs else None),('max',max(xs) if xs else None)]: out[metric+'_'+suffix]=value
+        out['batches'] = json.dumps(sorted({r['batch'] for r in rows}))
+        out['run_seeds'] = json.dumps(sorted({r['seed'] for r in rows}))
         spread.append(out)
+        for row in rows:
+            row.update({k:v for k,v in out.items() if k.endswith(('_mean','_min','_max'))})
+    for name, rows in tables.items():
+        write(args.out/(name+'.csv'), rows)
     write(args.out/'seed_spread.csv',spread)
 
 
@@ -234,7 +305,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--batches',type=Path,nargs='+',default=[Path('results/routing')])
     p.add_argument('--traces',type=Path,nargs='+',default=[Path('traces')])
-    p.add_argument('--nodes',default='results/routing/nodes.json')
+    p.add_argument('--nodes', help='Override the node profile for all input batches')
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--trim-start',type=float,default=60)
     p.add_argument('--trim-end',type=float,default=60)

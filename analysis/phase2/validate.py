@@ -3,6 +3,8 @@ import importlib.util
 from pathlib import Path
 import sys
 import math
+import tempfile
+from types import SimpleNamespace
 import analyze as a
 
 
@@ -38,24 +40,41 @@ def main():
     baseline=importlib.util.module_from_spec(spec); argv=sys.argv; sys.argv=[argv[0]]
     spec.loader.exec_module(baseline); sys.argv=argv
     d=baseline.load()
-    selected=[r for r in rows if r['status']=='ok' and r['run_id']==max(q['run_id'] for q in rows if (q['trace'],q['policy'])==(r['trace'],r['policy']))]
-    for _,r in baseline.latency_table(d).iterrows():
-        xs=[float(q['e2e_s']) for q in selected if (q['trace'],q['policy'])==(r.trace,r.policy) and (r.modality=='all' or q['modality']==r.modality)]
-        close(a.median(xs),r['median']); close(a.lg.percentile(xs,.95),r.p95)
-    for _,r in baseline.placement_table(d).iterrows():
-        qs=[q for q in selected if (q['trace'],q['policy'],q['modality'])==(r.trace,r.policy,r.modality)]
-        close(sum(q['node']==r.node for q in qs)/len(qs),r.share)
-    for _,r in baseline.prediction_table(d).iterrows():
-        qs=[q for q in selected if (q['trace'],q['policy'])==(r.trace,r.policy)]
-        err=[float(q['e2e_s'])-float(q['predicted_e2e_s']) for q in qs]
-        close(a.median(err),r.median_err_s)
-        close(a.median([abs(e)/float(q['e2e_s']) for e,q in zip(err,qs)]),r.median_abs_rel)
+    # Exercise the analysis entry point and compare the files a user actually reads.
+    with tempfile.TemporaryDirectory() as directory:
+        out = Path(directory)
+        a.analyze(SimpleNamespace(batches=[batch], traces=[Path('traces')], nodes=None,
+                                  trim_start=60, trim_end=60, out=out))
+        def latest(table, keys, **filters):
+            """Index emitted Phase 1 comparisons at the baseline's grouping level."""
+            return a.unique([r for r in a.read(out/(table+'.csv')) if r['latest']=='True'
+                             and all(r[k]==v for k,v in filters.items())], keys)
+
+        by_policy = ('trace','policy')
+        heads = latest('headline', by_policy)
+        assert {r['run_id'] for r in heads.values()} == set(d.run_id)
+        latency = latest('per_modality', (*by_policy,'modality'))
+        for _,r in baseline.latency_table(d).iterrows():
+            if r.modality != 'all':
+                row = latency[(r.trace,r.policy,r.modality)]
+                close(float(row['full_send_p50']),r['median'])
+                close(float(row['full_send_p95']),r.p95)
+        placement = latest('placement', (*by_policy,'modality','node'), size='all')
+        for _,r in baseline.placement_table(d).iterrows():
+            row = placement[(r.trace,r.policy,r.modality,r.node)]
+            close(float(row['share']),r.share)
+            assert int(row['full_success']) == r.n
+        prediction = latest('prediction', by_policy, node='all', modality='all')
+        for _,r in baseline.prediction_table(d).iterrows():
+            row = prediction[(r.trace,r.policy)]
+            close(float(row['signed_error_s_p50']),r.median_err_s)
+            close(float(row['median_abs_rel']),r.median_abs_rel)
+        node_rows = a.unique(a.read(out/'nodes.csv'), ('run_id','node'))
     failed=[r for r in runs[('20261105T012551Z',)] if r['status']=='error']
     assert len(failed)==42 and len(runs[('20261105T012551Z',)])==122
-    normalized=a.normalize(batch,[Path('traces')],a.lg.load_costs(a.lg.load_nodes(batch/'nodes.json'))[0])
-    for key,qs in a.groups(failed,('node',)).items():
-        expected=min(float(q['sent_s'])+float(q['e2e_s']) for q in qs)
-        close(min(r['finish'] for r in normalized if r['run_id']=='20261105T012551Z' and r['node']==key[0] and r['status']=='error'),expected)
+    for (node,), qs in a.groups(failed,('node',)).items():
+        expected = min(float(q['sent_s'])+float(q['e2e_s']) for q in qs)
+        close(float(node_rows[('20261105T012551Z',node)]['first_failure_s']),expected)
     print('PASS: seven summaries, latest placement/latency/prediction, 42 failures and first failures')
 
 
