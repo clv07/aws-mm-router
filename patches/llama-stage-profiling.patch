@@ -1,0 +1,137 @@
+diff --git a/tools/server/server-common.cpp b/tools/server/server-common.cpp
+index 311eb4f12..fbddf93bd 100644
+--- a/tools/server/server-common.cpp
++++ b/tools/server/server-common.cpp
+@@ -151,6 +151,10 @@ json server_slot_stats::to_json() const {
+         {"predicted_ms",           t_gen_ms()},
+         {"predicted_per_token_ms", t_gen_per_token_ms()},
+         {"predicted_per_second",   n_gen_tps()},
++	
++        {"encoding_ms",            encoding_ms},
++        {"encoding_calls",         encoding_calls},
++        {"encoding_chunks",        encoding_chunks},
+     };
+ 
+     if (n_draft_tokens > 0) {
+diff --git a/tools/server/server-common.h b/tools/server/server-common.h
+index 01bf12e61..ac0bdfe62 100644
+--- a/tools/server/server-common.h
++++ b/tools/server/server-common.h
+@@ -408,6 +408,11 @@ struct server_slot_stats {
+     uint64_t n_prompt_processed = 0;
+     uint64_t n_gen              = 0;
+ 
++    // encoding stats
++    double encoding_ms = 0.0;
++    int encoding_calls = 0;
++    int encoding_chunks = 0;
++
+     // speculative decoding stats
+     // note: the per-position breakdown lives in server_slot, it is not needed in a task result
+     uint64_t n_draft_tokens      = 0;
+diff --git a/tools/server/server-context.cpp b/tools/server/server-context.cpp
+index 2bd1ab9ec..ec6bcd95a 100644
+--- a/tools/server/server-context.cpp
++++ b/tools/server/server-context.cpp
+@@ -408,6 +408,11 @@ struct server_slot {
+ 
+     server_slot_stats stats;
+ 
++    double encode_ms_total = 0.0;
++    int encode_calls = 0;
++    int encode_chunks = 0;
++
++
+     // accepted tokens per draft position
+     // not in server_slot_stats to avoid copying to every task result
+     std::vector<uint64_t> n_accepted_per_pos;
+@@ -446,6 +451,9 @@ struct server_slot {
+ 
+         // note: callback_on_reset() must have run before this, see release()
+         stats = {};
++	encode_ms_total = 0.0;
++	encode_calls = 0;
++	encode_chunks = 0;
+         n_accepted_per_pos.clear();
+ 
+         n_predict_max = -1;
+@@ -657,6 +665,14 @@ struct server_slot {
+         if (is_processing()) {
+             GGML_ASSERT(task);
+ 
++	    if (encode_calls > 0) {
++	        SLT_INF(*this, 
++			"[STAGE_PROFILE] encoding_ms_total=%.3f encoding_calls=%d, total_chuncks=%d\n",
++			encode_ms_total,
++			encode_calls,
++			encode_chunks);
++	    }
++
+             SLT_INF(*this, "stop processing: n_tokens = %d, truncated = %d\n", prompt.n_tokens(), truncated);
+ 
+             t_last_used = ggml_time_us();
+@@ -866,7 +882,7 @@ struct server_slot {
+ 
+ // encode the mtmd chunk at idx, batched with as many of the next chunks as possible
+ // returns 0 on success
+-static int encode_mtmd_chunk(const server_slot & slot, mtmd::batch_ptr & mbatch, size_t idx) {
++static int encode_mtmd_chunk(server_slot & slot, mtmd::batch_ptr & mbatch, size_t idx) {
+     const auto & mctx = slot.mctx;
+     const auto & input_tokens = slot.task->tokens;
+     const auto & chunk = input_tokens.find_chunk(idx);
+@@ -893,11 +909,25 @@ static int encode_mtmd_chunk(const server_slot & slot, mtmd::batch_ptr & mbatch,
+     // TODO @ngxson : move this log line to debug when it become more stable
+     SLT_TRC(slot, "encoding mtmd batch from idx = %zu, n_chunks = %d\n", idx, n_added);
+ 
++    const int64_t encode_start_us = ggml_time_us();
++
+     res = mtmd_batch_encode(mbatch.get());
++
++    const double encode_ms = (ggml_time_us() - encode_start_us) / 1000.0;
++
++    if (res == 0) {
++        slot.encode_ms_total += encode_ms; 
++	slot.encode_calls += 1;
++	slot.encode_chunks += n_added;
++    }
++
+     if (res != 0) {
+         SLT_ERR(slot, "failed to encode mtmd batch for chunk idx = %zu, res = %d\n", idx, res);
+         return -1;
+     }
++    SLT_INF(slot, 
++	    "[STAGE_PROFILE] encoding_ms=%.3f n_chunk=%d\n",
++	    encode_ms, n_added);
+ 
+     return 0;
+ }
+@@ -907,7 +937,7 @@ static int encode_mtmd_chunk(const server_slot & slot, mtmd::batch_ptr & mbatch,
+ // note: this is not a member of server_slot because we want to run it inside yield_to_queue
+ //       slot is passed as const to avoid accidental modification of the slot state
+ //       some pointers are allowed to be used, they are not used by to_json()
+-static int process_mtmd_chunk(const server_slot & slot, mtmd::batch_ptr & mbatch, size_t idx, size_t & n_tokens_out) {
++static int process_mtmd_chunk(server_slot & slot, mtmd::batch_ptr & mbatch, size_t idx, size_t & n_tokens_out) {
+     GGML_ASSERT(slot.mctx);
+     const auto & mctx = slot.mctx;
+     const auto & input_tokens = slot.task->tokens;
+@@ -2383,6 +2413,9 @@ private:
+         // populate timings if this is final response or timings_per_token is enabled
+         if (slot.stop != STOP_TYPE_NONE || slot.task->params.timings_per_token) {
+             res->stats = slot.stats;
++	    res->stats.encoding_ms = slot.encode_ms_total;
++	    res->stats.encoding_calls = slot.encode_calls;
++	    res->stats.encoding_chunks = slot.encode_calls;
+         }
+ 
+         queue_results.send(std::move(res));
+@@ -2422,6 +2455,10 @@ private:
+             res->tokens      = std::move(slot.generated_tokens);
+         }
+         res->stats           = slot.stats;
++        res->stats.encoding_ms = slot.encode_ms_total;
++	res->stats.encoding_calls = slot.encode_calls;
++	res->stats.encoding_chunks = slot.encode_calls;
++
+         res->prompt          = slot.task->tokens.detokenize(ctx_tgt, true);
+         res->response_fields = std::move(slot.task->params.response_fields);
+ 
