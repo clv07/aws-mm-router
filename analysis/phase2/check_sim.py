@@ -12,13 +12,13 @@ def main():
     with tempfile.TemporaryDirectory(prefix='phase2-sim-') as directory:
         root=Path(directory); trace=root/'check.csv'
         import tracegen
-        old=sys.argv[:]; old_out=a.lg.OUT_DIR
+        old=sys.argv[:]; old_out=a.runner.OUT_DIR
         try:
             sys.argv=['tracegen','make','--nodes','results/routing/nodes.json','--load','0.9','--seed','1','--out',str(trace)]
             tracegen.main()
-            a.lg.OUT_DIR=root
-            sys.argv=['loadgen','sim','--trace',str(trace),'--nodes','results/routing/nodes.json','--requests','50']
-            a.lg.main()
+            a.runner.OUT_DIR=root
+            sys.argv=['main','sim','--trace',str(trace),'--nodes','results/routing/nodes.json','--requests','50']
+            a.runner.main()
             rs=a.read(root/'sim_requests.csv'); ds=a.read(root/'sim_decisions.csv')
             qs=a.unique(a.read(trace),('id',))
             for s in a.read(root/'sim_summary.csv'):
@@ -30,14 +30,14 @@ def main():
                 if s['group']=='all':
                     durations=[float(d['duration_us']) for d in ds if d['policy']==s['policy']]
                     assert abs(sum(durations)/len(durations)-float(s['decision_us']))<1e-9
-            normalized=a.normalize(root,[root],a.lg.load_costs(a.lg.load_nodes('results/routing/nodes.json'))[0])
+            normalized=a.normalize(root,[root],a.router.load_costs(a.router.load_nodes('results/routing/nodes.json'))[0])
             for r in normalized:
                 assert r['met']==(r['finish']-r['arrival']<=float(qs[(r['id'],)]['deadline_s']))
-                if r['policy'] in a.lg.QUEUE_POLICIES: assert r['node_wait_s']==0
+                if r['policy'] in a.router.QUEUE_POLICIES: assert r['node_wait_s']==0
                 else: assert r['router_wait_s']==0
             print('PASS: exported overall/per-modality sim attainment, trace attainment and decision_us')
         finally:
-            sys.argv=old; a.lg.OUT_DIR=old_out
+            sys.argv=old; a.runner.OUT_DIR=old_out
 
 
 if __name__=='__main__': main()

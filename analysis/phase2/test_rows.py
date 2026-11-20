@@ -33,13 +33,13 @@ class RowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
             a.write(root/'trace.csv',[dict(id='1',deadline_s=15,slo_factor=3)])
-            rows=[dict(source='sim',run_id='test',trace='trace',policy=p,id='1',run='00',modality='chat',arrival_s=2,start_s=12,finish_s=22,node='n',node_slots=2) for p in (a.lg.POLICIES[0],a.lg.QUEUE_POLICIES[0])]
+            rows=[dict(source='sim',run_id='test',trace='trace',policy=p,id='1',run='00',modality='chat',arrival_s=2,start_s=12,finish_s=22,node='n',node_slots=2) for p in (a.router.POLICIES[0],a.router.QUEUE_POLICIES[0])]
             a.write(root/'sim_requests.csv',rows)
             normalized=a.normalize(root,[root],{'n':{'00':5}})
             for r in normalized:
                 self.assertEqual(r['latency'],20); self.assertEqual(r['slowdown'],4)
                 self.assertFalse(r['met'])
-                if r['policy'] in a.lg.QUEUE_POLICIES:
+                if r['policy'] in a.router.QUEUE_POLICIES:
                     self.assertEqual(r['router_wait_s'],10); self.assertEqual(r['node_wait_s'],0)
                 else:
                     self.assertEqual(r['router_wait_s'],0); self.assertEqual(r['node_wait_s'],10)

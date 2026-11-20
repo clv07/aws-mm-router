@@ -19,6 +19,9 @@ import time
 
 import requests
 
+# Phase 2 measurement: buffer side files without changing request result columns.
+from phase2_measurement import Measurements, request_bytes
+
 from benchmark import RUNS, RemoteSamples, append_rows, derived, median, payload, request_once, server_info
 from router import (INF, POLICIES, QUEUE_POLICIES, Request, Router, fit_service_model, load_nodes,
                     node_model, read_csv)
@@ -162,6 +165,8 @@ def sim_requests(args, trace, nodes, costs, gains, model):
 
 def replay(args, nodes, trace, costs, gains, bodies, labels):
     """Send each request at its arrival time to the node router.Router picks; returns (rows, makespan, monitors)."""
+    # Phase 2 measurement: count serialized payload bytes before the replay clock starts.
+    body_bytes = {key: request_bytes(body) for key, body in bodies.items()}
     router = Router(args.policy, nodes, costs, gains, args.seed)
     write_lock = threading.Lock()
     rows = []
@@ -189,19 +194,31 @@ def replay(args, nodes, trace, costs, gains, bodies, labels):
         print(f'replaying {len(trace)} requests with policy {args.policy} over {list(nodes)}', flush=True)
         threads = []
         start = time.perf_counter()
-        for q in trace:
-            wait = float(q['arrival_s']) - (time.perf_counter() - start)
-            if wait > 0:
-                time.sleep(wait)
-            now = time.perf_counter() - start
-            node, inflight, predicted = router.assign(q['run'], now)
-            t = threading.Thread(target=send, args=(q, node, now, inflight, predicted), daemon=True)
-            t.start()
-            threads.append(t)
-        print('all requests sent; waiting for the last ones to finish', flush=True)
-        for t in threads:
-            t.join()
-        makespan = time.perf_counter() - start
+        # Phase 2 measurement: skip pre-run samples and flush side files on interruption.
+        measurements = Measurements(OUT_DIR, labels['run_id'], monitors, start)
+        measurements.thread.start()
+        try:
+            for q in trace:
+                wait = float(q['arrival_s']) - (time.perf_counter() - start)
+                if wait > 0:
+                    time.sleep(wait)
+                now = time.perf_counter() - start
+                # Phase 2 measurement: time only assignment to isolate router overhead.
+                decision_start = time.perf_counter()
+                node, inflight, predicted = router.assign(q['run'], now)
+                decision_us = (time.perf_counter() - decision_start) * 1e6
+                # Phase 2 measurement: retain payload size and resolved slots for analysis.
+                measurements.record(q['id'], body_bytes[q['id']], decision_us, nodes[node]['slots'])
+                t = threading.Thread(target=send, args=(q, node, now, inflight, predicted), daemon=True)
+                t.start()
+                threads.append(t)
+            print('all requests sent; waiting for the last ones to finish', flush=True)
+            for t in threads:
+                t.join()
+            makespan = time.perf_counter() - start
+        finally:
+            # Phase 2 measurement: stop polling after makespan and before monitor teardown.
+            measurements.close()
     return rows, makespan, monitors
 
 
@@ -309,6 +326,24 @@ def simulate(args):
 
     run_id = new_run_id()
     results = [(p, *sim_policy(p, nodes, costs, gains, model, reqs, actual, args.seed)) for p in policies]
+    # Phase 2 measurement: export each completed replay before summary evaluation.
+    for policy, log, decisions in results:
+        # Phase 2 measurement: export service timestamps and sampled solo costs without changing scheduling.
+        export_rows = []
+        for r in reqs:
+            e = log[r.id]
+            export_rows.append(dict(source='sim', run_id=run_id, trace=Path(args.trace).stem, policy=policy,
+                                    seed=args.seed, slo_mult=args.slo, id=r.id, run=r.run,
+                                    modality=r.modality, arrival_s=r.arrival, node=e['node'],
+                                    node_slots=nodes[e['node']]['slots'], start_s=e['dispatch'],
+                                    finish_s=e['finish'], solo_s=actual[r.id, e['node']],
+                                    sim_deadline_s=r.deadline, predicted_finish_s=None))
+        # Phase 2 measurement: preserve the optional forecast column as empty; no sim_policy edit.
+        append_rows(OUT_DIR / 'sim_requests.csv', list(export_rows[0]), export_rows)
+        # Phase 2 measurement: retain every timed call, including dispatches that sent nothing.
+        append_rows(OUT_DIR / 'sim_decisions.csv', ['run_id', 'policy', 'n', 'duration_us'],
+                    [dict(run_id=run_id, policy=policy, n=i, duration_us=d * 1e6)
+                     for i, d in enumerate(decisions)])
     evaluate_sim(results, reqs, nodes, args, run_id)
 
 

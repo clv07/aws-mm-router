@@ -21,7 +21,7 @@ def main():
     batch=Path('results/routing'); rows=a.read(batch/'requests.csv')
     runs=a.groups(rows,('run_id',))
     assert len(runs)==7
-    price=sum(c['price_per_hour'] for c in a.lg.load_nodes(batch/'nodes.json').values())
+    price=sum(c['price_per_hour'] for c in a.router.load_nodes(batch/'nodes.json').values())
     for s in a.read(batch/'summary.csv'):
         rs=runs[(s['run_id'],)]
         span=max(float(r['sent_s'])+float(r['e2e_s']) for r in rs)
@@ -30,7 +30,7 @@ def main():
         assert len(ok)==int(s['success']) and len(members)-len(ok)==int(s['failed'])
         for field,prefix in [('e2e_s','e2e'),('ttft_s','ttft')]:
             xs=[float(r[field]) for r in ok if r[field]]
-            for name,value in [('median',a.median(xs)),('p95',a.lg.percentile(xs,.95)),('p99',a.lg.percentile(xs,.99))]:
+            for name,value in [('median',a.median(xs)),('p95',a.runner.percentile(xs,.95)),('p99',a.runner.percentile(xs,.99))]:
                 col=f'{name}_{prefix}_s'
                 if s.get(col): close(value,s[col])
         close(len(ok)/span,s['req_s'],3)
@@ -47,7 +47,7 @@ def main():
                                   trim_start=60, trim_end=60, out=out))
         def latest(table, keys, **filters):
             """Index emitted Phase 1 comparisons at the baseline's grouping level."""
-            return a.unique([r for r in a.read(out/(table+'.csv')) if r['latest']=='True'
+            return a.unique([r for r in a.read(out/(table+'.csv')) if r['source']=='aws' and r['latest']=='True'
                              and all(r[k]==v for k,v in filters.items())], keys)
 
         by_policy = ('trace','policy')
@@ -69,7 +69,7 @@ def main():
             row = prediction[(r.trace,r.policy)]
             close(float(row['signed_error_s_p50']),r.median_err_s)
             close(float(row['median_abs_rel']),r.median_abs_rel)
-        node_rows = a.unique(a.read(out/'nodes.csv'), ('run_id','node'))
+        node_rows = a.unique([r for r in a.read(out/'nodes.csv') if r['source']=='aws'], ('run_id','node'))
     failed=[r for r in runs[('20261105T012551Z',)] if r['status']=='error']
     assert len(failed)==42 and len(runs[('20261105T012551Z',)])==122
     for (node,), qs in a.groups(failed,('node',)).items():

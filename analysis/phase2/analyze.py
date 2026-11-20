@@ -11,7 +11,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
-import loadgen as lg
+import main as runner
+import router
 from benchmark import median
 
 
@@ -28,7 +29,7 @@ def number(row, key):
 
 def read(path):
     """Read optional CSV input without inventing missing measurements."""
-    return lg.read_csv(path) if path.exists() else []
+    return router.read_csv(path) if path.exists() else []
 
 
 def unique(rows, keys):
@@ -53,8 +54,8 @@ def groups(rows, keys):
 def stats(rows, field, prefix):
     """Use runner quantiles and median so historical summaries match exactly."""
     xs = [r[field] for r in rows if r.get(field) is not None]
-    return {prefix + '_p50': median(xs), prefix + '_p95': lg.percentile(xs, .95),
-            prefix + '_p99': lg.percentile(xs, .99)}
+    return {prefix + '_p50': median(xs), prefix + '_p95': runner.percentile(xs, .95),
+            prefix + '_p99': runner.percentile(xs, .99)}
 
 
 def intervals(rows, lo, hi, slots=None):
@@ -156,7 +157,7 @@ def normalize(batch, traces, costs):
         else:
             r['status'] = 'ok'
             r['finish'], r['busy'] = float(r['finish_s']), float(r['start_s'])
-            r['sent'] = r['busy'] if r['policy'] in lg.QUEUE_POLICIES else float(r['arrival_s'])
+            r['sent'] = r['busy'] if r['policy'] in router.QUEUE_POLICIES else float(r['arrival_s'])
             r['node_wait_s'] = r['busy']-r['sent']
             r['service_s'] = r['finish']-r['busy']
         r['arrival'] = float(r['arrival_s'])
@@ -186,8 +187,8 @@ def analyze(args):
     tables = defaultdict(list)
     for batch in args.batches:
         profile = args.nodes or (batch/'nodes.json' if (batch/'nodes.json').exists() else 'results/routing/nodes.json')
-        nodes = lg.load_nodes(profile)
-        costs, _ = lg.load_costs(nodes)
+        nodes = router.load_nodes(profile)
+        costs, _ = router.load_costs(nodes)
         rows = normalize(batch,args.traces,costs)
         decisions = {}
         for source, filename in [('sim', 'sim_decisions.csv'), ('aws', 'decisions.csv')]:
@@ -214,7 +215,7 @@ def analyze(args):
             lo,hi = args.trim_start,end-args.trim_end
             price = sum(c.get('price_per_hour',0) for c in nodes.values()) if all(c.get('price_per_hour') for c in nodes.values()) else None
             head = {**labels, **metrics(rs,lo,hi,price), 'window_start':lo,'window_end':hi}
-            if key[0] == 'sim' or key[2] in lg.QUEUE_POLICIES:
+            if key[0] == 'sim' or key[2] in router.QUEUE_POLICIES:
                 ds = [{'duration': float(d['duration_us'])} for d in decisions[key[0]][key[1:]]]
             else:
                 ds = [{'duration': float(r['decision_us'])} for r in rs if r.get('decision_us')]
@@ -243,7 +244,7 @@ def analyze(args):
                     if table == 'per_modality' and key[0] == 'aws':
                         # Legacy latency uses successful sends over the full run.
                         xs = [float(r['e2e_s']) for r in ok]
-                        out.update(full_send_p50=median(xs), full_send_p95=lg.percentile(xs, .95))
+                        out.update(full_send_p50=median(xs), full_send_p95=runner.percentile(xs, .95))
                     if table=='placement':
                         out['share'] = len(ok)/sum(r['status']=='ok' and r['modality']==group[0] and (group[1]=='all' or r.get('size','')==group[1]) for r in rs) if ok else 0
                     if table=='nodes':
