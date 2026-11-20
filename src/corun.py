@@ -6,6 +6,7 @@ requests slow each other down (pairwise interference) and how cost grows with k 
   python src/corun.py pairs --node c7a.2xlarge-p2 --url http://10.0.1.12:8080 --runs 00 02 04 07 --pairs 02+04 04+07
   python src/corun.py groups --node c7a.2xlarge-p2 --url http://127.0.0.1:18080 --ssh aws-c7a \
          --mix default --allow-queue --groups 00+mix 00+mix+mix mix+mix mix+mix+mix+mix
+  python src/corun.py summarize results/interference/c7a.2xlarge-p2__Qwen2.5-Omni-3B-Q8_0   # pairs -> matrix.csv
 
 Runs on the router machine (the client), which sends requests to the serving node over the network. CPU/RAM is
 sampled on the serving node over SSH (default: the --url host). Every row records the router, so the network part
@@ -14,7 +15,8 @@ of each request's overhead can be fitted per (node, router).
 from __future__ import annotations
 
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
+import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from itertools import combinations_with_replacement
@@ -29,7 +31,7 @@ from urllib.parse import urlparse
 import requests
 
 from benchmark import (OUTPUT_MODES, OUTPUT_TOKENS, RUNS, WARMUPS, RemoteSamples, append_rows, derived,
-                       instance_type, payload, request_once, server_info)
+                       instance_type, median, payload, request_once, server_info)
 from tracegen import MIXES, parse_mix
 
 MIX = 'mix'           # stream spec that draws each request's workload from --mix
@@ -38,13 +40,18 @@ MAX_WALL_S = 2400     # a group stops sending new requests after this long (grou
 MAX_REQUESTS = 200    # safety cap per stream
 OVERLAP_S = 0.5
 REQUESTS_CSV = 'requests.csv'
+STALL_FACTOR = 5      # summarize: a gap between tokens longer than this x the request's median gap is a stall
+MATRIX_CSV = 'matrix.csv'
+MATRIX_FIELDS = ["node", "model", "output_mode", "run", "other_run", "requests", "solo_e2e_s", "e2e_s", "slowdown",
+                 "server_slowdown", "ttft_slowdown", "encode_slowdown", "prefill_slowdown", "decode_slowdown",
+                 "solo_max_gap_s", "max_gap_s", "stall_s", "pair_gain", "peak_ram_gb"]
 
 PAIR_REQUEST_FIELDS = ["run_id", "timestamp_utc", "model", "node", "router", "slots", "output_mode", "pair",
                        "stream", "run", "modality", "size", "other_run", "index", "input",
                        "request_bytes", "start_s", "first_s", "end_s", "status", "error",
                        "finish_reason", "e2e_s", "ttft_s", "prompt_tokens", "output_tokens",
                        "prefill_tok_s", "decode_tok_s", "tpot_ms", "token_s",
-                       "server_prompt_ms", "server_predicted_ms"]
+                       "server_prompt_ms", "server_predicted_ms", "encoding_ms"]
 PAIR_FIELDS = ["run_id", "timestamp_utc", "model", "node", "router", "slots", "output_mode", "pair",
                "run_a", "run_b", "wall_s", "requests_a", "requests_b", "failed", "peak_ram_gb",
                "cpu_pct"]
@@ -53,7 +60,7 @@ GROUP_REQUEST_FIELDS = ["run_id", "timestamp_utc", "model", "node", "router", "s
                         "inflight_at_send", "others_at_send", "start_s", "svc_start_s", "first_s", "end_s",
                         "status", "error", "finish_reason", "e2e_s", "service_s", "overhead_s", "ttft_s",
                         "prompt_tokens", "output_tokens", "prefill_tok_s", "decode_tok_s", "tpot_ms",
-                        "token_s", "server_prompt_ms", "server_predicted_ms"]
+                        "token_s", "server_prompt_ms", "server_predicted_ms", "encoding_ms"]
 GROUP_FIELDS = ["run_id", "timestamp_utc", "model", "node", "router", "slots", "output_mode", "group", "k",
                 "mix", "wall_s", "requests", "failed", "req_s", "peak_ram_gb", "cpu_pct"]
 
@@ -343,6 +350,161 @@ def add_common(p: argparse.ArgumentParser, repeats: int, pool: int) -> None:
                                  "(required when --url is a tunnel); 'local' samples this machine")
 
 
+# summarizing pairs (results/interference/<node>__<model>)
+
+def fnum(row: dict, field: str) -> float | None:
+    return float(row[field]) if row.get(field) not in (None, '') else None
+
+
+def values(rows: list[dict], field: str) -> list[float]:
+    return [v for v in (fnum(r, field) for r in rows) if v is not None]
+
+
+def ratio(a: float | None, b: float | None) -> float | None:
+    return a / b if a is not None and b else None
+
+
+def token_gaps(row: dict) -> tuple[float | None, float | None]:
+    """Largest gap between consecutive output tokens (token_s), and the time lost to stalls: the excess
+    of every gap longer than STALL_FACTOR x the median gap (e.g. while the other slot's image or audio
+    is being encoded)."""
+    times = [float(t) for t in (row.get('token_s') or '').split()]
+    gaps = [b - a for a, b in zip(times, times[1:])]
+    if not gaps:
+        return None, None
+    typical = median(gaps)
+    return max(gaps), sum(g - typical for g in gaps if g > STALL_FACTOR * typical)
+
+
+def overlap(row: dict, others: list[dict]) -> float:
+    """Fraction of this request's lifetime during which the other stream had a request in flight."""
+    s, e = float(row['start_s']), float(row['end_s'])
+    if e <= s:
+        return 0.0
+    covered = sum(max(0.0, min(e, float(o['end_s'])) - max(s, float(o['start_s']))) for o in others)
+    return covered / (e - s)
+
+
+def stage_times(row: dict) -> dict:
+    """Server-side seconds of one request: service (prompt + decode, no network or queue), encode
+    (patched llama-server only) and prefill (prompt minus encode). Under interference prompt time also
+    holds the time this slot was blocked by the other one's image/audio, so prefill includes it."""
+    prompt, decode, encode = (fnum(row, f) for f in ('server_prompt_ms', 'server_predicted_ms', 'encoding_ms'))
+    gap, stall = token_gaps(row)
+    return {'service_s': (prompt + decode) / 1000 if prompt is not None and decode is not None else None,
+            'encode_s': encode / 1000 if encode is not None else None,
+            'prefill_s': (prompt - (encode or 0)) / 1000 if prompt is not None else None,
+            'max_gap_s': gap, 'stall_s': stall}
+
+
+def summarize_pairs(rows: list[dict], pair_rows: list[dict], min_overlap: float) -> list[dict]:
+    """Matrix rows: one per (output mode, workload, what ran alongside), 'solo' for alone."""
+    ok = [dict(r, **stage_times(r)) for r in rows if r['status'] == 'ok']
+    by_pair = defaultdict(list)   # (run_id, pair) -> rows, to find each request's partner stream
+    for r in ok:
+        by_pair[(r['run_id'], r['pair'])].append(r)
+    ram = defaultdict(list)
+    for p in pair_rows:
+        if p.get('peak_ram_gb'):
+            ram[(p['output_mode'], p['pair'])].append(float(p['peak_ram_gb']))
+    groups = defaultdict(list)    # (output mode, run, other run or '') -> requests
+    for members in by_pair.values():
+        for r in members:
+            if not r['other_run']:
+                groups[(r['output_mode'], r['run'], '')].append(r)
+                continue
+            partner = [o for o in members if o['stream'] != r['stream']]
+            if overlap(r, partner) >= min_overlap:
+                groups[(r['output_mode'], r['run'], r['other_run'])].append(r)
+    first = ok[0] if ok else {}
+    out = {}
+    for (mode, run, other), members in sorted(groups.items()):
+        solo = groups.get((mode, run, ''), [])
+        m = lambda rs, field: median(values(rs, field))
+        slow = lambda field: ratio(m(members, field), m(solo, field))
+        out[(mode, run, other)] = {
+            'node': first.get('node'), 'model': first.get('model'), 'output_mode': mode,
+            'run': run, 'other_run': other or 'solo', 'requests': len(members),
+            'solo_e2e_s': m(solo, 'e2e_s'), 'e2e_s': m(members, 'e2e_s'),
+            'slowdown': slow('e2e_s'),
+            # from llama-server's own times: without the client-node network, which corun includes
+            'server_slowdown': slow('service_s'),
+            'ttft_slowdown': slow('ttft_s'), 'encode_slowdown': slow('encode_s'),
+            'prefill_slowdown': slow('prefill_s'),
+            'decode_slowdown': ratio(m(solo, 'decode_tok_s'), m(members, 'decode_tok_s')),
+            # Stalls hit only the requests decoding when the other one starts its prefill or
+            # encoding, so the worst gap and the mean stall rather than medians.
+            'solo_max_gap_s': max(values(solo, 'max_gap_s'), default=None),
+            'max_gap_s': max(values(members, 'max_gap_s'), default=None),
+            'stall_s': (sum(values(members, 'stall_s')) / len(values(members, 'stall_s'))
+                        if values(members, 'stall_s') else None),
+            'peak_ram_gb': max(ram.get((mode, '+'.join(sorted((run, other))) if other else run), [None]),
+                               key=lambda v: v or 0)}
+    # Combined throughput of the pair relative to running its two workloads one after the other
+    # (weighted speedup): 1/slowdown(A|B) + 1/slowdown(B|A). 1 = sharing the node gains nothing,
+    # 2 = neither slows the other; below 1 = they would be faster one at a time.
+    for (mode, run, other), m in out.items():
+        back = out.get((mode, other, run)) if other else None
+        if other and m['slowdown'] and back and back['slowdown']:
+            m['pair_gain'] = 1 / m['slowdown'] + 1 / back['slowdown']
+    return list(out.values())
+
+
+def read_rows(path: Path) -> list[dict]:
+    with path.open(newline='', encoding='utf-8') as f:
+        return list(csv.DictReader(f))
+
+
+def print_matrix(matrix: list[dict], field: str, title: str) -> None:
+    for mode in sorted({m['output_mode'] for m in matrix}):
+        cells = {(m['run'], m['other_run']): m.get(field) for m in matrix if m['output_mode'] == mode}
+        runs = sorted({r for r, _ in cells})
+        others = sorted({o for _, o in cells if o != 'solo'})
+        name = lambda r: f'{r} {RUNS[r][0]}{"" if RUNS[r][0] == "chat" else RUNS[r][1]}'
+        print(f'\n{title} (output={mode}); rows: the request measured, columns: what ran alongside')
+        print(f'  {"":<12}' + ''.join(f'{name(o):>12}' for o in others))
+        for r in runs:
+            cell = lambda v: (f'{"-":>12}' if v is None else f'{v:>12}' if isinstance(v, int) else f'{v:>12.2f}')
+            print(f'  {name(r):<12}' + ''.join(cell(cells.get((r, o))) for o in others))
+
+
+def summarize(args: argparse.Namespace) -> None:
+    """`summarize`: slowdown matrix of a pairs results folder -> matrix.csv."""
+    folder = Path(args.folder)
+    rows = read_rows(folder / REQUESTS_CSV)
+    pair_rows = read_rows(folder / 'pairs.csv') if (folder / 'pairs.csv').exists() else []
+    if args.run_id:
+        rows = [r for r in rows if r['run_id'] in args.run_id]
+        pair_rows = [p for p in pair_rows if p['run_id'] in args.run_id]
+    matrix = summarize_pairs(rows, pair_rows, args.min_overlap)
+    with (folder / MATRIX_CSV).open('w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=MATRIX_FIELDS, extrasaction='ignore')
+        writer.writeheader()
+        writer.writerows(matrix)
+    print_matrix(matrix, 'slowdown', 'Slowdown: latency alongside / latency alone')
+    print_matrix(matrix, 'server_slowdown', 'Server-side slowdown (prompt + decode time, no network)')
+    if any(m.get('encode_slowdown') for m in matrix):
+        print_matrix(matrix, 'encode_slowdown', 'Encode slowdown (image/audio encoder)')
+    print_matrix(matrix, 'stall_s', 'Mean stall time per request, s (gaps > 5x the median gap)')
+    print_matrix(matrix, 'pair_gain', 'Pair gain: 1/slowdown(A|B) + 1/slowdown(B|A); 1 = no gain from sharing')
+    print_matrix(matrix, 'requests', f'Requests used (overlap >= {args.min_overlap})')
+    print(f'\nwrote {folder / MATRIX_CSV}')
+
+
+def load_matrix(folder: str | Path, output_mode: str = 'fixed', field: str = 'slowdown') -> dict:
+    """For a router: {(run, other_run): slowdown} from a summarized folder, plus the same keyed
+    by modality (median over that modality's measured sizes) for workloads not profiled, e.g.
+    look up ('03', '04') and fall back to ('text', 'image'). Solo entries are left out."""
+    rows = [r for r in read_rows(Path(folder) / MATRIX_CSV)
+            if r['output_mode'] == output_mode and r['other_run'] != 'solo' and r.get(field)]
+    result = {(r['run'], r['other_run']): float(r[field]) for r in rows}
+    by_modality = defaultdict(list)
+    for (a, b), v in list(result.items()):
+        by_modality[(RUNS[a][0], RUNS[b][0])].append(v)
+    result.update({k: median(v) for k, v in by_modality.items()})
+    return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description='Co-running profiler: closed-loop streams sharing one llama-server.')
     sub = parser.add_subparsers(dest='command', required=True)
@@ -371,7 +533,15 @@ def main() -> None:
     g.add_argument('--no-warmup', action='store_true',
                    help='skip the warm-up request per workload (e.g. right after another run on the same server)')
     add_common(g, repeats=4, pool=30)
-    run(parser.parse_args())
+
+    s = sub.add_parser('summarize', help='pairs: slowdown matrix (matrix.csv) from a results/interference folder')
+    s.add_argument('folder', help='results/interference/<node>__<model>')
+    s.add_argument('--min-overlap', type=float, default=0.8,
+                   help='use a paired request only if the other stream was busy for at least this '
+                        'fraction of its lifetime')
+    s.add_argument('--run-id', nargs='+', help='only these run ids (default: all)')
+    args = parser.parse_args()
+    summarize(args) if args.command == 'summarize' else run(args)
 
 
 if __name__ == '__main__':
