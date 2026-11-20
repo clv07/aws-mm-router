@@ -18,6 +18,11 @@ and workloads are drawn from a separate random stream in arrival order. So with 
 - traces differ only in when requests arrive.
 Rates are mean rates over the whole trace for poisson and onoff (bursty traces are rescaled so
 their mean matches exactly); for step and ramp they are the base rate the shape is applied to.
+
+Deadlines (with --nodes), each per workload from the nodes' Phase 1 profiles:
+  deadline_s       --slo factor x the fastest solo end-to-end time
+  ttft_deadline_s  --ttft-slo factor x the fastest solo TTFT (first token, counted from arrival)
+  tpot_slo_ms      --tpot-slo x the fastest solo time per output token
 """
 from __future__ import annotations
 
@@ -31,7 +36,7 @@ import random
 import statistics
 
 from benchmark import RUNS
-from router import load_nodes, node_model
+from router import load_nodes, node_model, profile_rows
 
 TRACES_DIR = Path("traces")
 
@@ -45,7 +50,10 @@ MIXES = {   # percent per modality; sizes share their modality's weight equally
 }
 DEFAULT_MIX = MIXES['default']   # also main.py capacity's default
 SLO_DEFAULT = 'chat=3,text=4,image=4,audio=4'   # deadline = factor x fastest solo time of that workload
-FIELDS = ['id', 'arrival_s', 'run', 'modality', 'size', 'input', 'slo_factor', 'deadline_s', 'burst']
+TTFT_SLO_DEFAULT = SLO_DEFAULT   # TTFT deadline = factor x fastest solo TTFT of that workload
+TPOT_SLO_DEFAULT = 3.0           # TPOT target = factor x fastest solo time per output token of that workload
+FIELDS = ['id', 'arrival_s', 'run', 'modality', 'size', 'input', 'slo_factor', 'deadline_s',
+          'ttft_deadline_s', 'tpot_slo_ms', 'burst']
 SEED_STREAMS = {'arrivals': 0, 'workloads': 1, 'bursts': 2}   # independent random streams per seed
 
 
@@ -163,6 +171,24 @@ def best_costs(nodes_path):
     return best, capacity
 
 
+def best_ttft_tpot(nodes_path):
+    """Fastest solo TTFT (s) and time per output token (ms) of every workload on any node, from the
+    Phase 1 profiles' concurrency-1 summaries (natural output preferred, as in router.profile_costs)."""
+    ttft, tpot = {}, {}
+    for cfg in load_nodes(nodes_path).values():
+        rows = {}
+        for r in profile_rows(cfg['profile'], 'summary.csv', 'summary_v2.csv'):
+            if r.get('concurrency') == '1' and r['failed'] == '0':
+                if r.get('output_mode', 'natural') == 'natural' or r['run'] not in rows:
+                    rows[r['run']] = r
+        for run, r in rows.items():
+            if r.get('ttft_s'):
+                ttft[run] = min(ttft.get(run, math.inf), float(r['ttft_s']))
+            if r.get('decode_tok_s') and float(r['decode_tok_s']) > 0:
+                tpot[run] = min(tpot.get(run, math.inf), 1000 / float(r['decode_tok_s']))
+    return ttft, tpot
+
+
 def parse_slo(text):
     slo = {}
     for part in text.split(','):
@@ -177,6 +203,7 @@ def make(args):
     mix_spec = MIXES.get(args.mix, args.mix)
     mix = parse_mix(mix_spec)
     best, capacity = best_costs(args.nodes) if args.nodes else (None, None)
+    best_ttft, best_tpot = best_ttft_tpot(args.nodes) if args.nodes else ({}, {})
     if args.load is not None:
         if capacity is None and args.capacity is None:
             raise SystemExit('--load needs --nodes (to compute capacity) or --capacity')
@@ -198,7 +225,7 @@ def make(args):
         segments = SHAPES[args.arrivals](rate, args.duration, args, streams['bursts'])
         times = arrivals_from_shape(segments, streams['arrivals'])
 
-    slo = parse_slo(args.slo)
+    slo, ttft_slo = parse_slo(args.slo), parse_slo(args.ttft_slo)
     wl, used, rows = streams['workloads'], {}, []
     runs, weights = list(mix), list(mix.values())
     for t, burst in times:
@@ -209,6 +236,8 @@ def make(args):
         rows.append({'id': len(rows) + 1, 'arrival_s': f'{t:.3f}', 'run': run, 'modality': modality,
                      'size': size, 'input': used[modality], 'slo_factor': f'{factor:g}',
                      'deadline_s': f'{factor * best[run]:.1f}' if best else '',
+                     'ttft_deadline_s': f'{ttft_slo[modality] * best_ttft[run]:.2f}' if run in best_ttft else '',
+                     'tpot_slo_ms': f'{args.tpot_slo * best_tpot[run]:.1f}' if run in best_tpot else '',
                      'burst': int(burst)})
 
     name = args.out or TRACES_DIR / 'phase2' / default_name(args, rate)
@@ -364,6 +393,10 @@ def main():
     p.add_argument('--seed', type=int, default=1)
     p.add_argument('--mix', default='default', help=f'one of {", ".join(MIXES)}, or chat=..,text=.. / run ids')
     p.add_argument('--slo', default=SLO_DEFAULT, help=f'deadline factor per modality (default {SLO_DEFAULT})')
+    p.add_argument('--ttft-slo', default=TTFT_SLO_DEFAULT,
+                   help=f'TTFT deadline factor per modality, x the fastest solo TTFT (default {TTFT_SLO_DEFAULT})')
+    p.add_argument('--tpot-slo', type=float, default=TPOT_SLO_DEFAULT,
+                   help=f'TPOT target, x the fastest solo time per output token (default {TPOT_SLO_DEFAULT:g})')
     g = p.add_argument_group('onoff (bursty)')
     g.add_argument('--burst-factor', type=float, default=3.0, help='rate in a burst / mean rate (default 3)')
     g.add_argument('--burst-fraction', type=float, default=0.2, help='share of time in bursts (default 0.2)')

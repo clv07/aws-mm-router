@@ -86,9 +86,13 @@ def metrics(rows, lo, hi, price):
     deadlines = [r for r in cohort if r.get('deadline') is not None]
     has_deadlines = any(r.get('deadline') is not None for r in rows)
     met = [r for r in done if r.get('met')]
+    tt = [r for r in cohort if r.get('met_ttft_tpot') is not None]
     # Failures stay in the attainment denominator; slowdown uses fastest solo baseline.
     result = {'requests': len(cohort), 'success': len(ok),
               'attainment': sum(bool(r.get('met')) for r in deadlines)/len(deadlines) if deadlines else None,
+              # TTFT + TPOT SLO (traces with ttft_deadline_s / tpot_slo_ms; live runs only)
+              'attainment_ttft_tpot': sum(r['met_ttft_tpot'] for r in tt)/len(tt) if tt else None,
+              'ttft_tpot_requests': len(tt),
               'starvation': sum(r['latency'] > 2*r['deadline'] for r in ok if r.get('deadline') is not None) if has_deadlines else None,
               'completions': len(done), 'deadline_requests': len(deadlines), 'met_completions': len(met) if has_deadlines else None,
               'throughput': len(done)/(hi-lo), 'offered': len(cohort)/(hi-lo),
@@ -115,8 +119,11 @@ def metrics(rows, lo, hi, price):
     return result
 
 
-def normalize(batch, traces, costs):
-    """Join side files from original requests, then derive comparable timestamps."""
+def normalize(batch, traces, costs, link=None):
+    """Join side files from original requests, then derive comparable timestamps.
+
+    link = (round trip s, MB/s) of the router-node path (movement.py payload): splits the
+    residual node_wait_net_s into net_s (bytes up and down over that link) and node_queue_s."""
     extra = unique(read(batch/'requests_extra.csv'), ('run_id','id'))
     rows = [dict(r, source='aws') for r in read(batch/'requests.csv')] + read(batch/'sim_requests.csv')
     unique([r for r in rows if r['source'] == 'aws'], ('run_id', 'id'))
@@ -153,6 +160,16 @@ def normalize(batch, traces, costs):
             r['decode_s'] = number(r,'server_predicted_ms')
             for key in ('prefill_s','decode_s'):
                 if r[key] is not None: r[key] /= 1000
+            # Patched llama-server: prompt time includes the image/audio encoder; split it out.
+            r['encode_s'] = number(r,'encoding_ms')/1000 if number(r,'encoding_ms') is not None else None
+            if r['encode_s'] is not None and r['prefill_s'] is not None:
+                r['prefill_s'] -= r['encode_s']
+            r['tpot'] = number(r,'tpot_ms')
+            up, down = number(r,'req_bytes'), number(r,'response_bytes')
+            if link and up is not None and down is not None:
+                r['net_s'] = link[0] + (up + down) / (link[1] * 1e6)
+                if r['node_wait_net_s'] is not None:
+                    r['node_queue_s'] = max(0.0, r['node_wait_net_s'] - r['net_s'])
             r['prediction_error'] = float(r['e2e_s'])-float(r['predicted_e2e_s']) if r.get('predicted_e2e_s') else None
         else:
             r['status'] = 'ok'
@@ -168,6 +185,11 @@ def normalize(batch, traces, costs):
         baseline = r['deadline']/factor if r['deadline'] is not None and factor and factor > 0 else min(c[r['run']] for c in costs.values())
         r['slowdown'] = r['latency']/baseline
         r['met'] = r['status']=='ok' and r['latency'] <= r['deadline'] if r['deadline'] is not None else None
+        ttft_deadline, tpot_slo = number(q,'ttft_deadline_s'), number(q,'tpot_slo_ms')
+        if r['source'] == 'aws' and ttft_deadline is not None and tpot_slo is not None:
+            # Both must hold; failures miss; a 1-token answer has no TPOT.
+            r['met_ttft_tpot'] = (r['status'] == 'ok' and r['ttft'] is not None and r['ttft'] <= ttft_deadline
+                                  and (r['tpot'] is None or r['tpot'] <= tpot_slo))
         r.update(batch=str(batch), burst=q.get('burst',''), trace_seed=meta.get('seed',''),
                  load=meta.get('load', {'cluster-load60':.6,'cluster-load90':.9}.get(r['trace'],'')),
                  pattern=meta.get('arrivals',''), mix=meta.get('mix',''), deadline_rule=meta.get('slo',''),
@@ -189,7 +211,7 @@ def analyze(args):
         profile = args.nodes or (batch/'nodes.json' if (batch/'nodes.json').exists() else 'results/routing/nodes.json')
         nodes = router.load_nodes(profile)
         costs, _ = router.load_costs(nodes)
-        rows = normalize(batch,args.traces,costs)
+        rows = normalize(batch,args.traces,costs,getattr(args,'link',None))
         decisions = {}
         for source, filename in [('sim', 'sim_decisions.csv'), ('aws', 'decisions.csv')]:
             calls = read(batch/filename)
@@ -215,6 +237,9 @@ def analyze(args):
             lo,hi = args.trim_start,end-args.trim_end
             price = sum(c.get('price_per_hour',0) for c in nodes.values()) if all(c.get('price_per_hour') for c in nodes.values()) else None
             head = {**labels, **metrics(rs,lo,hi,price), 'window_start':lo,'window_end':hi}
+            router_cpu = [float(x['cpu_pct']) for x in samples_by_run[(key[1],)] if key[0] == 'aws'
+                          and x['node'] == 'router' and x['cpu_pct'] and lo <= float(x['t_s']) < hi]
+            head.update(router_cpu_p50=median(router_cpu), router_cpu_max=max(router_cpu, default=None))
             if key[0] == 'sim' or key[2] in router.QUEUE_POLICIES:
                 ds = [{'duration': float(d['duration_us'])} for d in decisions[key[0]][key[1:]]]
             else:
@@ -274,7 +299,8 @@ def analyze(args):
                         # Use the same successful arrival cohort as steady-state latency.
                         cohort = [r for r in ok if lo <= r['arrival'] < hi]
                         out['breakdown_requests'] = len(cohort) if hi > lo else None
-                        for field in ('router_wait_s','node_wait_net_s','node_wait_s','prefill_s','decode_s','service_s'):
+                        for field in ('router_wait_s','node_wait_net_s','net_s','node_queue_s','node_wait_s',
+                                      'encode_s','prefill_s','decode_s','service_s'):
                             xs=[r[field] for r in cohort if r.get(field) is not None]; out[field]=sum(xs)/len(xs) if xs else None
                     if table=='residuals':
                         residual=[float(r['queue_s']) for r in ok if r.get('node_inflight')=='1' and r.get('queue_s')]; out.update(n=len(residual),median_queue_s=median(residual))
@@ -289,7 +315,7 @@ def analyze(args):
     keys=('source','cluster','configuration','output_mode','load','pattern','mix','deadline_rule','slo_mult','policy')
     for key,rows in groups([r for r in tables['headline'] if r['latest']],keys).items():
         out=dict(zip(keys,key)); out.update(runs=len(rows),trace_seeds=len({r['trace_seed'] for r in rows if r['trace_seed']!=''}),requests=sum(r.get('requests',0) for r in rows))
-        for metric in ('attainment','goodput','slowdown_p95','latency_p95','usd_per_1k_met','decision_us_p99'):
+        for metric in ('attainment','attainment_ttft_tpot','goodput','slowdown_p95','latency_p95','usd_per_1k_met','decision_us_p99'):
             measured = [r for r in rows if r.get(metric) is not None]
             # Average repeats within a trace seed first, so one trace cannot outweigh another.
             by_seed = defaultdict(list)
@@ -297,7 +323,8 @@ def analyze(args):
                 seed = r['trace_seed'] if r['trace_seed'] != '' else (r['trace'], r['seed'])
                 by_seed[seed].append(r[metric])
             xs = [sum(values)/len(values) for values in by_seed.values()]
-            count_field = {'attainment':'deadline_requests', 'goodput':'met_completions',
+            count_field = {'attainment':'deadline_requests', 'attainment_ttft_tpot':'ttft_tpot_requests',
+                           'goodput':'met_completions',
                            'slowdown_p95':'success', 'latency_p95':'success',
                            'usd_per_1k_met':'met_completions', 'decision_us_p99':'decision_calls'}[metric]
             out[metric+'_n'] = sum(r[count_field] for r in measured)
@@ -321,6 +348,8 @@ def main():
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--trim-start',type=float,default=60)
     p.add_argument('--trim-end',type=float,default=60)
+    p.add_argument('--link', type=float, nargs=2, metavar=('RTT_S','MB_S'),
+                   help='router-node link from movement.py payload (round trip in s, MB/s): adds net_s and node_queue_s')
     analyze(p.parse_args())
 
 
