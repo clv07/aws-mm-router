@@ -52,6 +52,8 @@ Experiments 1–5 measure each piece alone. Experiment 6 puts them into the rout
 
 **What to expect from 6c.** At low load nothing queues, so a router queue only adds its decision time. It should help under bursts, with mixed request sizes and when predictions are off, because a waiting request can still go to whichever node frees first. It costs an idle gap per request (the router-node round trip plus uploading the body; a few ms inside AWS, much more from outside or for large audio), and a 2-vCPU router has to keep up. A middle option worth testing if the gap matters: let each node hold one waiting request, so the upload overlaps the running one.
 
+**Experiments 1–5 involve no router, so dispatch mode doesn't apply to them.** `split.py` sends one request at a time to fixed nodes; `corun.py pairs` never has more requests in flight than slots; `movement.py` moves bulk data. They measure what a node costs, and both dispatch modes use the same numbers. The one link: under a router queue a node never runs more requests than slots, so the pair matrix (4) describes it exactly; under dispatch on arrival a node can be sent more requests than slots and the extra ones wait in llama-server's queue, which only the k > slots groups of experiment 5 (`--allow-queue`) measure. Keep those groups.
+
 Why 70% load for the bursty replay: bursts already reach about 2× capacity, and at 90% the `rr`/`least` backlogs take too long to drain.
 
 ## 4. How the results feed the router
