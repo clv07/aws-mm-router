@@ -217,17 +217,23 @@ class RemoteSamples:
 
 def request_once(session, url, payload, on_token=None):
     """One streamed request. on_token, if given, is called with time.perf_counter() at each
-    output text token (interference.py uses it for the gaps between tokens)."""
+    output text token (corun.py uses it for the gaps between tokens).
+
+    encoding_ms/_calls/_chunks come from llama-server built with patches/llama-stage-profiling.patch
+    (time in the image/audio encoder; prompt_ms includes it) and are None on an unpatched server.
+    response_bytes counts the streamed response body (its event lines), for the network share."""
     start = time.perf_counter()
     first = None
     usage, timing = {}, {}
     count = 0
+    received = 0
     finish = None
     try:
         with session.post(url.rstrip('/') + '/v1/chat/completions', json=payload,
                           stream=True, timeout=(15, TIMEOUT_SECONDS)) as response:
             response.raise_for_status()
             for raw in response.iter_lines():
+                received += len(raw) + 1   # + the newline iter_lines strips
                 if not raw or not raw.startswith(b'data:'):
                     continue
                 data = raw[5:].strip()
@@ -262,12 +268,15 @@ def request_once(session, url, payload, on_token=None):
                 "ttft_s":first, "decode_tok_s":rate, "output_tokens":n,
                 "prompt_tokens":usage.get('prompt_tokens') or timing.get('prompt_n'),
                 "server_prompt_ms":timing.get('prompt_ms'),
-                "server_predicted_ms":timing.get('predicted_ms')}
+                "server_predicted_ms":timing.get('predicted_ms'),
+                "encoding_ms":timing.get('encoding_ms'), "encoding_calls":timing.get('encoding_calls'),
+                "encoding_chunks":timing.get('encoding_chunks'), "response_bytes":received}
     except Exception as exc:
         return {"status":"error", "error":str(exc)[:180], "finish_reason":None,
                 "e2e_s":time.perf_counter()-start, "ttft_s":None,
                 "decode_tok_s":None, "output_tokens":None, "prompt_tokens":None,
-                "server_prompt_ms":None, "server_predicted_ms":None}
+                "server_prompt_ms":None, "server_predicted_ms":None, "encoding_ms":None,
+                "encoding_calls":None, "encoding_chunks":None, "response_bytes":None}
 
 
 def instance_type():
@@ -319,7 +328,8 @@ def append_rows(path, fields, rows):
                 "Move it aside (e.g. add a suffix) before running this version."
             )
     with path.open('a', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
+        # Rows may carry more keys than this file's columns (e.g. request_once's newer fields).
+        writer = csv.DictWriter(f, fieldnames=fields, extrasaction='ignore')
         if needs_header:
             writer.writeheader()
         writer.writerows(rows)

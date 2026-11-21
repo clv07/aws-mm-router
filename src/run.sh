@@ -10,6 +10,9 @@
 #   compute capability to compile for (default: read from nvidia-smi, e.g. 75 = Tesla T4 on g4dn,
 #   86 = A10G on g5, 89 = L4 on g6).
 #   EXTRA_ARGS = more llama-server flags, e.g. EXTRA_ARGS="-ub 1024" (default: none).
+#   CACHE_RAM = llama-server --cache-ram in MiB (default: llama-server's own); 0 on 8 GB nodes and for split.py.
+#   Slot KV files (split.py, /slots?action=save|restore) go to ~/slots.
+#   llama.cpp is built with patches/llama-stage-profiling.patch (encoding time per request).
 # Build llama.cpp and download the model if missing, (re)start llama-server in tmux only if it
 # isn't already serving this model with these flags, and wait until it is ready.
 set -euo pipefail
@@ -38,18 +41,25 @@ else
   BUILD=build; CMAKE_FLAGS=(); OFFLOAD=""
 fi
 
-# 1. llama.cpp
-if [ ! -x ~/llama.cpp/$BUILD/bin/llama-server ]; then
-  echo "building llama.cpp $LLAMA_COMMIT ($BUILD)"
+SLOT_DIR=$HOME/slots
+
+# 1. llama.cpp at $LLAMA_COMMIT plus patches/llama-stage-profiling.patch, which makes llama-server
+#    report each request's image/audio encoding time (timings.encoding_ms). The stamp file names the
+#    patch's hash, so a changed patch triggers a rebuild. Local edits in ~/llama.cpp are discarded.
+PATCH=$(cd "$(dirname "$0")/.." && pwd)/patches/llama-stage-profiling.patch
+STAMP=~/llama.cpp/$BUILD/.stage-profiling-$(sha1sum <"$PATCH" | cut -c1-12)
+if [ ! -x ~/llama.cpp/$BUILD/bin/llama-server ] || [ ! -f "$STAMP" ]; then
+  echo "building llama.cpp $LLAMA_COMMIT + stage-profiling patch ($BUILD)"
   sudo apt-get update -qq && sudo apt-get install -y -qq git cmake build-essential tmux curl python3-venv
   if [ "$GPU" = 1 ] && ! command -v nvcc >/dev/null; then
     echo "GPU=1 but nvcc (CUDA toolkit) is not installed: run ./src/setup.sh" >&2; exit 1
   fi
   [ -d ~/llama.cpp ] || git clone -q https://github.com/ggml-org/llama.cpp ~/llama.cpp
-  (cd ~/llama.cpp && git checkout -q "$LLAMA_COMMIT" &&
+  (cd ~/llama.cpp && git checkout -q -f "$LLAMA_COMMIT" && git apply "$PATCH" &&
    cmake -B $BUILD -DLLAMA_CURL=OFF ${CMAKE_FLAGS[@]+"${CMAKE_FLAGS[@]}"} >~/llama-build.log 2>&1 &&
    cmake --build $BUILD -j"$(nproc)" --target llama-server >>~/llama-build.log 2>&1) ||
     { echo "llama.cpp build failed, last lines of ~/llama-build.log:" >&2; tail -20 ~/llama-build.log >&2; exit 1; }
+  rm -f ~/llama.cpp/$BUILD/.stage-profiling-*; touch "$STAMP"
 fi
 
 # 2. model and its multimodal projector
@@ -63,7 +73,8 @@ for f in "$MODEL" "$MMPROJ"; do
 done
 
 # 3. llama-server, listening on localhost only (benchmark.py runs on the node; main.py reaches it through SSH tunnels)
-CMD="$HOME/llama.cpp/$BUILD/bin/llama-server -m $HOME/models/$MODEL --mmproj $HOME/models/$MMPROJ --host 127.0.0.1 --port 8080 -c $CTX -np $SLOTS -t $(nproc)${OFFLOAD:+ $OFFLOAD}${EXTRA_ARGS:+ $EXTRA_ARGS}"
+mkdir -p "$SLOT_DIR"
+CMD="$HOME/llama.cpp/$BUILD/bin/llama-server -m $HOME/models/$MODEL --mmproj $HOME/models/$MMPROJ --host 127.0.0.1 --port 8080 -c $CTX -np $SLOTS -t $(nproc) --slot-save-path $SLOT_DIR/${CACHE_RAM:+ --cache-ram $CACHE_RAM}${OFFLOAD:+ $OFFLOAD}${EXTRA_ARGS:+ $EXTRA_ARGS}"
 PID=$(pgrep -x llama-server || true)
 if [ -z "$PID" ] || [ "$(ps -o args= -p "$PID")" != "$CMD" ]; then
   echo "starting llama-server"
