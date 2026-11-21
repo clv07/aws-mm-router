@@ -192,6 +192,21 @@ python analysis/phase2/figures.py results/phase2-analysis      # slo-grid-*.png,
 | Quota (24 vCPUs shared by the whole account) | Nobody starts other instances while the cluster runs |
 | Cost | `sudo shutdown -h +360` on every node after starting; stop all four when done |
 
+## 10. TODO: chunked prefill
+
+**Idea:** split a long prompt's prefill into chunks and interleave them with the other slot's decode steps (as in Sarathi-Serve), so a long prompt no longer freezes the request decoding next to it. This targets the stalls the interference experiment found (chat paused ~9 s next to audio on s41).
+
+**What llama-server does today** (llama.cpp 8642541b2, checked in the source):
+- **Text prompts** are already processed in batches of `-b` / `-ub` tokens (default 2,048 / 512), and the server runs a decode step for the other slot between batches. Smaller batches mean shorter stalls but slower prefill.
+- **Images and audio are not chunked.** A media chunk is encoded and then prefilled in one call (`process_mtmd_chunk`), which blocks the other slot until it finishes, whatever `-b` / `-ub` are. Chunking it would need a llama.cpp change, like the stage-profiling patch: prefill the media's tokens in `-ub`-sized pieces and yield between them.
+
+**Possible experiments:**
+1. **Text, no code change:** rerun the chat × text pairs of experiment 4 with `EXTRA_ARGS="-b 256 -ub 256"` (and 128, 512) on `run.sh`. Measure chat's stalls and TPOT against the text request's prefill time. Question: is there a batch size that removes chat's stalls at little prefill cost?
+2. **Media, needs a patch:** chunk the media prefill (and, separately, check whether the encoder itself can run in pieces). Same pairs with image and audio. Question: how much of chat's slowdown next to images/audio is removable, and at what cost to the image/audio request?
+3. **Effect on routing:** if chunking removes most of the interference, the interference-aware policy matters less; rerun the 6b sweep with the best setting.
+
+**Owner and timing:** to decide at the meeting; after experiments 4 and 6b, since it changes the server setup every other experiment shares.
+
 ## Docs map
 
 | Doc | What it is | Phase |
