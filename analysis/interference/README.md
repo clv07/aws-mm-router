@@ -1,6 +1,6 @@
 # Interference Between Modalities: Test Run on the Lab Server
 
-**A test run on a lab server (s41), not on AWS.** It checks that `src/interference.py` works and shows the first trends. The numbers are not from our EC2 instances, so they shouldn't go in the report as cluster results. Method and options: [`docs/phase2-interference.md`](../../docs/phase2-interference.md).
+**A test run on a lab server (s41), not on AWS.** It checks that `src/interference.py` works and shows the first trends. (`interference.py` has since been replaced by `corun.py pairs`, which takes the same measurement from the router; `summarize` and `load_matrix()` are now in `corun.py`. The commands at the end are the ones used for this run.) The numbers are not from our EC2 instances, so they shouldn't go in the report as cluster results. Method and options: [`docs/phase2-interference.md`](../../docs/phase2-interference.md).
 
 Raw files (per-request CSVs, logs, the server and setup scripts, `lscpu` output) are kept on s41 in `/mnt/intC-ssdr1-480gb/sushila/omni/results/interference-s41-2026-11-16/`.
 
@@ -84,7 +84,7 @@ Requests used: 5 per cell, 10 for a workload with itself (both streams). Each pa
 
 ## What this suggests for routing
 
-- **What's in the other slot matters, mostly for chat.** Avoid sending chat to a node whose other slot is processing a long prompt. Large requests can go next to chat at little cost. The slowdown matrix (`load_matrix()` in `interference.py`) gives an interference-aware `ect` its numbers.
+- **What's in the other slot matters, mostly for chat.** Avoid sending chat to a node whose other slot is processing a long prompt. Large requests can go next to chat at little cost. The slowdown matrix (`load_matrix()` in `corun.py`) gives an interference-aware `ect` its numbers.
 - **llama.cpp's batch size may reduce the stalls.** A smaller prompt batch (`-b`/`-ub`) should let the other slot's tokens through between chunks, at some cost in prompt speed. This is a quick second test on s41.
 
 ## Next steps

@@ -175,6 +175,7 @@ def replay(args, nodes, trace, costs, gains, bodies, labels):
         with requests.Session() as s:
             record = request_once(s, nodes[node]['url'], bodies[q['id']])
         router.done(node, time.perf_counter() - start)
+        measurements.complete(q['id'], record)   # Phase 2 measurement: response bytes, encoder time
         row = {**labels, 'timestamp_utc': utc_now(),
                'id': q['id'], 'arrival_s': q['arrival_s'], 'sent_s': f'{sent:.3f}', 'node': node,
                'model': nodes[node]['model'], 'node_inflight': inflight,

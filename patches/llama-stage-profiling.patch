@@ -120,7 +120,7 @@ index 2bd1ab9ec..ec6bcd95a 100644
              res->stats = slot.stats;
 +	    res->stats.encoding_ms = slot.encode_ms_total;
 +	    res->stats.encoding_calls = slot.encode_calls;
-+	    res->stats.encoding_chunks = slot.encode_calls;
++	    res->stats.encoding_chunks = slot.encode_chunks;
          }
  
          queue_results.send(std::move(res));
@@ -130,7 +130,7 @@ index 2bd1ab9ec..ec6bcd95a 100644
          res->stats           = slot.stats;
 +        res->stats.encoding_ms = slot.encode_ms_total;
 +	res->stats.encoding_calls = slot.encode_calls;
-+	res->stats.encoding_chunks = slot.encode_calls;
++	res->stats.encoding_chunks = slot.encode_chunks;
 +
          res->prompt          = slot.task->tokens.detokenize(ctx_tgt, true);
          res->response_fields = std::move(slot.task->params.response_fields);
