@@ -6,7 +6,7 @@
 
 ## 1. The logic
 
-Phase 1 profiled each node with one request at a time and routed each request whole to one node. The router's cost model (`ect`) predicts a request's time from those solo profiles. Under real traffic it is missing four things, and each Phase 2 experiment measures one of them:
+Phase 1 profiled each node with one request at a time and routed each request whole to one node. The router's cost model (`ect`) predicts a request's time from those solo profiles. Under real traffic it is missing five things, and each Phase 2 experiment measures one of them:
 
 | What the router is missing | Why it matters for multimodal requests | Experiment |
 | --- | --- | --- |
@@ -14,8 +14,9 @@ Phase 1 profiled each node with one request at a time and routed each request wh
 | **What moving data costs** | Requests carry base64 images and audio; a split moves the KV cache (~37 KB per prompt token, ~16 MB for one image) | 2. Network |
 | **Whether a request should be split across nodes** | Encode + prefill on the node best at prompts, decode on the node best at tokens, KV cache moved in between (EP+D) | 3. Split |
 | **What requests do to each other on one node** | llama-server encodes and prefills an image or audio clip in one call, which blocks the node's other slot: chat slowed 5.7× next to audio on s41, 1.8× on the c7a. `ect` assumes one fixed factor per node | 4. Interference, 5. Concurrency |
+| **When to commit a request to a node** | `rr`/`least`/`ect` pick a node on arrival and send at once; extra requests wait in llama-server's queue, stuck there even if another node frees up first (a chat behind a 4-image request). A router queue sends a request only when a slot frees, so it can still choose the node, the order (deadline first) and the pairing. But the slot then sits idle while the router learns it is free, sends the request and the node receives and parses it | 6c. Where requests wait |
 
-Experiments 1–5 measure each piece alone. Experiment 6 puts them into the router and compares policies under traffic, which produces the SLO figure.
+Experiments 1–5 measure each piece alone. Experiment 6 puts them into the router and compares policies under traffic, which produces the SLO figure; 6c separates *where requests wait* from *how a node is chosen*.
 
 **What we split, and what we don't:** we split a request at the prefill → decode boundary (EP+D), using llama-server's slot save/restore. We don't split encoding from prefill (llama-server can't take embeddings as input) or the model's layers (only useful when a model doesn't fit). Details: [phase2-split.md](phase2-split.md).
 
@@ -46,7 +47,10 @@ Experiments 1–5 measure each piece alone. Experiment 6 puts them into the rout
 | **5** | **Concurrency.** k = 1–4 streams with mixed workloads, including more streams than slots | How does cost grow with load, and does the pair matrix predict mixed load? | Cost vs k per node, queue wait, measured gain per node | `corun.py groups` | Interference & concurrency | ~20–30 min per node |
 | **6a** | **Bursty replay.** A bursty trace (`onoff`, 70% load, 15 min) replayed live with `ect` and `least` | Does the simulator match reality under bursts? | p50/p95 per modality, live vs simulated | `tracegen.py`, `main.py run` / `sim` | Analysis | ~40 min |
 | **6b** | **Rate sweep.** Traces at ~6 loads × 2–3 seeds, every policy: `rr`, `least`, `ect`, `slo`, then `ect` + interference and `ect` + split | Which policy sustains the highest rate at ≥ 90% SLO attainment? | SLO attainment (TTFT + TPOT, and end-to-end), goodput, $ per 1,000 met requests, latency breakdown, router CPU, bytes moved | `main.py sim` for the full curves; `main.py run` at 2–3 loads per policy; `analysis/phase2/analyze.py`, `figures.py` | Analysis + routing algorithms | ~3–4 h live |
+| **6c** | **Where requests wait: dispatch on arrival vs router queue.** The same node choice (`ect`'s cost model) run two ways: commit on arrival (wait in llama-server) and late binding (wait at the router, dispatch when a slot frees); then the router queue's order: arrival (FIFO) vs least slack (deadline first), with aging. Over the 6b loads, steady and bursty traces | When does holding requests at the router help, and when does it hurt? | SLO attainment and p95 per modality; where the time went (`router_wait_s` vs node queue); slot utilization (the idle gap between requests); requests stuck behind a large one; router CPU and decision time | `router.py` queue path (`slo` has it: `order` = slack / sufferage / fifo, `wait_for_best`, aging); `main.py sim`. **To add:** an `ect`-cost queue variant and command-line options for the order, so only one thing changes at a time; live router-queue dispatch in `main.py run` | Routing algorithms + analysis | sim: none; live: 2 loads × 2 traces × 2 modes, ~2 h |
 | *7 (optional)* | *Multi-turn sessions:* keep a session on the node holding its KV, move the KV, or recompute | When should a session move? | Bytes and latency per turn | to add | – | – |
+
+**What to expect from 6c.** At low load nothing queues, so a router queue only adds its decision time. It should help under bursts, with mixed request sizes and when predictions are off, because a waiting request can still go to whichever node frees first. It costs an idle gap per request (the router-node round trip plus uploading the body; a few ms inside AWS, much more from outside or for large audio), and a 2-vCPU router has to keep up. A middle option worth testing if the gap matters: let each node hold one waiting request, so the upload overlaps the running one.
 
 Why 70% load for the bursty replay: bursts already reach about 2× capacity, and at 90% the `rr`/`least` backlogs take too long to drain.
 
@@ -62,6 +66,7 @@ The routing policies only read these results; they never re-measure.
 | Split | `results/split/<label>/costs.json` | `split.SplitCosts` | `ect` + split: the finish time of every option (each node alone, each split A → B), pick the earliest; carry it out with `split.split_request()` |
 | Interference | `results/interference/<node>__<model>/matrix.csv` | `corun.load_matrix()` | `ect` + interference: slowdown(new \| running) in place of the fixed `k / slot_gain` in `cost_model` and in the simulator's `rate()`; prefer the node whose current work pairs best |
 | Concurrency | `results/concurrency/<node>__<model>/` | – | Measured gain per node (replaces the m8g's borrowed 1.01) |
+| Where requests wait | 6c analysis | – | Whether policies commit on arrival or queue at the router, and in what order; above which load the router queue is worth it |
 
 ## 5. Who does what
 
@@ -71,7 +76,7 @@ The routing policies only read these results; they never re-measure.
 | **Interference & concurrency** | `corun.py` | 4, 5 |
 | **Stage profiling** | `patches/llama-stage-profiling.patch` | 1 (reads the encoding times from 3, 4 and 5) |
 | **Analysis** | `analysis/phase2/`, `tracegen.py` traces | 6a, 6b analysis and figures |
-| **Routing algorithms** (two people, one algorithm each) | `router.py`, `main.py` | `ect` + interference, `ect` + split; 6b runs |
+| **Routing algorithms** (two people, one algorithm each) | `router.py`, `main.py` | `ect` + interference, `ect` + split; live router-queue dispatch; 6b, 6c runs |
 | **Router machine** | the c7i.large router | access setup |
 
 ## 6. Order
@@ -88,6 +93,7 @@ The routing policies only read these results; they never re-measure.
 | 8 | Traces; bursty replay (6a); simulator calibration | Analysis | 3 |
 | 9 | `ect` + interference and `ect` + split policies, tested on a short trace | Routing algorithms | 5, 6 |
 | 10 | Rate sweep (6b), SLO grids | Analysis + routing algorithms | 8, 9 |
+| 11 | Where requests wait (6c): simulator first, then live at 2 loads, steady and bursty | Routing algorithms + analysis | 9 (live dispatch in `main.py run`), 10 |
 
 Steps 4–8 all use the cluster: run them one after another, not at the same time.
 
@@ -152,6 +158,10 @@ python src/main.py sim --trace traces/phase2/<that trace>.csv --nodes nodes.aws.
 for load in 0.4 0.6 0.8 1.0 1.2 1.4; do for seed in 1 2; do
   python src/tracegen.py make --load $load --seed $seed --duration 900 --nodes nodes.aws.json; done; done
 
+# 6c. where requests wait: today `slo` (router queue, least slack) vs `ect` (commit on arrival) in the simulator,
+#     on every 6b trace; the ect-cost queue variant and the order options are still to add
+python src/main.py sim --trace traces/phase2/<trace>.csv --nodes nodes.aws.json --policies ect,slo
+
 # analysis and figures (--link from experiment 2: round trip s, MB/s)
 python analysis/phase2/analyze.py --nodes nodes.aws.json --out results/phase2-analysis --link <RTT_S> <MB_S>
 python analysis/phase2/figures.py results/phase2-analysis      # slo-grid-*.png, breakdown, placement
@@ -166,6 +176,7 @@ python analysis/phase2/figures.py results/phase2-analysis      # slo-grid-*.png,
 - [ ] Stages: encode share per workload and node, alone and under interference.
 - [ ] Simulator calibrated: with the interference matrix, simulated p50/p95 for `ect`/`least` on the bursty trace within ~20–25% of live.
 - [ ] SLO grids: attainment vs rate for every policy, TTFT + TPOT and end-to-end.
+- [ ] Where requests wait: commit-on-arrival vs router queue (FIFO and least slack) on the same node choice, simulated over all loads and live at 2 loads, steady and bursty; the load above which the router queue wins.
 - [ ] Results committed, instances stopped.
 
 ## 9. Risks
@@ -173,6 +184,7 @@ python analysis/phase2/figures.py results/phase2-analysis      # slo-grid-*.png,
 | Risk | Mitigation |
 | --- | --- |
 | x86 → Arm KV restore fails | Split only within one CPU family (c7a ↔ c7i); report it as a finding |
+| Router queue's idle gap or decision time outweighs its benefit | Measure it in 6c (slot utilization, `decision_us`); try one waiting request per node |
 | Router CPU becomes the bottleneck under bursts (2 vCPUs build every request) | Check `router_cpu_max` in the analysis; move the router to a larger instance if it saturates |
 | Tunnels drop | They restart themselves; failed requests are excluded; rerun only what failed |
 | Quota (24 vCPUs shared by the whole account) | Nobody starts other instances while the cluster runs |
