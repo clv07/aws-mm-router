@@ -7,7 +7,6 @@ src/
   benchmark.py      Phase 1 single-node benchmark: sends the 9 workloads to one llama-server and records
                     latency, prefill/decode speed, CPU and memory; its request_once() is shared by
                     every tool and also returns encoding_ms (patched llama-server) and response_bytes
-  benchmark_v3.py   benchmark.py with the encode/prefill/decode columns (requests_stages.csv)
   quality.py        answer quality per quantization (ROUGE-L vs f16, word error rate)
   router.py         the routing algorithm: Router with the policies (random, rr, least, ect, slo),
                     its cost model, and the node models it is built from (Phase 1 profiles +
