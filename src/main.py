@@ -1261,6 +1261,8 @@ def setup_logging(level=logging.INFO, policy="router", run_id=None):
         handlers=[logging.StreamHandler(), logging.FileHandler(path, mode="w", encoding="utf-8")],
         force=True,
     )
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.WARNING)
     logger.info("RUN_LOG path=%s policy=%s run_id=%s", path, policy, run_id)
     return path
 
