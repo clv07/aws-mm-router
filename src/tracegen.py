@@ -36,7 +36,7 @@ import random
 import statistics
 
 from benchmark import RUNS
-from router import load_nodes, node_model, profile_rows
+from router.router import load_nodes, node_model, profile_rows
 
 TRACES_DIR = Path("traces")
 
