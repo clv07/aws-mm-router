@@ -1,0 +1,2324 @@
+=== 05:58:14 reset
+=== 06:00:05 reset
+Shutdown scheduled for Fri 2026-11-27 18:01:05 UTC, use 'shutdown -c' to cancel.
+Shutdown scheduled for Fri 2026-11-27 18:01:06 UTC, use 'shutdown -c' to cancel.
+Shutdown scheduled for Fri 2026-11-27 18:01:06 UTC, use 'shutdown -c' to cancel.
+Shutdown scheduled for Fri 2026-11-27 19:01:06 UTC, use 'shutdown -c' to cancel.
+=== 06:01:06 all 3 servers ready
+=== 06:01:06 5: concurrency
+run_id=20261127T060106Z node=m8g.xlarge-p2 router=c7i.large cpu/ram=node-m8g model=Qwen2.5-Omni-3B-Q8_0 build=b11960-8642541b2 slots=2 ctx_per_slot=4096 output=fixed mix=chat=50,text=20,image=15,audio=15 groups: 00+mix 00+mix+mix 00+mix+mix+mix mix+mix mix+mix+mix mix+mix+mix+mix -> results/concurrency/m8g.xlarge-p2__Qwen2.5-Omni-3B-Q8_0
+  building 30 inputs for 00 chat=short
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+  building 30 inputs for 01 text=512
+  building 30 inputs for 02 text=1024
+  building 30 inputs for 03 text=3072
+  building 30 inputs for 04 image=1
+  building 30 inputs for 05 image=2
+  building 30 inputs for 06 image=4
+  building 30 inputs for 07 audio=10
+  building 30 inputs for 08 audio=40
+  warmup 00: ok 5.73s
+  warmup 01: ok 13.68s
+  warmup 02: ok 26.53s
+  warmup 03: ok 128.08s
+  warmup 04: ok 25.32s
+  warmup 05: ok 57.75s
+  warmup 06: ok 106.21s
+  warmup 07: ok 53.01s
+  warmup 08: ok 110.62s
+[m8g.xlarge-p2] 00+mix (k=2)
+  00+mix [0] 00 #1: ok 99.51s
+  00+mix [1] 06 #1: ok 99.65s (with 00)
+  00+mix [0] 00 #2: ok 10.65s
+  00+mix [1] 00 #2: ok 10.35s (with 00)
+  00+mix [0] 00 #3: ok 10.58s
+  00+mix [1] 00 #3: ok 10.39s (with 00)
+  00+mix [1] 01 #4: ok 18.43s
+  00+mix [0] 00 #4: ok 18.40s (with 01)
+  00+mix [1] 05 #5: ok 49.84s
+[m8g.xlarge-p2] 00+mix+mix (k=3)
+  00+mix+mix [0] 00 #1: ok 115.75s (with 08)
+  00+mix+mix [2] 08 #1: ok 116.28s
+  00+mix+mix [1] 00 #1: ok 126.41s (with 00+08)
+  00+mix+mix [0] 00 #2: ok 10.81s (with 00)
+  00+mix+mix [2] 00 #2: ok 29.09s (with 00+00)
+  00+mix+mix [1] 01 #2: ok 19.47s (with 00+00)
+  00+mix+mix [0] 00 #3: ok 29.40s (with 00+01)
+  00+mix+mix [2] 00 #3: ok 115.18s (with 00+01)
+  00+mix+mix [1] 08 #3: ok 125.57s (with 00+00)
+  00+mix+mix [0] 00 #4: ok 115.92s (with 00+08)
+  00+mix+mix [2] 00 #4: ok 21.76s (with 00+08)
+  00+mix+mix [1] 00 #4: ok 10.64s (with 00)
+  00+mix+mix [0] 00 #5: ok 28.78s (with 00+00)
+  00+mix+mix [2] 01 #5: ok 19.17s (with 00+00)
+[m8g.xlarge-p2] 00+mix+mix+mix (k=4)
+  00+mix+mix+mix [1] 00 #1: ok 10.59s
+  00+mix+mix+mix [0] 00 #1: ok 70.58s (with 00)
+  00+mix+mix+mix [3] 03 #1: ok 249.98s (with 00+00)
+  00+mix+mix+mix [2] 08 #1: ok 250.11s (with 00+00+03)
+  00+mix+mix+mix [1] 07 #2: ok 297.26s (with 00+03+08)  00+mix+mix+mix [0] 00 #2: ok 237.29s (with 03+07+08)
+
+  00+mix+mix+mix [3] 03 #2: ok 191.53s (with 00+07)  00+mix+mix+mix [2] 00 #2: ok 191.37s (with 00+03+07)
+
+  00+mix+mix+mix [1] 00 #3: ok 144.37s (with 00+00+03)
+  00+mix+mix+mix [0] 00 #3: ok 144.37s (with 00+03)
+  00+mix+mix+mix [3] 02 #3: ok 89.95s (with 00+00+07)
+  00+mix+mix+mix [2] 07 #3: ok 90.31s (with 00+00)
+  00+mix+mix+mix [1] 00 #4: ok 90.09s (with 02+07)
+  00+mix+mix+mix [0] 00 #4: ok 90.33s (with 00+02+07)
+  00+mix+mix+mix [2] 08 #4: ok 241.14s (with 00+00+06)
+  00+mix+mix+mix [3] 06 #4: ok 241.67s (with 00+00+07)
+  00+mix+mix+mix [1] 00 #5: ok 241.06s (with 06+08)
+  00+mix+mix+mix [0] 00 #5: ok 241.35s (with 00+06+08)
+  00+mix+mix+mix [2] 00 #5: ok 16.29s (with 00+00+06)
+[m8g.xlarge-p2] mix+mix (k=2)
+  mix+mix [0] 00 #1: ok 10.59s
+  mix+mix [1] 00 #1: ok 10.63s (with 00)
+  mix+mix [0] 00 #2: ok 30.12s
+  mix+mix [1] 04 #2: ok 30.01s (with 00)
+  mix+mix [0] 00 #3: ok 10.58s (with 04)
+  mix+mix [1] 00 #3: ok 10.49s (with 00)
+  mix+mix [0] 00 #4: ok 55.95s
+  mix+mix [1] 05 #4: ok 56.19s (with 00)
+  mix+mix [0] 04 #5: ok 28.90s (with 05)
+[m8g.xlarge-p2] mix+mix+mix (k=3)
+  mix+mix+mix [0] 01 #1: ok 30.58s
+  mix+mix+mix [2] 04 #1: ok 39.05s (with 01)
+  mix+mix+mix [1] 01 #1: ok 90.80s (with 01+04)
+  mix+mix+mix [0] 05 #2: ok 68.69s (with 01+04)
+  mix+mix+mix [2] 01 #2: ok 117.62s (with 01+05)
+  mix+mix+mix [1] 07 #2: ok 74.68s (with 01+05)
+  mix+mix+mix [0] 01 #3: ok 84.01s (with 01+07)
+  mix+mix+mix [2] 01 #3: ok 48.75s (with 01+07)
+  mix+mix+mix [1] 02 #3: ok 50.19s (with 01+01)
+  mix+mix+mix [0] 00 #4: ok 79.87s (with 01+02)
+  mix+mix+mix [2] 07 #4: ok 68.51s (with 00+02)
+  mix+mix+mix [1] 00 #4: ok 58.18s (with 00+07)
+  mix+mix+mix [0] 00 #5: ok 20.65s (with 00+07)
+  mix+mix+mix [2] 00 #5: ok 10.45s (with 00+00)
+[m8g.xlarge-p2] mix+mix+mix+mix (k=4)
+  mix+mix+mix+mix [2] 01 #1: ok 141.86s (with 03+07)
+  mix+mix+mix+mix [3] 03 #1: ok 141.95s
+  mix+mix+mix+mix [1] 01 #1: ok 207.94s (with 01+03+07)
+  mix+mix+mix+mix [0] 07 #1: ok 228.47s (with 03)
+  mix+mix+mix+mix [3] 02 #2: ok 144.26s (with 01+07+07)
+  mix+mix+mix+mix [2] 07 #2: ok 248.48s (with 01+07)
+  mix+mix+mix+mix [1] 08 #2: ok 301.15s (with 02+07+07)
+  mix+mix+mix+mix [0] 06 #2: ok 281.11s (with 02+07+08)
+  mix+mix+mix+mix [3] 00 #3: ok 232.79s (with 06+07+08)
+  mix+mix+mix+mix [2] 00 #3: ok 129.25s (with 00+06+08)
+  mix+mix+mix+mix [1] 00 #3: ok 21.06s (with 00+00+06)
+  mix+mix+mix+mix [0] 00 #3: ok 20.96s (with 00+00+00)
+  mix+mix+mix+mix [3] 00 #4: ok 20.72s (with 00+00+00)
+  mix+mix+mix+mix [2] 00 #4: ok 39.46s (with 00+00+00)
+  mix+mix+mix+mix [1] 05 #4: ok 79.08s (with 00+00+00)
+  mix+mix+mix+mix [0] 05 #4: ok 79.20s (with 00+00+05)
+  mix+mix+mix+mix [3] 00 #5: ok 79.38s (with 00+05+05)
+  mix+mix+mix+mix [2] 00 #5: ok 157.80s (with 00+05+05)
+  mix+mix+mix+mix [1] 06 #5: ok 114.36s (with 00+00+05)
+Appended results to results/concurrency/m8g.xlarge-p2__Qwen2.5-Omni-3B-Q8_0/requests.csv and groups.csv (run_id=20261127T060106Z)
+run_id=20261127T065032Z node=c7a.2xlarge-p2 router=c7i.large cpu/ram=node-c7a model=Qwen2.5-Omni-3B-Q8_0 build=b11960-8642541b2 slots=2 ctx_per_slot=4096 output=fixed mix=chat=50,text=20,image=15,audio=15 groups: 00+mix 00+mix+mix 00+mix+mix+mix mix+mix mix+mix+mix mix+mix+mix+mix -> results/concurrency/c7a.2xlarge-p2__Qwen2.5-Omni-3B-Q8_0
+  building 30 inputs for 00 chat=short
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+  building 30 inputs for 01 text=512
+  building 30 inputs for 02 text=1024
+  building 30 inputs for 03 text=3072
+  building 30 inputs for 04 image=1
+  building 30 inputs for 05 image=2
+  building 30 inputs for 06 image=4
+  building 30 inputs for 07 audio=10
+  building 30 inputs for 08 audio=40
+  warmup 00: ok 11.59s
+  warmup 01: ok 14.83s
+  warmup 02: ok 18.69s
+  warmup 03: ok 36.05s
+  warmup 04: ok 16.62s
+  warmup 05: ok 23.76s
+  warmup 06: ok 33.41s
+  warmup 07: ok 20.32s
+  warmup 08: ok 29.57s
+[c7a.2xlarge-p2] 00+mix (k=2)
+  00+mix [0] 00 #1: ok 32.90s
+  00+mix [1] 06 #1: ok 33.48s (with 00)
+  00+mix [0] 00 #2: ok 12.09s (with 06)
+  00+mix [1] 00 #2: ok 12.04s (with 00)
+  00+mix [0] 00 #3: ok 11.82s (with 00)
+  00+mix [1] 00 #3: ok 11.88s (with 00)
+  00+mix [0] 00 #4: ok 16.16s (with 00)
+  00+mix [1] 01 #4: ok 16.24s (with 00)
+  00+mix [0] 00 #5: ok 11.19s (with 01)
+[c7a.2xlarge-p2] 00+mix+mix (k=3)
+  00+mix+mix [0] 00 #1: ok 31.09s (with 08)
+  00+mix+mix [2] 08 #1: ok 31.49s
+  00+mix+mix [1] 00 #1: ok 42.89s (with 00+08)
+  00+mix+mix [0] 00 #2: ok 11.93s (with 00)
+  00+mix+mix [2] 00 #2: ok 28.05s (with 00+00)
+  00+mix+mix [1] 01 #2: ok 17.21s (with 00+00)
+  00+mix+mix [0] 00 #3: ok 28.61s (with 00+01)
+  00+mix+mix [2] 00 #3: ok 30.61s (with 00+01)
+  00+mix+mix [1] 08 #3: ok 42.69s (with 00+00)
+  00+mix+mix [0] 00 #4: ok 31.59s (with 00+08)
+  00+mix+mix [2] 00 #4: ok 24.93s (with 00+08)
+  00+mix+mix [1] 00 #4: ok 12.04s (with 00)
+  00+mix+mix [0] 00 #5: ok 27.30s (with 00+00)
+  00+mix+mix [2] 01 #5: ok 16.38s (with 00+00)
+[c7a.2xlarge-p2] 00+mix+mix+mix (k=4)
+  00+mix+mix+mix [1] 00 #1: ok 11.91s
+  00+mix+mix+mix [0] 00 #1: ok 26.79s (with 00)
+  00+mix+mix+mix [3] 03 #1: ok 69.40s (with 00+00)
+  00+mix+mix+mix [2] 08 #1: ok 69.57s (with 00+00+03)
+  00+mix+mix+mix [1] 07 #2: ok 79.00s (with 00+03+08)
+  00+mix+mix+mix [0] 00 #2: ok 64.14s (with 03+07+08)
+  00+mix+mix+mix [3] 03 #2: ok 59.51s (with 00+07)
+  00+mix+mix+mix [2] 00 #2: ok 59.32s (with 00+03+07)
+  00+mix+mix+mix [1] 00 #3: ok 50.04s (with 00+00+03)
+  00+mix+mix+mix [0] 00 #3: ok 50.05s (with 00+03)
+  00+mix+mix+mix [3] 02 #3: ok 41.82s (with 00+00+07)
+  00+mix+mix+mix [2] 07 #3: ok 42.16s (with 00+00)
+  00+mix+mix+mix [1] 00 #4: ok 42.17s (with 02+07)
+  00+mix+mix+mix [0] 00 #4: ok 42.35s (with 00+02+07)
+  00+mix+mix+mix [2] 08 #4: ok 68.27s (with 00+00+06)
+  00+mix+mix+mix [3] 06 #4: ok 68.83s (with 00+00+07)
+  00+mix+mix+mix [1] 00 #5: ok 68.13s (with 06+08)
+  00+mix+mix+mix [0] 00 #5: ok 68.42s (with 00+06+08)
+  00+mix+mix+mix [2] 00 #5: ok 22.98s (with 00+00+06)
+[c7a.2xlarge-p2] mix+mix (k=2)
+  mix+mix [0] 00 #1: ok 11.91s
+  mix+mix [1] 00 #1: ok 11.99s (with 00)
+  mix+mix [0] 00 #2: ok 18.27s
+  mix+mix [1] 04 #2: ok 18.48s (with 00)
+  mix+mix [0] 00 #3: ok 12.06s (with 04)
+  mix+mix [1] 00 #3: ok 11.83s (with 00)
+  mix+mix [0] 00 #4: ok 24.23s
+  mix+mix [1] 05 #4: ok 30.21s (with 00)
+  mix+mix [0] 04 #5: ok 17.13s (with 05)
+[c7a.2xlarge-p2] mix+mix+mix (k=3)
+  mix+mix+mix [0] 01 #1: ok 19.56s
+  mix+mix+mix [2] 04 #1: ok 29.15s (with 01)
+  mix+mix+mix [1] 01 #1: ok 51.87s (with 01+04)
+  mix+mix+mix [0] 05 #2: ok 36.18s (with 01+04)
+  mix+mix+mix [2] 01 #2: ok 50.07s (with 01+05)
+  mix+mix+mix [1] 07 #2: ok 31.52s (with 01+05)
+  mix+mix+mix [0] 01 #3: ok 43.35s (with 01+07)
+  mix+mix+mix [2] 01 #3: ok 27.99s (with 01+07)
+  mix+mix+mix [1] 02 #3: ok 36.13s (with 01+01)
+  mix+mix+mix [0] 00 #4: ok 29.97s (with 01+02)
+  mix+mix+mix [2] 07 #4: ok 34.31s (with 00+02)
+  mix+mix+mix [1] 00 #4: ok 21.94s (with 00+07)
+  mix+mix+mix [0] 00 #5: ok 23.72s (with 00+07)
+  mix+mix+mix [2] 00 #5: ok 12.01s (with 00+00)
+[c7a.2xlarge-p2] mix+mix+mix+mix (k=4)
+  mix+mix+mix+mix [3] 03 #1: ok 47.60s
+  mix+mix+mix+mix [0] 07 #1: ok 51.35s (with 03)
+  mix+mix+mix+mix [2] 01 #1: ok 67.55s (with 03+07)
+  mix+mix+mix+mix [1] 01 #1: ok 74.85s (with 01+03+07)
+  mix+mix+mix+mix [3] 02 #2: ok 63.97s (with 01+01+07)
+  mix+mix+mix+mix [0] 06 #2: ok 69.79s (with 01+01+02)
+  mix+mix+mix+mix [2] 07 #2: ok 85.04s (with 01+02+06)
+  mix+mix+mix+mix [1] 08 #2: ok 78.78s (with 02+06+07)
+  mix+mix+mix+mix [3] 00 #3: ok 52.74s (with 06+07+08)
+  mix+mix+mix+mix [0] 00 #3: ok 44.18s (with 00+07+08)
+  mix+mix+mix+mix [2] 00 #3: ok 23.59s (with 00+00+08)
+  mix+mix+mix+mix [1] 00 #3: ok 23.76s (with 00+00+00)
+  mix+mix+mix+mix [3] 00 #4: ok 34.13s (with 00+00+00)
+  mix+mix+mix+mix [0] 05 #4: ok 34.36s (with 00+00+00)
+  mix+mix+mix+mix [2] 00 #4: ok 40.31s (with 00+00+05)
+  mix+mix+mix+mix [1] 05 #4: ok 40.64s (with 00+00+05)
+  mix+mix+mix+mix [3] 00 #5: ok 37.95s (with 00+05+05)
+  mix+mix+mix+mix [0] 02 #5: ok 38.27s (with 00+00+05)
+  mix+mix+mix+mix [2] 00 #5: ok 31.08s (with 00+02+05)
+Appended results to results/concurrency/c7a.2xlarge-p2__Qwen2.5-Omni-3B-Q8_0/requests.csv and groups.csv (run_id=20261127T065032Z)
+run_id=20261127T071015Z node=c7i.2xlarge router=c7i.large cpu/ram=node-c7i model=Qwen2.5-Omni-3B-Q8_0 build=b11960-8642541b2 slots=2 ctx_per_slot=4096 output=fixed mix=chat=50,text=20,image=15,audio=15 groups: 00+mix 00+mix+mix 00+mix+mix+mix mix+mix mix+mix+mix mix+mix+mix+mix -> results/concurrency/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0
+  building 30 inputs for 00 chat=short
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+  building 30 inputs for 01 text=512
+  building 30 inputs for 02 text=1024
+  building 30 inputs for 03 text=3072
+  building 30 inputs for 04 image=1
+  building 30 inputs for 05 image=2
+  building 30 inputs for 06 image=4
+  building 30 inputs for 07 audio=10
+  building 30 inputs for 08 audio=40
+  warmup 00: ok 10.45s
+  warmup 01: ok 18.96s
+  warmup 02: ok 27.89s
+  warmup 03: ok 67.00s
+  warmup 04: ok 22.51s
+  warmup 05: ok 39.73s
+  warmup 06: ok 62.39s
+  warmup 07: ok 31.49s
+  warmup 08: ok 53.26s
+[c7i.2xlarge] 00+mix (k=2)
+  00+mix [0] 00 #1: ok 59.20s
+  00+mix [1] 06 #1: ok 60.06s (with 00)
+  00+mix [0] 00 #2: ok 12.31s (with 06)
+  00+mix [1] 00 #2: ok 12.23s (with 00)
+  00+mix [0] 00 #3: ok 12.21s (with 00)
+  00+mix [1] 00 #3: ok 12.17s (with 00)
+  00+mix [0] 00 #4: ok 20.80s (with 00)
+  00+mix [1] 01 #4: ok 20.96s (with 00)
+  00+mix [0] 00 #5: ok 10.82s (with 01)
+[c7i.2xlarge] 00+mix+mix (k=3)
+  00+mix+mix [0] 00 #1: ok 55.02s (with 08)
+  00+mix+mix [2] 08 #1: ok 55.79s
+  00+mix+mix [1] 00 #1: ok 67.18s (with 00+08)
+  00+mix+mix [0] 00 #2: ok 12.44s (with 00+08)
+  00+mix+mix [2] 00 #2: ok 31.95s (with 00+00)
+  00+mix+mix [1] 01 #2: ok 21.21s (with 00+00)
+  00+mix+mix [0] 00 #3: ok 32.52s (with 00+01)
+  00+mix+mix [2] 00 #3: ok 54.72s (with 00+01)
+  00+mix+mix [1] 08 #3: ok 66.50s (with 00+00)
+  00+mix+mix [0] 00 #4: ok 55.55s (with 00+08)
+  00+mix+mix [2] 00 #4: ok 25.05s (with 00+08)
+  00+mix+mix [1] 00 #4: ok 12.49s (with 00+00)
+  00+mix+mix [0] 00 #5: ok 32.07s (with 00+00)
+  00+mix+mix [2] 01 #5: ok 20.83s (with 00+00)
+[c7i.2xlarge] 00+mix+mix+mix (k=4)
+  00+mix+mix+mix [1] 00 #1: ok 12.25s
+  00+mix+mix+mix [0] 00 #1: ok 47.55s (with 00)
+  00+mix+mix+mix [3] 03 #1: ok 124.62s (with 00+00)
+  00+mix+mix+mix [2] 08 #1: ok 124.92s (with 00+00+03)
+  00+mix+mix+mix [1] 07 #2: ok 145.65s (with 00+03+08)
+  00+mix+mix+mix [0] 00 #2: ok 110.37s (with 03+07+08)
+  00+mix+mix+mix [3] 03 #2: ok 102.70s (with 00+07+08)
+  00+mix+mix+mix [2] 00 #2: ok 102.42s (with 00+03+07)
+  00+mix+mix+mix [1] 00 #3: ok 81.84s (with 00+00+03)
+  00+mix+mix+mix [0] 00 #3: ok 81.88s (with 00+03)
+  00+mix+mix+mix [3] 02 #3: ok 62.92s (with 00+00)
+  00+mix+mix+mix [2] 07 #3: ok 63.44s (with 00+00+02)
+  00+mix+mix+mix [1] 00 #4: ok 63.03s (with 02+07)
+  00+mix+mix+mix [0] 00 #4: ok 63.35s (with 00+02+07)
+  00+mix+mix+mix [2] 08 #4: ok 125.02s (with 00+00+06)
+  00+mix+mix+mix [3] 06 #4: ok 126.00s (with 00+00+07)
+  00+mix+mix+mix [1] 00 #5: ok 125.05s (with 06+08)
+  00+mix+mix+mix [0] 00 #5: ok 125.42s (with 00+06+08)
+  00+mix+mix+mix [2] 00 #5: ok 22.52s (with 00+00+06)
+[c7i.2xlarge] mix+mix (k=2)
+  mix+mix [0] 00 #1: ok 12.14s
+  mix+mix [1] 00 #1: ok 12.21s (with 00)
+  mix+mix [0] 00 #2: ok 24.20s
+  mix+mix [1] 04 #2: ok 24.57s (with 00)
+  mix+mix [0] 00 #3: ok 12.23s (with 04)
+  mix+mix [1] 00 #3: ok 11.75s (with 00)
+  mix+mix [0] 00 #4: ok 38.13s
+  mix+mix [1] 05 #4: ok 38.51s (with 00)
+  mix+mix [0] 04 #5: ok 24.34s (with 05)
+[c7i.2xlarge] mix+mix+mix (k=3)
+  mix+mix+mix [0] 01 #1: ok 28.68s
+  mix+mix+mix [2] 04 #1: ok 37.48s (with 01)
+  mix+mix+mix [1] 01 #1: ok 73.56s (with 01+04)
+  mix+mix+mix [0] 05 #2: ok 53.70s (with 01+04)
+  mix+mix+mix [2] 01 #2: ok 77.60s (with 01+05)
+  mix+mix+mix [1] 07 #2: ok 50.72s (with 01+05)
+  mix+mix+mix [0] 01 #3: ok 61.76s (with 01+07)
+  mix+mix+mix [2] 01 #3: ok 47.11s (with 01+07)
+  mix+mix+mix [1] 02 #3: ok 49.72s (with 01+01)
+  mix+mix+mix [0] 00 #4: ok 51.32s (with 01+02)
+  mix+mix+mix [2] 07 #4: ok 45.53s (with 00+02)
+  mix+mix+mix [1] 00 #4: ok 33.88s (with 00+07)
+  mix+mix+mix [0] 00 #5: ok 23.86s (with 00+07)
+  mix+mix+mix [2] 00 #5: ok 12.32s (with 00+00)
+[c7i.2xlarge] mix+mix+mix+mix (k=4)
+  mix+mix+mix+mix [2] 01 #1: ok 77.98s (with 03+07)
+  mix+mix+mix+mix [3] 03 #1: ok 78.12s
+  mix+mix+mix+mix [1] 01 #1: ok 119.67s (with 01+03+07)
+  mix+mix+mix+mix [0] 07 #1: ok 120.29s (with 03)
+  mix+mix+mix+mix [2] 07 #2: ok 92.48s (with 01+07)
+  mix+mix+mix+mix [3] 02 #2: ok 92.40s (with 01+07+07)
+  mix+mix+mix+mix [1] 08 #2: ok 161.42s (with 02+07+07)
+  mix+mix+mix+mix [0] 06 #2: ok 161.40s (with 02+07+08)
+  mix+mix+mix+mix [2] 00 #3: ok 122.29s (with 06+08)
+  mix+mix+mix+mix [3] 00 #3: ok 122.93s (with 00+06+08)
+  mix+mix+mix+mix [1] 00 #3: ok 24.58s (with 00+00+06)
+  mix+mix+mix+mix [0] 00 #3: ok 24.52s (with 00+00+00)
+  mix+mix+mix+mix [2] 00 #4: ok 24.28s (with 00+00+00)
+  mix+mix+mix+mix [3] 00 #4: ok 36.38s (with 00+00+00)
+  mix+mix+mix+mix [1] 05 #4: ok 59.92s (with 00+00+00)
+  mix+mix+mix+mix [0] 05 #4: ok 60.00s (with 00+00+05)
+  mix+mix+mix+mix [2] 00 #5: ok 60.18s (with 00+05+05)
+  mix+mix+mix+mix [3] 00 #5: ok 73.35s (with 00+05+05)
+  mix+mix+mix+mix [1] 06 #5: ok 73.52s (with 00+00+05)
+Appended results to results/concurrency/c7i.2xlarge__Qwen2.5-Omni-3B-Q8_0/requests.csv and groups.csv (run_id=20261127T071015Z)
+=== 07:41:14 2: network router -> nodes
+sink on node-c7a not reachable, skipped
+run_id=20261127T074120Z http://127.0.0.1:18091 -> results/movement/router-c7i/payload.csv
+    up       1,000 B  median      1.66 ms       0.6 MB/s
+  down       1,000 B  median      1.62 ms       0.6 MB/s
+    up      10,000 B  median      1.33 ms       7.5 MB/s
+  down      10,000 B  median      1.66 ms       6.0 MB/s
+    up     100,000 B  median     42.47 ms       2.4 MB/s
+  down     100,000 B  median      1.97 ms      50.8 MB/s
+    up   1,000,000 B  median     43.01 ms      23.2 MB/s
+  down   1,000,000 B  median      3.27 ms     306.0 MB/s
+    up   4,000,000 B  median     47.12 ms      84.9 MB/s
+  down   4,000,000 B  median      7.44 ms     537.5 MB/s
+    up  16,000,000 B  median     66.14 ms     241.9 MB/s
+  down  16,000,000 B  median     26.16 ms     611.7 MB/s
+    up  64,000,000 B  median    143.94 ms     444.6 MB/s
+  down  64,000,000 B  median    103.93 ms     615.8 MB/s
+    up 128,000,000 B  median    247.92 ms     516.3 MB/s
+  down 128,000,000 B  median    206.78 ms     619.0 MB/s
+up: time ≈ 25.85 ms + bytes / 507 MB/s
+down: time ≈ 1.41 ms + bytes / 624 MB/s
+appended 80 rows to results/movement/router-c7i/payload.csv
+run_id=20261127T074126Z http://127.0.0.1:18092 -> results/movement/router-m8g/payload.csv
+    up       1,000 B  median     41.94 ms       0.0 MB/s
+  down       1,000 B  median     41.66 ms       0.0 MB/s
+    up      10,000 B  median     42.03 ms       0.2 MB/s
+  down      10,000 B  median      0.72 ms      13.9 MB/s
+    up     100,000 B  median     41.99 ms       2.4 MB/s
+  down     100,000 B  median      0.79 ms     126.9 MB/s
+    up   1,000,000 B  median     43.01 ms      23.2 MB/s
+  down   1,000,000 B  median      2.70 ms     370.2 MB/s
+    up   4,000,000 B  median     47.75 ms      83.8 MB/s
+  down   4,000,000 B  median      7.28 ms     549.1 MB/s
+    up  16,000,000 B  median     68.07 ms     235.0 MB/s
+  down  16,000,000 B  median     25.68 ms     623.0 MB/s
+    up  64,000,000 B  median    149.04 ms     429.4 MB/s
+  down  64,000,000 B  median    100.82 ms     634.8 MB/s
+    up 128,000,000 B  median    257.04 ms     498.0 MB/s
+  down 128,000,000 B  median    201.79 ms     634.3 MB/s
+up: time ≈ 39.82 ms + bytes / 528 MB/s
+down: time ≈ 7.88 ms + bytes / 669 MB/s
+appended 80 rows to results/movement/router-m8g/payload.csv
+=== 07:41:33 3: split
+run_id=20261127T074133Z model=Qwen2.5-Omni-3B-Q8_0 nodes=['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge'] pairs=[('c7a.2xlarge', 'm8g.xlarge')] transport=direct -> results/split/aws-check
+  warmed up c7a.2xlarge
+  warmed up c7i.2xlarge
+  warmed up m8g.xlarge
+[alone]
+  c7a.2xlarge 00 chat=short #1: 10.9s (prompt 0.2 + decode 10.7)
+  c7a.2xlarge 04 image=1 #1: 18.2s (prompt 7.1 + decode 11.2)
+  c7i.2xlarge 00 chat=short #1: 10.4s (prompt 0.5 + decode 9.9)
+  c7i.2xlarge 04 image=1 #1: 27.4s (prompt 17.1 + decode 10.3)
+  m8g.xlarge 00 chat=short #1: 5.7s (prompt 0.3 + decode 5.5)
+  m8g.xlarge 04 image=1 #1: 35.1s (prompt 29.2 + decode 5.9)
+[split]
+  c7a.2xlarge->m8g.xlarge 00 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 04 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+appended results to results/split/aws-check; next: python src/split.py summarize results/split/aws-check
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+run_id=20261127T074402Z model=Qwen2.5-Omni-3B-Q8_0 nodes=['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge'] pairs=[('c7a.2xlarge', 'm8g.xlarge'), ('c7a.2xlarge', 'c7i.2xlarge'), ('c7i.2xlarge', 'm8g.xlarge')] transport=direct -> results/split/aws-p2
+  warmed up c7a.2xlarge
+  warmed up c7i.2xlarge
+  warmed up m8g.xlarge
+[alone]
+  c7a.2xlarge 00 chat=short #1: 10.9s (prompt 0.2 + decode 10.7)
+  c7a.2xlarge 00 chat=short #2: 10.9s (prompt 0.2 + decode 10.7)
+  c7a.2xlarge 00 chat=short #3: 11.0s (prompt 0.2 + decode 10.7)
+  c7a.2xlarge 02 text=1024 #1: 18.3s (prompt 7.1 + decode 11.2)
+  c7a.2xlarge 02 text=1024 #2: 18.3s (prompt 7.1 + decode 11.1)
+  c7a.2xlarge 02 text=1024 #3: 18.6s (prompt 7.1 + decode 11.5)
+  c7a.2xlarge 03 text=3072 #1: 36.3s (prompt 23.8 + decode 12.5)
+  c7a.2xlarge 03 text=3072 #2: 36.0s (prompt 23.9 + decode 12.0)
+  c7a.2xlarge 03 text=3072 #3: 35.9s (prompt 23.8 + decode 12.1)
+  c7a.2xlarge 04 image=1 #1: 18.2s (prompt 7.1 + decode 11.1)
+  c7a.2xlarge 04 image=1 #2: 17.0s (prompt 5.7 + decode 11.3)
+  c7a.2xlarge 04 image=1 #3: 14.3s (prompt 3.4 + decode 10.9)
+  c7a.2xlarge 06 image=4 #1: 33.3s (prompt 21.6 + decode 11.6)
+  c7a.2xlarge 06 image=4 #2: 30.8s (prompt 19.4 + decode 11.3)
+  c7a.2xlarge 06 image=4 #3: 31.1s (prompt 18.8 + decode 12.3)
+  c7a.2xlarge 07 audio=10 #1: 20.0s (prompt 8.9 + decode 11.0)
+  c7a.2xlarge 07 audio=10 #2: 20.0s (prompt 8.9 + decode 11.1)
+  c7a.2xlarge 07 audio=10 #3: 20.1s (prompt 8.9 + decode 11.1)
+  c7a.2xlarge 08 audio=40 #1: 29.5s (prompt 18.0 + decode 11.4)
+  c7a.2xlarge 08 audio=40 #2: 29.7s (prompt 18.1 + decode 11.5)
+  c7a.2xlarge 08 audio=40 #3: 29.6s (prompt 18.1 + decode 11.4)
+  c7i.2xlarge 00 chat=short #1: 10.4s (prompt 0.5 + decode 10.0)
+  c7i.2xlarge 00 chat=short #2: 10.4s (prompt 0.5 + decode 9.9)
+  c7i.2xlarge 00 chat=short #3: 10.5s (prompt 0.5 + decode 9.9)
+  c7i.2xlarge 02 text=1024 #1: 27.8s (prompt 17.3 + decode 10.5)
+  c7i.2xlarge 02 text=1024 #2: 27.8s (prompt 17.3 + decode 10.5)
+  c7i.2xlarge 02 text=1024 #3: 27.8s (prompt 17.3 + decode 10.5)
+  c7i.2xlarge 03 text=3072 #1: 66.6s (prompt 55.1 + decode 11.5)
+  c7i.2xlarge 03 text=3072 #2: 66.7s (prompt 55.2 + decode 11.5)
+  c7i.2xlarge 03 text=3072 #3: 66.7s (prompt 55.2 + decode 11.5)
+  c7i.2xlarge 04 image=1 #1: 27.5s (prompt 17.2 + decode 10.3)
+  c7i.2xlarge 04 image=1 #2: 24.1s (prompt 13.9 + decode 10.2)
+  c7i.2xlarge 04 image=1 #3: 18.5s (prompt 8.4 + decode 10.1)
+  c7i.2xlarge 06 image=4 #1: 62.4s (prompt 51.5 + decode 10.8)
+  c7i.2xlarge 06 image=4 #2: 57.1s (prompt 46.4 + decode 10.7)
+  c7i.2xlarge 06 image=4 #3: 55.5s (prompt 44.7 + decode 10.7)
+  c7i.2xlarge 07 audio=10 #1: 31.4s (prompt 21.0 + decode 10.4)
+  c7i.2xlarge 07 audio=10 #2: 31.5s (prompt 21.0 + decode 10.4)
+  c7i.2xlarge 07 audio=10 #3: 31.4s (prompt 21.0 + decode 10.4)
+  c7i.2xlarge 08 audio=40 #1: 53.1s (prompt 42.2 + decode 10.8)
+  c7i.2xlarge 08 audio=40 #2: 53.1s (prompt 42.2 + decode 10.8)
+  c7i.2xlarge 08 audio=40 #3: 53.0s (prompt 42.1 + decode 10.8)
+  m8g.xlarge 00 chat=short #1: 5.7s (prompt 0.3 + decode 5.4)
+  m8g.xlarge 00 chat=short #2: 5.7s (prompt 0.3 + decode 5.4)
+  m8g.xlarge 00 chat=short #3: 5.8s (prompt 0.4 + decode 5.4)
+  m8g.xlarge 02 text=1024 #1: 26.5s (prompt 20.3 + decode 6.2)
+  m8g.xlarge 02 text=1024 #2: 26.4s (prompt 20.3 + decode 6.1)
+  m8g.xlarge 02 text=1024 #3: 26.5s (prompt 20.3 + decode 6.2)
+  m8g.xlarge 03 text=3072 #1: 128.1s (prompt 120.7 + decode 7.4)
+  m8g.xlarge 03 text=3072 #2: 128.1s (prompt 120.3 + decode 7.7)
+  m8g.xlarge 03 text=3072 #3: 128.0s (prompt 120.6 + decode 7.4)
+  m8g.xlarge 04 image=1 #1: 35.0s (prompt 29.1 + decode 5.8)
+  m8g.xlarge 04 image=1 #2: 28.7s (prompt 23.0 + decode 5.7)
+  m8g.xlarge 04 image=1 #3: 18.1s (prompt 12.4 + decode 5.7)
+  m8g.xlarge 06 image=4 #1: 107.0s (prompt 100.5 + decode 6.5)
+  m8g.xlarge 06 image=4 #2: 94.5s (prompt 88.1 + decode 6.3)
+  m8g.xlarge 06 image=4 #3: 89.9s (prompt 83.5 + decode 6.3)
+  m8g.xlarge 07 audio=10 #1: 53.0s (prompt 47.0 + decode 6.0)
+  m8g.xlarge 07 audio=10 #2: 53.0s (prompt 47.0 + decode 6.0)
+  m8g.xlarge 07 audio=10 #3: 53.0s (prompt 46.9 + decode 6.0)
+  m8g.xlarge 08 audio=40 #1: 110.7s (prompt 104.0 + decode 6.6)
+  m8g.xlarge 08 audio=40 #2: 110.7s (prompt 104.1 + decode 6.5)
+  m8g.xlarge 08 audio=40 #3: 110.7s (prompt 104.1 + decode 6.5)
+[split]
+  c7a.2xlarge->m8g.xlarge 00 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 00 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 00 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 02 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 02 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 02 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 03 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 03 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 03 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 04 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 04 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 04 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 06 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 06 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 06 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 07 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 07 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 07 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 08 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 08 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 08 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 00 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 00 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 00 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 02 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 02 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 02 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 03 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 03 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 03 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 04 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 04 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 04 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 06 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 06 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 06 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 07 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 07 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 07 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 08 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 08 #2: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->c7i.2xlarge 08 #3: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7i.2xlarge->m8g.xlarge 00 chat=short #1: 6.9s = prompt 0.5 + save 0.00 + copy 0.87 + restore 0.00 + answer 5.5  KV 0.9 MB
+  c7i.2xlarge->m8g.xlarge 00 chat=short #2: 6.5s = prompt 0.5 + save 0.00 + copy 0.47 + restore 0.00 + answer 5.5  KV 1.0 MB
+  c7i.2xlarge->m8g.xlarge 00 chat=short #3: 6.5s = prompt 0.5 + save 0.00 + copy 0.46 + restore 0.00 + answer 5.5  KV 1.1 MB
+  c7i.2xlarge->m8g.xlarge 02 text=1024 #1: 24.0s = prompt 17.2 + save 0.01 + copy 0.59 + restore 0.01 + answer 6.2  KV 38.5 MB
+  c7i.2xlarge->m8g.xlarge 02 text=1024 #2: 24.5s = prompt 17.3 + save 0.01 + copy 1.02 + restore 0.01 + answer 6.2  KV 38.5 MB
+  c7i.2xlarge->m8g.xlarge 02 text=1024 #3: 24.1s = prompt 17.3 + save 0.01 + copy 0.59 + restore 0.01 + answer 6.2  KV 38.5 MB
+  c7i.2xlarge->m8g.xlarge 03 text=3072 #1: 63.9s = prompt 55.1 + save 0.04 + copy 1.18 + restore 0.01 + answer 7.5  KV 114.0 MB
+  c7i.2xlarge->m8g.xlarge 03 text=3072 #2: 63.8s = prompt 55.1 + save 0.04 + copy 1.15 + restore 0.01 + answer 7.5  KV 114.0 MB
+  c7i.2xlarge->m8g.xlarge 03 text=3072 #3: 63.9s = prompt 55.2 + save 0.04 + copy 1.19 + restore 0.01 + answer 7.5  KV 114.0 MB
+  c7i.2xlarge->m8g.xlarge 04 image=1 #1: 23.6s = prompt 17.1 + save 0.01 + copy 0.53 + restore 0.00 + answer 5.9  KV 19.3 MB
+  c7i.2xlarge->m8g.xlarge 04 image=1 #2: 20.2s = prompt 13.8 + save 0.01 + copy 0.54 + restore 0.00 + answer 5.8  KV 15.9 MB
+  c7i.2xlarge->m8g.xlarge 04 image=1 #3: 15.0s = prompt 8.4 + save 0.01 + copy 0.95 + restore 0.00 + answer 5.7  KV 10.1 MB
+  c7i.2xlarge->m8g.xlarge 06 image=4 #1: 58.7s = prompt 51.5 + save 0.02 + copy 0.63 + restore 0.01 + answer 6.6  KV 56.4 MB
+  c7i.2xlarge->m8g.xlarge 06 image=4 #2: 53.8s = prompt 46.4 + save 0.02 + copy 1.04 + restore 0.01 + answer 6.4  KV 51.3 MB
+  c7i.2xlarge->m8g.xlarge 06 image=4 #3: 51.8s = prompt 44.8 + save 0.02 + copy 0.61 + restore 0.01 + answer 6.4  KV 49.6 MB
+  c7i.2xlarge->m8g.xlarge 07 audio=10 #1: 28.1s = prompt 21.0 + save 0.01 + copy 0.99 + restore 0.00 + answer 6.1  KV 28.7 MB
+  c7i.2xlarge->m8g.xlarge 07 audio=10 #2: 27.7s = prompt 21.0 + save 0.01 + copy 0.56 + restore 0.00 + answer 6.1  KV 28.7 MB
+  c7i.2xlarge->m8g.xlarge 07 audio=10 #3: 27.6s = prompt 21.0 + save 0.01 + copy 0.54 + restore 0.00 + answer 6.1  KV 28.7 MB
+  c7i.2xlarge->m8g.xlarge 08 audio=40 #1: 49.9s = prompt 42.2 + save 0.02 + copy 1.08 + restore 0.01 + answer 6.6  KV 56.3 MB
+  c7i.2xlarge->m8g.xlarge 08 audio=40 #2: 49.6s = prompt 42.2 + save 0.02 + copy 0.63 + restore 0.01 + answer 6.7  KV 56.3 MB
+  c7i.2xlarge->m8g.xlarge 08 audio=40 #3: 50.0s = prompt 42.2 + save 0.02 + copy 1.05 + restore 0.01 + answer 6.7  KV 56.3 MB
+appended results to results/split/aws-p2; next: python src/split.py summarize results/split/aws-p2
+=== 08:43:28 6a: bursty replay
+traces/phase2/onoff-load0.7-s1.csv: 126 requests over 900.0 s, mean 0.14 req/s, interarrival CV 1.46, peak 60 s load 3.93x mean, 86 in bursts; chat 64, text 29, image 14, audio 19
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.093
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.072
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.033
+  cluster capacity for this mix ≈ 0.198 req/s (60% load = 0.119, 90% = 0.179); gain = slot_gain
+trace traces/phase2/onoff-load0.7-s1.csv: 126 requests, offered 0.149 req/s = 75% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 14.8s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.2s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.4s
+  warmup c7a.2xlarge audio: ok 12.5s
+  warmup c7i.2xlarge audio: ok 24.2s
+  warmup m8g.xlarge audio: ok 48.9s
+replaying 126 requests with policy ect over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     6 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     7 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+     1 04 image=1 -> c7a.2xlarge (1 in flight): ok 44.6s, predicted 12.3s
+     4 03 text=3072 -> c7a.2xlarge (2 in flight): ok 43.5s, predicted 30.3s
+     5 05 image=2 -> c7i.2xlarge (2 in flight): ok 28.3s, predicted 20.8s
+     2 05 image=2 -> c7i.2xlarge (1 in flight): ok 50.8s, predicted 20.8s
+     9 05 image=2 -> c7a.2xlarge (3 in flight): ok 18.1s, predicted 15.8s
+     8 01 text=512 -> c7a.2xlarge (3 in flight): ok 29.8s, predicted 9.8s
+    10 01 text=512 -> c7a.2xlarge (1 in flight): ok 15.9s, predicted 9.8s
+    11 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    12 00 chat=short -> m8g.xlarge (1 in flight): ok 1.7s, predicted 5.8s
+    13 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.3s, predicted 8.0s
+    14 00 chat=short -> m8g.xlarge (1 in flight): ok 1.9s, predicted 5.8s
+    16 00 chat=short -> m8g.xlarge (1 in flight): ok 0.9s, predicted 5.8s
+    18 00 chat=short -> m8g.xlarge (1 in flight): ok 3.4s, predicted 5.8s
+    15 04 image=1 -> c7a.2xlarge (1 in flight): ok 12.0s, predicted 12.3s
+    19 00 chat=short -> m8g.xlarge (2 in flight): ok 10.7s, predicted 11.2s
+    23 00 chat=short -> m8g.xlarge (3 in flight): ok 11.5s, predicted 15.0s
+    24 00 chat=short -> m8g.xlarge (3 in flight): ok 10.8s, predicted 18.6s
+    26 00 chat=short -> m8g.xlarge (3 in flight): ok 12.2s, predicted 16.9s
+    27 00 chat=short -> m8g.xlarge (4 in flight): ok 12.3s, predicted 21.2s
+    29 00 chat=short -> m8g.xlarge (3 in flight): ok 11.5s, predicted 20.9s
+    22 07 audio=10 -> c7i.2xlarge (2 in flight): ok 36.3s, predicted 24.3s
+    20 00 chat=short -> c7a.2xlarge (2 in flight): ok 37.9s, predicted 11.6s
+    31 00 chat=short -> m8g.xlarge (2 in flight): ok 10.2s, predicted 16.1s
+    32 01 text=512 -> m8g.xlarge (3 in flight): ok 16.6s, predicted 29.3s
+    21 03 text=3072 -> c7a.2xlarge (3 in flight): ok 44.8s, predicted 33.7s
+    35 00 chat=short -> m8g.xlarge (2 in flight): ok 8.3s, predicted 23.2s
+    38 00 chat=short -> m8g.xlarge (2 in flight): ok 3.7s, predicted 21.3s
+    39 00 chat=short -> m8g.xlarge (2 in flight): ok 5.4s, predicted 24.6s
+    30 07 audio=10 -> c7a.2xlarge (4 in flight): ok 34.5s, predicted 28.3s
+    43 00 chat=short -> m8g.xlarge (3 in flight): ok 8.9s, predicted 31.8s
+    42 00 chat=short -> m8g.xlarge (2 in flight): ok 10.8s, predicted 26.5s
+    28 01 text=512 -> c7a.2xlarge (3 in flight): ok 55.2s, predicted 31.9s
+    46 00 chat=short -> m8g.xlarge (4 in flight): ok 9.8s, predicted 39.2s
+    44 00 chat=short -> m8g.xlarge (3 in flight): ok 16.8s, predicted 34.6s
+    47 00 chat=short -> m8g.xlarge (4 in flight): ok 11.0s, predicted 39.7s
+    49 00 chat=short -> m8g.xlarge (4 in flight): ok 14.2s, predicted 44.1s
+    33 01 text=512 -> c7a.2xlarge (5 in flight): ok 67.1s, predicted 32.0s
+    52 00 chat=short -> m8g.xlarge (1 in flight): ok 10.7s, predicted 5.8s
+    17 02 text=1024 -> c7i.2xlarge (1 in flight): ok 107.4s, predicted 15.3s
+    53 01 text=512 -> m8g.xlarge (2 in flight): ok 16.4s, predicted 18.8s
+    40 07 audio=10 -> c7a.2xlarge (5 in flight): ok 58.0s, predicted 41.2s
+    25 03 text=3072 -> c7i.2xlarge (3 in flight): ok 117.7s, predicted 53.4s
+    55 00 chat=short -> m8g.xlarge (3 in flight): ok 34.9s, predicted 16.7s
+    36 03 text=3072 -> c7a.2xlarge (4 in flight): ok 91.6s, predicted 37.1s
+    34 02 text=1024 -> c7i.2xlarge (4 in flight): ok 115.6s, predicted 37.0s
+    56 02 text=1024 -> m8g.xlarge (4 in flight): ok 59.7s, predicted 40.3s
+    59 02 text=1024 -> m8g.xlarge (3 in flight): ok 52.2s, predicted 56.8s
+    37 02 text=1024 -> c7i.2xlarge (4 in flight): ok 115.2s, predicted 39.1s
+    41 03 text=3072 -> c7a.2xlarge (6 in flight): ok 115.3s, predicted 63.6s
+    61 00 chat=short -> m8g.xlarge (4 in flight): ok 59.3s, predicted 60.4s
+    64 00 chat=short -> m8g.xlarge (5 in flight): ok 54.6s, predicted 60.0s
+    67 00 chat=short -> m8g.xlarge (7 in flight): ok 58.6s, predicted 68.2s
+    66 00 chat=short -> m8g.xlarge (6 in flight): ok 62.1s, predicted 63.8s
+    72 00 chat=short -> m8g.xlarge (9 in flight): ok 58.6s, predicted 72.4s
+    48 04 image=1 -> c7i.2xlarge (6 in flight): ok 123.9s, predicted 46.6s
+    69 00 chat=short -> m8g.xlarge (8 in flight): ok 67.0s, predicted 71.5s
+    50 08 audio=40 -> c7a.2xlarge (5 in flight): ok 111.1s, predicted 56.1s
+    77 00 chat=short -> m8g.xlarge (10 in flight): ok 51.8s, predicted 72.5s
+    73 00 chat=short -> m8g.xlarge (10 in flight): ok 64.1s, predicted 77.0s
+    78 00 chat=short -> m8g.xlarge (11 in flight): ok 57.1s, predicted 76.0s
+    81 00 chat=short -> m8g.xlarge (12 in flight): ok 56.8s, predicted 76.5s
+    57 07 audio=10 -> c7a.2xlarge (6 in flight): ok 102.9s, predicted 62.5s
+    82 00 chat=short -> m8g.xlarge (13 in flight): ok 67.3s, predicted 82.4s
+    60 07 audio=10 -> c7a.2xlarge (7 in flight): ok 107.7s, predicted 62.7s
+    84 01 text=512 -> m8g.xlarge (14 in flight): ok 67.4s, predicted 91.3s
+    54 08 audio=40 -> c7a.2xlarge (6 in flight): ok 133.5s, predicted 65.1s
+    85 00 chat=short -> m8g.xlarge (15 in flight): ok 73.2s, predicted 96.5s
+    86 00 chat=short -> m8g.xlarge (16 in flight): ok 70.5s, predicted 95.4s
+    63 02 text=1024 -> c7a.2xlarge (7 in flight): ok 122.7s, predicted 70.1s
+    68 00 chat=short -> c7a.2xlarge (8 in flight): ok 116.0s, predicted 70.0s
+    45 04 image=1 -> c7i.2xlarge (5 in flight): ok 182.1s, predicted 40.7s
+    89 00 chat=short -> m8g.xlarge (15 in flight): ok 88.9s, predicted 93.8s
+    92 04 image=1 -> m8g.xlarge (14 in flight): ok 83.2s, predicted 118.9s
+    97 00 chat=short -> m8g.xlarge (9 in flight): ok 60.8s, predicted 100.5s
+    58 07 audio=10 -> c7i.2xlarge (7 in flight): ok 158.3s, predicted 56.4s
+    93 00 chat=short -> m8g.xlarge (15 in flight): ok 87.5s, predicted 118.5s
+    71 00 chat=short -> c7a.2xlarge (9 in flight): ok 139.3s, predicted 71.1s
+    98 00 chat=short -> m8g.xlarge (9 in flight): ok 61.3s, predicted 100.4s
+   101 00 chat=short -> m8g.xlarge (2 in flight): ok 6.3s, predicted 10.2s
+   100 00 chat=short -> m8g.xlarge (1 in flight): ok 8.8s, predicted 5.8s
+    75 08 audio=40 -> c7a.2xlarge (10 in flight): ok 154.1s, predicted 85.6s
+    62 07 audio=10 -> c7i.2xlarge (8 in flight): ok 177.6s, predicted 65.5s
+    51 06 image=4 -> c7i.2xlarge (7 in flight): ok 210.0s, predicted 60.0s
+    80 07 audio=10 -> c7a.2xlarge (11 in flight): ok 156.5s, predicted 104.2s
+   102 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    65 01 text=512 -> c7i.2xlarge (9 in flight): ok 192.4s, predicted 71.1s
+    70 00 chat=short -> c7i.2xlarge (9 in flight): ok 187.2s, predicted 73.3s
+    79 06 image=4 -> c7a.2xlarge (10 in flight): ok 183.5s, predicted 97.5s
+    87 08 audio=40 -> c7a.2xlarge (12 in flight): ok 190.5s, predicted 102.5s
+    90 03 text=3072 -> c7a.2xlarge (12 in flight): ok 188.6s, predicted 122.3s
+    94 00 chat=short -> c7a.2xlarge (13 in flight): ok 184.0s, predicted 117.8s
+   106 00 chat=short -> m8g.xlarge (1 in flight): ok 4.8s, predicted 5.8s
+    96 01 text=512 -> c7a.2xlarge (13 in flight): ok 178.0s, predicted 110.9s
+    74 00 chat=short -> c7i.2xlarge (10 in flight): ok 248.7s, predicted 74.4s
+    76 03 text=3072 -> c7i.2xlarge (11 in flight): ok 259.0s, predicted 103.5s
+   107 00 chat=short -> m8g.xlarge (1 in flight): ok 6.5s, predicted 5.8s
+    83 04 image=1 -> c7i.2xlarge (12 in flight): ok 254.8s, predicted 102.2s
+   103 01 text=512 -> c7a.2xlarge (6 in flight): ok 97.8s, predicted 10.0s
+   105 07 audio=10 -> c7a.2xlarge (5 in flight): ok 61.1s, predicted 8.0s
+   104 03 text=3072 -> c7a.2xlarge (7 in flight): ok 97.9s, predicted 22.9s
+   109 00 chat=short -> m8g.xlarge (1 in flight): ok 1.7s, predicted 5.8s
+   110 00 chat=short -> m8g.xlarge (1 in flight): ok 2.7s, predicted 5.8s
+   111 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    88 00 chat=short -> c7i.2xlarge (11 in flight): ok 295.6s, predicted 93.1s
+   112 07 audio=10 -> c7a.2xlarge (2 in flight): ok 13.8s, predicted 10.4s
+   108 06 image=4 -> c7a.2xlarge (1 in flight): ok 51.7s, predicted 20.4s
+    95 07 audio=10 -> c7i.2xlarge (13 in flight): ok 304.3s, predicted 124.1s
+    99 00 chat=short -> c7i.2xlarge (13 in flight): ok 247.5s, predicted 73.4s
+   113 08 audio=40 -> c7a.2xlarge (3 in flight): ok 47.5s, predicted 25.4s
+   116 02 text=1024 -> c7a.2xlarge (3 in flight): ok 25.5s, predicted 13.8s
+    91 03 text=3072 -> c7i.2xlarge (12 in flight): ok 340.2s, predicted 119.3s
+   117 01 text=512 -> c7a.2xlarge (1 in flight): ok 12.5s, predicted 9.8s
+   114 02 text=1024 -> c7i.2xlarge (5 in flight): ok 68.5s, predicted 15.3s
+   115 04 image=1 -> c7i.2xlarge (5 in flight): ok 70.0s, predicted 23.9s
+   119 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+   120 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.7s, predicted 8.3s
+   118 02 text=1024 -> c7a.2xlarge (1 in flight): ok 18.3s, predicted 11.8s
+   121 07 audio=10 -> c7a.2xlarge (1 in flight): ok 13.1s, predicted 8.0s
+   122 00 chat=short -> m8g.xlarge (1 in flight): ok 3.9s, predicted 5.8s
+   123 00 chat=short -> m8g.xlarge (1 in flight): ok 5.4s, predicted 5.8s
+   124 00 chat=short -> m8g.xlarge (1 in flight): ok 3.1s, predicted 5.8s
+all requests sent; waiting for the last ones to finish
+   125 08 audio=40 -> c7a.2xlarge (1 in flight): ok 29.8s, predicted 20.0s
+   126 04 image=1 -> c7i.2xlarge (1 in flight): ok 14.0s, predicted 12.5s
+  all            126/126 ok, median e2e 51.7s, p95 238.1s, median TTFT 28.7s, 0.146 req/s
+  chat           64/64 ok, median e2e 11.2s, p95 186.7s, median TTFT 2.1s, 0.074 req/s
+  text           29/29 ok, median e2e 68.5s, p95 232.4s, median TTFT 44.2s, 0.034 req/s
+  image          14/14 ok, median e2e 60.8s, p95 225.7s, median TTFT 41.4s, 0.016 req/s
+  audio          19/19 ok, median e2e 102.9s, p95 201.9s, median TTFT 78.2s, 0.022 req/s
+  c7a.2xlarge    40/40 ok, median e2e 59.5s, p95 184.2s, median TTFT 38.1s, 0.046 req/s
+  c7i.2xlarge    25/25 ok, median e2e 158.3s, p95 302.5s, median TTFT 115.8s, 0.029 req/s
+  m8g.xlarge     61/61 ok, median e2e 11.0s, p95 73.2s, median TTFT 2.1s, 0.071 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T084500Z)
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.093
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.072
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.033
+  cluster capacity for this mix ≈ 0.198 req/s (60% load = 0.119, 90% = 0.179); gain = slot_gain
+trace traces/phase2/onoff-load0.7-s1.csv: 126 requests, offered 0.149 req/s = 75% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 14.6s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.3s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 12.7s
+  warmup c7i.2xlarge audio: ok 24.3s
+  warmup m8g.xlarge audio: ok 48.9s
+replaying 126 requests with policy least over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.4s, predicted 8.3s
+     2 05 image=2 -> c7a.2xlarge (1 in flight): ok 18.1s, predicted 14.1s
+     6 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+     5 05 image=2 -> c7a.2xlarge (1 in flight): ok 15.4s, predicted 14.1s
+     7 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+     8 01 text=512 -> c7a.2xlarge (1 in flight): ok 13.3s, predicted 9.8s
+     9 05 image=2 -> c7i.2xlarge (1 in flight): ok 29.9s, predicted 20.8s
+    10 01 text=512 -> c7a.2xlarge (1 in flight): ok 15.3s, predicted 9.8s
+    11 00 chat=short -> c7a.2xlarge (1 in flight): ok 8.0s, predicted 7.8s
+    12 00 chat=short -> c7i.2xlarge (1 in flight): ok 3.1s, predicted 8.3s
+    13 07 audio=10 -> c7i.2xlarge (1 in flight): ok 23.7s, predicted 14.5s
+    14 00 chat=short -> c7i.2xlarge (1 in flight): ok 3.5s, predicted 8.3s
+     1 04 image=1 -> m8g.xlarge (1 in flight): ok 165.2s, predicted 31.3s
+     4 03 text=3072 -> m8g.xlarge (2 in flight): ok 160.4s, predicted 151.0s
+    16 00 chat=short -> c7i.2xlarge (1 in flight): ok 1.6s, predicted 8.3s
+    15 04 image=1 -> c7a.2xlarge (1 in flight): ok 12.7s, predicted 12.3s
+    24 00 chat=short -> c7a.2xlarge (3 in flight): ok 5.7s, predicted 16.3s
+    20 00 chat=short -> c7a.2xlarge (2 in flight): ok 12.5s, predicted 11.6s
+    26 00 chat=short -> c7a.2xlarge (2 in flight): ok 12.0s, predicted 16.7s
+    27 00 chat=short -> c7a.2xlarge (3 in flight): ok 12.8s, predicted 23.0s
+    17 02 text=1024 -> m8g.xlarge (1 in flight): ok 31.4s, predicted 25.4s
+    19 00 chat=short -> m8g.xlarge (2 in flight): ok 28.2s, predicted 27.8s
+    30 07 audio=10 -> c7a.2xlarge (3 in flight): ok 14.2s, predicted 26.9s
+    29 00 chat=short -> c7a.2xlarge (3 in flight): ok 30.6s, predicted 24.7s
+    18 00 chat=short -> c7i.2xlarge (1 in flight): ok 59.2s, predicted 8.3s
+    32 01 text=512 -> c7a.2xlarge (3 in flight): ok 31.0s, predicted 31.9s
+    34 02 text=1024 -> c7a.2xlarge (4 in flight): ok 32.8s, predicted 37.7s
+    21 03 text=3072 -> c7i.2xlarge (2 in flight): ok 69.9s, predicted 37.3s
+    23 00 chat=short -> c7i.2xlarge (3 in flight): ok 79.6s, predicted 45.6s
+    35 00 chat=short -> c7a.2xlarge (4 in flight): ok 57.5s, predicted 39.6s
+    36 03 text=3072 -> c7a.2xlarge (5 in flight): ok 59.1s, predicted 55.4s
+    28 01 text=512 -> c7i.2xlarge (4 in flight): ok 96.7s, predicted 45.6s
+    37 02 text=1024 -> c7i.2xlarge (5 in flight): ok 62.7s, predicted 25.3s
+    39 00 chat=short -> c7a.2xlarge (5 in flight): ok 66.6s, predicted 60.1s
+    42 00 chat=short -> c7i.2xlarge (6 in flight): ok 66.7s, predicted 26.6s
+    44 00 chat=short -> c7i.2xlarge (6 in flight): ok 64.6s, predicted 31.3s
+    40 07 audio=10 -> c7a.2xlarge (6 in flight): ok 72.7s, predicted 67.3s
+    49 00 chat=short -> c7i.2xlarge (8 in flight): ok 62.0s, predicted 39.9s
+    45 04 image=1 -> c7a.2xlarge (7 in flight): ok 73.0s, predicted 72.4s
+    47 00 chat=short -> c7a.2xlarge (7 in flight): ok 67.0s, predicted 74.2s
+    52 00 chat=short -> c7a.2xlarge (8 in flight): ok 52.4s, predicted 69.4s
+    48 04 image=1 -> c7a.2xlarge (8 in flight): ok 102.5s, predicted 85.9s
+    46 00 chat=short -> c7i.2xlarge (7 in flight): ok 119.9s, predicted 38.4s
+    54 08 audio=40 -> c7a.2xlarge (9 in flight): ok 91.7s, predicted 88.7s
+    58 07 audio=10 -> c7a.2xlarge (9 in flight): ok 87.9s, predicted 91.2s
+    51 06 image=4 -> c7i.2xlarge (7 in flight): ok 107.3s, predicted 54.3s
+    22 07 audio=10 -> m8g.xlarge (3 in flight): ok 200.0s, predicted 73.8s
+    31 00 chat=short -> m8g.xlarge (3 in flight): ok 174.7s, predicted 176.2s
+    56 02 text=1024 -> c7a.2xlarge (9 in flight): ok 104.0s, predicted 91.3s
+    59 02 text=1024 -> c7a.2xlarge (10 in flight): ok 103.0s, predicted 102.2s
+    25 03 text=3072 -> m8g.xlarge (4 in flight): ok 211.1s, predicted 196.0s
+    64 00 chat=short -> c7a.2xlarge (11 in flight): ok 99.4s, predicted 101.5s
+    53 01 text=512 -> c7i.2xlarge (8 in flight): ok 128.6s, predicted 65.5s
+    38 00 chat=short -> m8g.xlarge (5 in flight): ok 171.0s, predicted 175.5s
+    66 00 chat=short -> c7a.2xlarge (11 in flight): ok 104.6s, predicted 107.4s
+    70 00 chat=short -> c7a.2xlarge (11 in flight): ok 103.3s, predicted 109.1s
+    71 00 chat=short -> c7a.2xlarge (12 in flight): ok 107.8s, predicted 114.1s
+    57 07 audio=10 -> c7i.2xlarge (9 in flight): ok 141.6s, predicted 68.8s
+    60 07 audio=10 -> c7i.2xlarge (9 in flight): ok 134.6s, predicted 75.5s
+    74 00 chat=short -> c7a.2xlarge (11 in flight): ok 126.9s, predicted 117.6s
+    77 00 chat=short -> c7a.2xlarge (13 in flight): ok 121.2s, predicted 138.2s
+    62 07 audio=10 -> c7i.2xlarge (10 in flight): ok 154.8s, predicted 94.1s
+    67 00 chat=short -> c7i.2xlarge (11 in flight): ok 154.7s, predicted 95.0s
+    61 00 chat=short -> c7i.2xlarge (9 in flight): ok 165.8s, predicted 81.9s
+    75 08 audio=40 -> c7a.2xlarge (12 in flight): ok 153.6s, predicted 136.4s
+    68 00 chat=short -> c7i.2xlarge (12 in flight): ok 166.3s, predicted 102.6s
+    69 00 chat=short -> c7i.2xlarge (11 in flight): ok 165.9s, predicted 109.0s
+    79 06 image=4 -> c7a.2xlarge (13 in flight): ok 150.8s, predicted 156.1s
+    72 00 chat=short -> c7i.2xlarge (12 in flight): ok 166.5s, predicted 112.4s
+    73 00 chat=short -> c7i.2xlarge (12 in flight): ok 168.6s, predicted 119.4s
+    82 00 chat=short -> c7a.2xlarge (14 in flight): ok 152.8s, predicted 158.9s
+    78 00 chat=short -> c7i.2xlarge (13 in flight): ok 173.6s, predicted 115.1s
+    83 04 image=1 -> c7i.2xlarge (14 in flight): ok 173.5s, predicted 121.0s
+    84 01 text=512 -> c7a.2xlarge (15 in flight): ok 171.4s, predicted 164.4s
+    86 00 chat=short -> c7i.2xlarge (15 in flight): ok 169.1s, predicted 118.8s
+    33 01 text=512 -> m8g.xlarge (4 in flight): ok 313.3s, predicted 188.1s
+    43 00 chat=short -> m8g.xlarge (7 in flight): ok 297.7s, predicted 298.9s
+    90 03 text=3072 -> c7a.2xlarge (16 in flight): ok 186.3s, predicted 190.6s
+    87 08 audio=40 -> c7a.2xlarge (16 in flight): ok 196.8s, predicted 170.8s
+    95 07 audio=10 -> c7a.2xlarge (18 in flight): ok 192.9s, predicted 198.2s
+    92 04 image=1 -> c7a.2xlarge (17 in flight): ok 208.9s, predicted 198.5s
+    99 00 chat=short -> c7a.2xlarge (12 in flight): ok 143.3s, predicted 156.8s
+    96 01 text=512 -> c7a.2xlarge (17 in flight): ok 191.7s, predicted 191.7s
+    88 00 chat=short -> c7i.2xlarge (16 in flight): ok 224.7s, predicted 120.2s
+   100 00 chat=short -> c7a.2xlarge (11 in flight): ok 120.5s, predicted 129.7s
+   101 00 chat=short -> c7a.2xlarge (12 in flight): ok 120.0s, predicted 136.1s
+    94 00 chat=short -> c7i.2xlarge (17 in flight): ok 216.1s, predicted 145.4s
+    91 03 text=3072 -> c7i.2xlarge (17 in flight): ok 227.2s, predicted 146.4s
+   106 00 chat=short -> c7a.2xlarge (7 in flight): ok 35.7s, predicted 49.9s
+    97 00 chat=short -> c7i.2xlarge (17 in flight): ok 204.2s, predicted 131.5s
+   107 00 chat=short -> c7a.2xlarge (4 in flight): ok 13.7s, predicted 33.3s
+   102 00 chat=short -> c7i.2xlarge (8 in flight): ok 114.3s, predicted 37.8s
+   109 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.6s, predicted 21.3s
+   108 06 image=4 -> c7a.2xlarge (1 in flight): ok 24.9s, predicted 20.4s
+   110 00 chat=short -> c7a.2xlarge (3 in flight): ok 15.6s, predicted 25.9s
+    41 03 text=3072 -> m8g.xlarge (6 in flight): ok 406.8s, predicted 296.4s
+    50 08 audio=40 -> m8g.xlarge (8 in flight): ok 389.4s, predicted 383.6s
+   103 01 text=512 -> c7i.2xlarge (9 in flight): ok 176.4s, predicted 46.2s
+   111 00 chat=short -> c7a.2xlarge (4 in flight): ok 40.7s, predicted 27.7s
+    55 00 chat=short -> m8g.xlarge (9 in flight): ok 392.5s, predicted 371.2s
+   113 08 audio=40 -> c7a.2xlarge (4 in flight): ok 41.9s, predicted 40.9s
+    63 02 text=1024 -> m8g.xlarge (10 in flight): ok 391.8s, predicted 381.1s
+   105 07 audio=10 -> c7i.2xlarge (8 in flight): ok 151.5s, predicted 42.3s
+   114 02 text=1024 -> c7a.2xlarge (3 in flight): ok 50.7s, predicted 45.9s
+   115 04 image=1 -> c7a.2xlarge (4 in flight): ok 54.8s, predicted 54.3s
+   104 03 text=3072 -> c7i.2xlarge (8 in flight): ok 206.2s, predicted 61.2s
+   116 02 text=1024 -> c7a.2xlarge (5 in flight): ok 52.9s, predicted 53.5s
+   112 07 audio=10 -> c7i.2xlarge (4 in flight): ok 93.1s, predicted 14.5s
+   117 01 text=512 -> c7i.2xlarge (3 in flight): ok 42.1s, predicted 11.6s
+   118 02 text=1024 -> c7a.2xlarge (1 in flight): ok 20.2s, predicted 11.8s
+   119 00 chat=short -> c7a.2xlarge (2 in flight): ok 19.7s, predicted 19.1s
+   120 00 chat=short -> c7i.2xlarge (3 in flight): ok 18.2s, predicted 8.3s
+   121 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.7s, predicted 8.0s
+   122 00 chat=short -> c7i.2xlarge (1 in flight): ok 7.6s, predicted 8.3s
+   123 00 chat=short -> c7a.2xlarge (1 in flight): ok 10.3s, predicted 7.8s
+   124 00 chat=short -> c7a.2xlarge (1 in flight): ok 5.9s, predicted 7.8s
+    65 01 text=512 -> m8g.xlarge (11 in flight): ok 511.7s, predicted 388.6s
+all requests sent; waiting for the last ones to finish
+    80 07 audio=10 -> m8g.xlarge (13 in flight): ok 537.8s, predicted 536.8s
+   126 04 image=1 -> c7a.2xlarge (1 in flight): ok 9.1s, predicted 12.3s
+    76 03 text=3072 -> m8g.xlarge (12 in flight): ok 550.9s, predicted 497.5s
+    81 00 chat=short -> m8g.xlarge (14 in flight): ok 545.5s, predicted 538.9s
+    85 00 chat=short -> m8g.xlarge (15 in flight): ok 544.2s, predicted 539.8s
+    89 00 chat=short -> m8g.xlarge (16 in flight): ok 536.9s, predicted 531.3s
+    93 00 chat=short -> m8g.xlarge (17 in flight): ok 528.0s, predicted 524.7s
+   125 08 audio=40 -> c7i.2xlarge (1 in flight): ok 53.1s, predicted 34.0s
+    98 00 chat=short -> m8g.xlarge (16 in flight): ok 501.4s, predicted 500.8s
+  all            126/126 ok, median e2e 100.9s, p95 509.1s, median TTFT 75.0s, 0.142 req/s
+  chat           64/64 ok, median e2e 89.5s, p95 524.0s, median TTFT 61.1s, 0.072 req/s
+  text           29/29 ok, median e2e 104.0s, p95 469.7s, median TTFT 94.3s, 0.033 req/s
+  image          14/14 ok, median e2e 63.9s, p95 185.9s, median TTFT 33.4s, 0.016 req/s
+  audio          19/19 ok, median e2e 134.6s, p95 404.2s, median TTFT 116.9s, 0.021 req/s
+  c7a.2xlarge    60/60 ok, median e2e 53.8s, p95 191.8s, median TTFT 39.4s, 0.068 req/s
+  c7i.2xlarge    44/44 ok, median e2e 110.8s, p95 214.6s, median TTFT 85.2s, 0.050 req/s
+  m8g.xlarge     22/22 ok, median e2e 390.6s, p95 545.4s, median TTFT 325.7s, 0.025 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T090054Z)
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+=== 09:15:41 6b: rate sweep
+traces/phase2/poisson-load0.4-s1.csv: 75 requests over 900.0 s, mean 0.0833 req/s, interarrival CV 1.06, peak 60 s load 2.2x mean, 0 in bursts; chat 38, text 18, image 8, audio 11
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load0.4-s2.csv: 68 requests over 900.0 s, mean 0.0756 req/s, interarrival CV 0.81, peak 60 s load 1.76x mean, 0 in bursts; chat 33, text 15, image 14, audio 6
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load0.6-s1.csv: 112 requests over 900.0 s, mean 0.1244 req/s, interarrival CV 0.99, peak 60 s load 1.74x mean, 0 in bursts; chat 59, text 25, image 12, audio 16
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load0.6-s2.csv: 101 requests over 900.0 s, mean 0.1122 req/s, interarrival CV 0.81, peak 60 s load 1.78x mean, 0 in bursts; chat 46, text 22, image 23, audio 10
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load0.8-s1.csv: 137 requests over 900.0 s, mean 0.1522 req/s, interarrival CV 0.98, peak 60 s load 1.75x mean, 0 in bursts; chat 71, text 29, image 15, audio 22
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load0.8-s2.csv: 145 requests over 900.0 s, mean 0.1611 req/s, interarrival CV 0.83, peak 60 s load 1.55x mean, 0 in bursts; chat 66, text 28, image 32, audio 19
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load1.0-s1.csv: 178 requests over 900.0 s, mean 0.1978 req/s, interarrival CV 0.97, peak 60 s load 1.6x mean, 0 in bursts; chat 93, text 35, image 22, audio 28
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load1.0-s2.csv: 179 requests over 900.0 s, mean 0.1989 req/s, interarrival CV 0.9, peak 60 s load 1.59x mean, 0 in bursts; chat 83, text 35, image 37, audio 24
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load1.2-s1.csv: 220 requests over 900.0 s, mean 0.2444 req/s, interarrival CV 0.96, peak 60 s load 1.57x mean, 0 in bursts; chat 115, text 42, image 28, audio 35
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load1.2-s2.csv: 225 requests over 900.0 s, mean 0.25 req/s, interarrival CV 0.91, peak 60 s load 1.67x mean, 0 in bursts; chat 112, text 40, image 42, audio 31
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load1.4-s1.csv: 253 requests over 900.0 s, mean 0.2811 req/s, interarrival CV 0.97, peak 60 s load 1.54x mean, 0 in bursts; chat 135, text 47, image 34, audio 37
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+traces/phase2/poisson-load1.4-s2.csv: 256 requests over 900.0 s, mean 0.2844 req/s, interarrival CV 0.91, peak 60 s load 1.58x mean, 0 in bursts; chat 128, text 48, image 47, audio 33
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.094
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.073
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.033
+  cluster capacity for this mix ≈ 0.200 req/s (60% load = 0.120, 90% = 0.180); gain = slot_gain
+trace traces/phase2/poisson-load0.6-s1.csv: 112 requests, offered 0.125 req/s = 62% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 14.5s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.0s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 13.0s
+  warmup c7i.2xlarge audio: ok 24.2s
+  warmup m8g.xlarge audio: ok 49.0s
+replaying 112 requests with policy rr over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     6 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+     1 04 image=1 -> c7a.2xlarge (1 in flight): ok 43.0s, predicted 12.3s
+     4 03 text=3072 -> c7a.2xlarge (2 in flight): ok 38.3s, predicted 22.9s
+     2 05 image=2 -> c7i.2xlarge (1 in flight): ok 49.8s, predicted 20.8s
+     7 00 chat=short -> c7a.2xlarge (3 in flight): ok 16.9s, predicted 7.8s
+     5 05 image=2 -> c7i.2xlarge (2 in flight): ok 36.5s, predicted 20.8s
+     8 01 text=512 -> c7i.2xlarge (3 in flight): ok 32.8s, predicted 23.4s
+    10 01 text=512 -> c7a.2xlarge (1 in flight): ok 15.4s, predicted 9.8s
+     9 05 image=2 -> m8g.xlarge (1 in flight): ok 44.6s, predicted 50.1s
+    11 00 chat=short -> c7i.2xlarge (1 in flight): ok 7.7s, predicted 8.3s
+    12 00 chat=short -> m8g.xlarge (1 in flight): ok 1.7s, predicted 5.8s
+    13 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.0s, predicted 8.0s
+    14 00 chat=short -> c7i.2xlarge (1 in flight): ok 3.5s, predicted 8.3s
+    16 00 chat=short -> c7a.2xlarge (1 in flight): ok 1.4s, predicted 7.8s
+    15 04 image=1 -> m8g.xlarge (1 in flight): ok 22.5s, predicted 31.3s
+    18 00 chat=short -> m8g.xlarge (2 in flight): ok 2.0s, predicted 14.7s
+    17 02 text=1024 -> c7i.2xlarge (1 in flight): ok 27.9s, predicted 15.3s
+    20 00 chat=short -> c7i.2xlarge (2 in flight): ok 14.9s, predicted 8.3s
+    22 07 audio=10 -> c7a.2xlarge (2 in flight): ok 13.0s, predicted 9.4s
+    23 00 chat=short -> c7i.2xlarge (3 in flight): ok 20.8s, predicted 14.0s
+    19 00 chat=short -> c7a.2xlarge (1 in flight): ok 45.7s, predicted 7.8s
+    26 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.4s, predicted 8.3s
+    25 03 text=3072 -> c7a.2xlarge (3 in flight): ok 43.2s, predicted 24.5s
+    28 01 text=512 -> c7a.2xlarge (3 in flight): ok 17.4s, predicted 9.8s
+    29 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+    31 00 chat=short -> c7a.2xlarge (1 in flight): ok 2.4s, predicted 7.8s
+    32 01 text=512 -> c7i.2xlarge (1 in flight): ok 17.3s, predicted 11.6s
+    24 00 chat=short -> m8g.xlarge (2 in flight): ok 119.2s, predicted 122.8s
+    34 02 text=1024 -> c7a.2xlarge (1 in flight): ok 18.6s, predicted 11.8s
+    21 03 text=3072 -> m8g.xlarge (1 in flight): ok 134.8s, predicted 124.6s
+    35 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+    38 00 chat=short -> c7i.2xlarge (1 in flight): ok 5.0s, predicted 8.3s
+    40 07 audio=10 -> c7a.2xlarge (2 in flight): ok 12.3s, predicted 8.0s
+    37 02 text=1024 -> c7a.2xlarge (1 in flight): ok 27.0s, predicted 11.8s
+    30 07 audio=10 -> m8g.xlarge (4 in flight): ok 108.5s, predicted 108.0s
+    43 00 chat=short -> c7a.2xlarge (2 in flight): ok 9.0s, predicted 7.8s
+    27 00 chat=short -> m8g.xlarge (3 in flight): ok 157.0s, predicted 99.1s
+    46 00 chat=short -> c7a.2xlarge (1 in flight): ok 6.6s, predicted 7.8s
+    49 00 chat=short -> c7a.2xlarge (1 in flight): ok 7.7s, predicted 7.8s
+    44 00 chat=short -> c7i.2xlarge (2 in flight): ok 49.0s, predicted 19.2s
+    41 03 text=3072 -> c7i.2xlarge (1 in flight): ok 69.5s, predicted 31.4s
+    47 00 chat=short -> c7i.2xlarge (3 in flight): ok 33.7s, predicted 8.3s
+    52 00 chat=short -> c7a.2xlarge (1 in flight): ok 2.5s, predicted 7.8s
+    53 01 text=512 -> c7i.2xlarge (2 in flight): ok 26.1s, predicted 11.6s
+    50 08 audio=40 -> c7i.2xlarge (1 in flight): ok 63.0s, predicted 34.0s
+    33 01 text=512 -> m8g.xlarge (5 in flight): ok 228.0s, predicted 101.3s
+    36 03 text=3072 -> m8g.xlarge (4 in flight): ok 173.5s, predicted 167.5s
+    55 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.3s, predicted 7.8s
+    39 00 chat=short -> m8g.xlarge (5 in flight): ok 167.8s, predicted 163.0s
+    56 02 text=1024 -> c7i.2xlarge (1 in flight): ok 26.4s, predicted 15.3s
+    42 00 chat=short -> m8g.xlarge (6 in flight): ok 180.4s, predicted 155.9s
+    58 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.5s, predicted 8.0s
+    61 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.3s, predicted 7.8s
+    45 04 image=1 -> m8g.xlarge (6 in flight): ok 197.7s, predicted 173.9s
+    64 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.2s, predicted 7.8s
+    62 07 audio=10 -> c7i.2xlarge (2 in flight): ok 27.1s, predicted 15.0s
+    67 00 chat=short -> c7a.2xlarge (2 in flight): ok 8.4s, predicted 7.8s
+    59 02 text=1024 -> c7i.2xlarge (1 in flight): ok 55.0s, predicted 15.3s
+    65 01 text=512 -> c7i.2xlarge (3 in flight): ok 28.6s, predicted 11.6s
+    70 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.2s, predicted 7.8s
+    68 00 chat=short -> c7i.2xlarge (4 in flight): ok 26.1s, predicted 12.7s
+    71 00 chat=short -> c7i.2xlarge (2 in flight): ok 11.1s, predicted 8.3s
+    73 00 chat=short -> c7a.2xlarge (1 in flight): ok 7.8s, predicted 7.8s
+    74 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.6s, predicted 8.3s
+    77 00 chat=short -> c7i.2xlarge (1 in flight): ok 1.4s, predicted 8.3s
+    48 04 image=1 -> m8g.xlarge (6 in flight): ok 279.3s, predicted 183.6s
+    79 06 image=4 -> c7a.2xlarge (2 in flight): ok 32.1s, predicted 20.4s
+    76 03 text=3072 -> c7a.2xlarge (1 in flight): ok 57.5s, predicted 22.9s
+    80 07 audio=10 -> c7i.2xlarge (1 in flight): ok 36.3s, predicted 14.5s
+    82 00 chat=short -> c7a.2xlarge (3 in flight): ok 24.0s, predicted 11.7s
+    85 00 chat=short -> c7a.2xlarge (3 in flight): ok 12.3s, predicted 7.8s
+    83 04 image=1 -> c7i.2xlarge (2 in flight): ok 26.8s, predicted 12.5s
+    86 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+    88 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+    89 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.6s, predicted 8.3s
+    92 04 image=1 -> c7i.2xlarge (1 in flight): ok 16.5s, predicted 12.5s
+    94 00 chat=short -> c7a.2xlarge (2 in flight): ok 5.6s, predicted 7.8s
+    91 03 text=3072 -> c7a.2xlarge (1 in flight): ok 36.8s, predicted 22.9s
+    51 06 image=4 -> m8g.xlarge (7 in flight): ok 307.2s, predicted 202.1s
+    95 07 audio=10 -> c7i.2xlarge (1 in flight): ok 23.6s, predicted 14.5s
+    97 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.1s, predicted 7.8s
+    98 00 chat=short -> c7i.2xlarge (2 in flight): ok 12.8s, predicted 8.3s
+    57 07 audio=10 -> m8g.xlarge (7 in flight): ok 320.3s, predicted 321.2s
+   100 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+   101 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.4s, predicted 8.3s
+   103 01 text=512 -> c7a.2xlarge (1 in flight): ok 13.3s, predicted 9.8s
+    60 07 audio=10 -> m8g.xlarge (7 in flight): ok 345.1s, predicted 343.6s
+   106 00 chat=short -> c7a.2xlarge (1 in flight): ok 9.1s, predicted 7.8s
+    54 08 audio=40 -> m8g.xlarge (8 in flight): ok 428.5s, predicted 308.1s
+    63 02 text=1024 -> m8g.xlarge (7 in flight): ok 360.5s, predicted 354.6s
+    66 00 chat=short -> m8g.xlarge (7 in flight): ok 345.9s, predicted 341.7s
+   109 00 chat=short -> c7a.2xlarge (1 in flight): ok 2.9s, predicted 7.8s
+all requests sent; waiting for the last ones to finish
+    72 00 chat=short -> m8g.xlarge (9 in flight): ok 321.9s, predicted 324.0s
+   104 03 text=3072 -> c7i.2xlarge (1 in flight): ok 70.3s, predicted 31.4s
+   107 00 chat=short -> c7i.2xlarge (2 in flight): ok 32.3s, predicted 8.3s
+   110 00 chat=short -> c7i.2xlarge (3 in flight): ok 11.7s, predicted 8.3s
+   112 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.6s, predicted 8.0s
+    69 00 chat=short -> m8g.xlarge (8 in flight): ok 443.2s, predicted 334.3s
+    78 00 chat=short -> m8g.xlarge (11 in flight): ok 389.7s, predicted 393.2s
+    75 08 audio=40 -> m8g.xlarge (10 in flight): ok 419.2s, predicted 414.8s
+    84 01 text=512 -> m8g.xlarge (12 in flight): ok 374.6s, predicted 380.9s
+    81 00 chat=short -> m8g.xlarge (12 in flight): ok 495.1s, predicted 381.7s
+    90 03 text=3072 -> m8g.xlarge (14 in flight): ok 555.6s, predicted 559.5s
+    87 08 audio=40 -> m8g.xlarge (13 in flight): ok 569.3s, predicted 445.1s
+    93 00 chat=short -> m8g.xlarge (15 in flight): ok 539.4s, predicted 530.5s
+    99 00 chat=short -> m8g.xlarge (16 in flight): ok 501.3s, predicted 509.6s
+    96 01 text=512 -> m8g.xlarge (15 in flight): ok 525.4s, predicted 527.1s
+   105 07 audio=10 -> m8g.xlarge (17 in flight): ok 487.8s, predicted 499.0s
+   108 06 image=4 -> m8g.xlarge (16 in flight): ok 515.1s, predicted 556.7s
+   102 00 chat=short -> m8g.xlarge (16 in flight): ok 585.9s, predicted 480.1s
+   111 00 chat=short -> m8g.xlarge (15 in flight): ok 512.5s, predicted 553.7s
+  all            112/112 ok, median e2e 26.3s, p95 513.6s, median TTFT 16.1s, 0.079 req/s
+  chat           59/59 ok, median e2e 11.1s, p95 502.4s, median TTFT 0.5s, 0.042 req/s
+  text           25/25 ok, median e2e 38.3s, p95 495.2s, median TTFT 23.9s, 0.018 req/s
+  image          12/12 ok, median e2e 43.8s, p95 400.8s, median TTFT 21.3s, 0.009 req/s
+  audio          16/16 ok, median e2e 49.6s, p95 508.2s, median TTFT 33.0s, 0.011 req/s
+  c7a.2xlarge    38/38 ok, median e2e 12.1s, p95 43.6s, median TTFT 0.7s, 0.027 req/s
+  c7i.2xlarge    37/37 ok, median e2e 23.6s, p95 64.3s, median TTFT 14.2s, 0.026 req/s
+  m8g.xlarge     37/37 ok, median e2e 321.9s, p95 558.3s, median TTFT 316.5s, 0.026 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T091715Z)
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.094
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.073
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.033
+  cluster capacity for this mix ≈ 0.200 req/s (60% load = 0.120, 90% = 0.180); gain = slot_gain
+trace traces/phase2/poisson-load0.6-s1.csv: 112 requests, offered 0.125 req/s = 62% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 14.5s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.2s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 12.4s
+  warmup c7i.2xlarge audio: ok 24.2s
+  warmup m8g.xlarge audio: ok 48.8s
+replaying 112 requests with policy least over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.4s, predicted 8.3s
+     2 05 image=2 -> c7a.2xlarge (1 in flight): ok 18.0s, predicted 14.1s
+     5 05 image=2 -> c7a.2xlarge (1 in flight): ok 16.1s, predicted 14.1s
+     7 00 chat=short -> c7a.2xlarge (2 in flight): ok 12.7s, predicted 14.3s
+     6 00 chat=short -> c7i.2xlarge (1 in flight): ok 19.5s, predicted 8.3s
+    10 01 text=512 -> c7a.2xlarge (1 in flight): ok 14.7s, predicted 9.8s
+     9 05 image=2 -> c7i.2xlarge (3 in flight): ok 37.8s, predicted 28.2s
+     8 01 text=512 -> c7i.2xlarge (2 in flight): ok 44.0s, predicted 11.9s
+    11 00 chat=short -> c7a.2xlarge (1 in flight): ok 8.0s, predicted 7.8s
+    12 00 chat=short -> c7i.2xlarge (1 in flight): ok 3.1s, predicted 8.3s
+    13 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.0s, predicted 8.0s
+    14 00 chat=short -> c7i.2xlarge (1 in flight): ok 3.5s, predicted 8.3s
+    16 00 chat=short -> c7a.2xlarge (1 in flight): ok 1.4s, predicted 7.8s
+    15 04 image=1 -> c7i.2xlarge (1 in flight): ok 16.7s, predicted 12.5s
+    18 00 chat=short -> c7i.2xlarge (1 in flight): ok 3.5s, predicted 8.3s
+    17 02 text=1024 -> c7a.2xlarge (1 in flight): ok 19.3s, predicted 11.8s
+    19 00 chat=short -> c7a.2xlarge (2 in flight): ok 12.1s, predicted 8.2s
+     1 04 image=1 -> m8g.xlarge (1 in flight): ok 164.9s, predicted 31.3s
+    24 00 chat=short -> c7a.2xlarge (1 in flight): ok 29.6s, predicted 7.8s
+    25 03 text=3072 -> c7a.2xlarge (2 in flight): ok 34.8s, predicted 30.4s
+    26 00 chat=short -> c7a.2xlarge (3 in flight): ok 21.4s, predicted 14.0s
+    28 01 text=512 -> c7a.2xlarge (3 in flight): ok 20.1s, predicted 17.9s
+     4 03 text=3072 -> m8g.xlarge (2 in flight): ok 196.1s, predicted 139.9s
+    20 00 chat=short -> c7i.2xlarge (1 in flight): ok 68.8s, predicted 8.3s
+    22 07 audio=10 -> m8g.xlarge (3 in flight): ok 67.3s, predicted 55.5s
+    21 03 text=3072 -> c7i.2xlarge (2 in flight): ok 68.4s, predicted 37.2s
+    29 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.2s, predicted 7.8s
+    27 00 chat=short -> m8g.xlarge (3 in flight): ok 34.1s, predicted 24.1s
+    23 00 chat=short -> c7i.2xlarge (3 in flight): ok 77.2s, predicted 45.4s
+    31 00 chat=short -> c7i.2xlarge (1 in flight): ok 2.5s, predicted 8.3s
+    32 01 text=512 -> c7a.2xlarge (1 in flight): ok 13.2s, predicted 9.8s
+    33 01 text=512 -> c7i.2xlarge (1 in flight): ok 17.0s, predicted 11.6s
+    30 07 audio=10 -> m8g.xlarge (1 in flight): ok 48.7s, predicted 48.0s
+    34 02 text=1024 -> c7a.2xlarge (1 in flight): ok 18.6s, predicted 11.8s
+    35 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+    38 00 chat=short -> m8g.xlarge (1 in flight): ok 2.9s, predicted 5.8s
+    37 02 text=1024 -> c7i.2xlarge (1 in flight): ok 28.9s, predicted 15.3s
+    42 00 chat=short -> c7i.2xlarge (2 in flight): ok 11.5s, predicted 8.3s
+    40 07 audio=10 -> c7a.2xlarge (2 in flight): ok 23.7s, predicted 18.2s
+    46 00 chat=short -> c7i.2xlarge (2 in flight): ok 7.0s, predicted 12.5s
+    44 00 chat=short -> c7i.2xlarge (1 in flight): ok 11.7s, predicted 8.3s
+    45 04 image=1 -> c7a.2xlarge (2 in flight): ok 14.3s, predicted 12.3s
+    36 03 text=3072 -> c7a.2xlarge (1 in flight): ok 51.7s, predicted 22.9s
+    47 00 chat=short -> c7i.2xlarge (1 in flight): ok 6.1s, predicted 8.3s
+    49 00 chat=short -> c7a.2xlarge (2 in flight): ok 13.5s, predicted 17.1s
+    48 04 image=1 -> c7a.2xlarge (1 in flight): ok 17.3s, predicted 12.3s
+    50 08 audio=40 -> c7a.2xlarge (1 in flight): ok 29.6s, predicted 20.0s
+    39 00 chat=short -> m8g.xlarge (1 in flight): ok 127.4s, predicted 5.8s
+    52 00 chat=short -> c7i.2xlarge (1 in flight): ok 2.6s, predicted 8.3s
+    43 00 chat=short -> m8g.xlarge (3 in flight): ok 122.6s, predicted 121.5s
+    41 03 text=3072 -> m8g.xlarge (2 in flight): ok 134.8s, predicted 126.4s
+    55 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    51 06 image=4 -> c7a.2xlarge (1 in flight): ok 33.6s, predicted 20.4s
+    53 01 text=512 -> c7a.2xlarge (2 in flight): ok 33.8s, predicted 29.1s
+    57 07 audio=10 -> c7a.2xlarge (1 in flight): ok 13.0s, predicted 8.0s
+    54 08 audio=40 -> c7i.2xlarge (1 in flight): ok 53.1s, predicted 34.0s
+    56 02 text=1024 -> m8g.xlarge (1 in flight): ok 26.5s, predicted 25.4s
+    59 02 text=1024 -> c7a.2xlarge (1 in flight): ok 14.9s, predicted 11.8s
+    58 07 audio=10 -> c7i.2xlarge (1 in flight): ok 25.2s, predicted 14.5s
+    61 00 chat=short -> c7i.2xlarge (2 in flight): ok 21.8s, predicted 12.4s
+    62 07 audio=10 -> c7a.2xlarge (2 in flight): ok 19.9s, predicted 8.0s
+    63 02 text=1024 -> c7a.2xlarge (2 in flight): ok 24.6s, predicted 19.0s
+    67 00 chat=short -> c7a.2xlarge (2 in flight): ok 9.2s, predicted 7.8s
+    60 07 audio=10 -> m8g.xlarge (1 in flight): ok 50.1s, predicted 48.0s
+    68 00 chat=short -> c7a.2xlarge (2 in flight): ok 12.8s, predicted 13.2s
+    65 01 text=512 -> c7i.2xlarge (1 in flight): ok 20.8s, predicted 11.6s
+    66 00 chat=short -> c7i.2xlarge (2 in flight): ok 20.9s, predicted 19.9s
+    64 00 chat=short -> m8g.xlarge (2 in flight): ok 28.4s, predicted 27.1s
+    69 00 chat=short -> c7a.2xlarge (3 in flight): ok 12.7s, predicted 15.0s
+    70 00 chat=short -> m8g.xlarge (2 in flight): ok 6.4s, predicted 6.3s
+    72 00 chat=short -> c7i.2xlarge (1 in flight): ok 5.7s, predicted 8.3s
+    73 00 chat=short -> m8g.xlarge (1 in flight): ok 3.5s, predicted 5.8s
+    71 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.1s, predicted 7.8s
+    74 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.6s, predicted 8.3s
+    77 00 chat=short -> c7i.2xlarge (1 in flight): ok 1.4s, predicted 8.3s
+    75 08 audio=40 -> c7a.2xlarge (1 in flight): ok 48.9s, predicted 20.0s
+    78 00 chat=short -> c7i.2xlarge (1 in flight): ok 29.0s, predicted 8.3s
+    80 07 audio=10 -> c7i.2xlarge (2 in flight): ok 24.1s, predicted 17.8s
+    79 06 image=4 -> c7a.2xlarge (2 in flight): ok 36.3s, predicted 20.4s
+    83 04 image=1 -> c7a.2xlarge (2 in flight): ok 17.4s, predicted 12.3s
+    84 01 text=512 -> c7i.2xlarge (1 in flight): ok 16.0s, predicted 11.6s
+    85 00 chat=short -> c7i.2xlarge (2 in flight): ok 18.0s, predicted 17.8s
+    86 00 chat=short -> c7a.2xlarge (1 in flight): ok 10.1s, predicted 7.8s
+    87 08 audio=40 -> c7a.2xlarge (1 in flight): ok 31.5s, predicted 20.0s
+    76 03 text=3072 -> m8g.xlarge (1 in flight): ok 134.0s, predicted 124.6s    81 00 chat=short -> m8g.xlarge (2 in flight): ok 93.2s, predicted 89.7s
+
+    89 00 chat=short -> c7a.2xlarge (2 in flight): ok 32.4s, predicted 23.4s
+    82 00 chat=short -> m8g.xlarge (3 in flight): ok 97.1s, predicted 95.5s
+    92 04 image=1 -> c7a.2xlarge (3 in flight): ok 20.0s, predicted 15.5s
+    94 00 chat=short -> m8g.xlarge (1 in flight): ok 2.4s, predicted 5.8s
+    95 07 audio=10 -> c7a.2xlarge (2 in flight): ok 11.4s, predicted 9.0s
+    93 00 chat=short -> c7a.2xlarge (1 in flight): ok 20.7s, predicted 7.8s
+    88 00 chat=short -> c7i.2xlarge (1 in flight): ok 67.0s, predicted 8.3s
+    96 01 text=512 -> m8g.xlarge (1 in flight): ok 13.1s, predicted 13.2s
+    97 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.8s, predicted 7.8s
+    98 00 chat=short -> c7a.2xlarge (2 in flight): ok 10.0s, predicted 12.5s
+    99 00 chat=short -> c7a.2xlarge (1 in flight): ok 1.5s, predicted 7.8s
+   101 00 chat=short -> m8g.xlarge (1 in flight): ok 3.5s, predicted 5.8s
+   100 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+    90 03 text=3072 -> c7i.2xlarge (2 in flight): ok 117.9s, predicted 32.4s
+   102 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+   103 01 text=512 -> m8g.xlarge (1 in flight): ok 11.7s, predicted 13.2s
+   106 00 chat=short -> c7a.2xlarge (1 in flight): ok 9.1s, predicted 7.8s
+   107 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.3s, predicted 7.8s
+    91 03 text=3072 -> c7i.2xlarge (3 in flight): ok 175.4s, predicted 54.0s
+all requests sent; waiting for the last ones to finish
+   105 07 audio=10 -> m8g.xlarge (1 in flight): ok 50.5s, predicted 48.0s
+   110 00 chat=short -> m8g.xlarge (2 in flight): ok 5.5s, predicted 7.9s
+   104 03 text=3072 -> c7i.2xlarge (2 in flight): ok 70.4s, predicted 31.4s
+   109 00 chat=short -> c7a.2xlarge (2 in flight): ok 14.7s, predicted 24.5s
+   111 00 chat=short -> c7i.2xlarge (2 in flight): ok 11.2s, predicted 8.3s
+   112 07 audio=10 -> c7a.2xlarge (3 in flight): ok 21.8s, predicted 26.4s
+   108 06 image=4 -> c7a.2xlarge (1 in flight): ok 35.1s, predicted 20.4s
+  all            112/112 ok, median e2e 17.7s, p95 124.7s, median TTFT 7.3s, 0.121 req/s
+  chat           59/59 ok, median e2e 11.2s, p95 93.6s, median TTFT 0.5s, 0.064 req/s
+  text           25/25 ok, median e2e 26.5s, p95 167.3s, median TTFT 13.1s, 0.027 req/s
+  image          12/12 ok, median e2e 19.0s, p95 95.0s, median TTFT 12.2s, 0.013 req/s
+  audio          16/16 ok, median e2e 27.4s, p95 56.6s, median TTFT 19.2s, 0.017 req/s
+  c7a.2xlarge    51/51 ok, median e2e 14.9s, p95 35.7s, median TTFT 7.1s, 0.055 req/s
+  c7i.2xlarge    36/36 ok, median e2e 18.7s, p95 87.4s, median TTFT 3.9s, 0.039 req/s
+  m8g.xlarge     25/25 ok, median e2e 34.1s, p95 158.9s, median TTFT 20.7s, 0.027 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T094218Z)
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.094
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.073
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.033
+  cluster capacity for this mix ≈ 0.200 req/s (60% load = 0.120, 90% = 0.180); gain = slot_gain
+trace traces/phase2/poisson-load0.6-s1.csv: 112 requests, offered 0.125 req/s = 62% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.5s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.7s
+  warmup c7a.2xlarge text: ok 14.8s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.2s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 13.0s
+  warmup c7i.2xlarge audio: ok 24.1s
+  warmup m8g.xlarge audio: ok 48.9s
+replaying 112 requests with policy ect over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     6 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     1 04 image=1 -> c7a.2xlarge (1 in flight): ok 43.1s, predicted 12.3s
+     7 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+     2 05 image=2 -> c7i.2xlarge (1 in flight): ok 49.8s, predicted 20.8s
+     4 03 text=3072 -> c7a.2xlarge (2 in flight): ok 42.1s, predicted 22.9s
+     5 05 image=2 -> c7i.2xlarge (2 in flight): ok 27.3s, predicted 20.8s
+     8 01 text=512 -> c7a.2xlarge (3 in flight): ok 29.3s, predicted 9.8s
+     9 05 image=2 -> c7a.2xlarge (3 in flight): ok 35.6s, predicted 19.5s
+    10 01 text=512 -> c7a.2xlarge (3 in flight): ok 21.3s, predicted 9.8s
+    11 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+    12 00 chat=short -> m8g.xlarge (1 in flight): ok 1.7s, predicted 5.8s
+    13 07 audio=10 -> c7a.2xlarge (1 in flight): ok 11.9s, predicted 8.0s
+    14 00 chat=short -> m8g.xlarge (1 in flight): ok 1.9s, predicted 5.8s
+    16 00 chat=short -> m8g.xlarge (1 in flight): ok 0.9s, predicted 5.8s
+    15 04 image=1 -> c7a.2xlarge (1 in flight): ok 11.4s, predicted 12.3s
+    18 00 chat=short -> m8g.xlarge (1 in flight): ok 1.9s, predicted 5.8s
+    17 02 text=1024 -> c7a.2xlarge (1 in flight): ok 19.8s, predicted 11.8s
+    20 00 chat=short -> m8g.xlarge (1 in flight): ok 8.5s, predicted 5.8s
+    23 00 chat=short -> m8g.xlarge (2 in flight): ok 9.3s, predicted 9.1s
+    24 00 chat=short -> m8g.xlarge (2 in flight): ok 3.1s, predicted 7.4s
+    19 00 chat=short -> c7a.2xlarge (2 in flight): ok 38.3s, predicted 8.2s
+    26 00 chat=short -> m8g.xlarge (1 in flight): ok 6.6s, predicted 5.8s
+    27 00 chat=short -> m8g.xlarge (2 in flight): ok 6.4s, predicted 6.7s
+    21 03 text=3072 -> c7a.2xlarge (3 in flight): ok 43.7s, predicted 24.7s
+    28 01 text=512 -> c7a.2xlarge (2 in flight): ok 15.7s, predicted 9.8s
+    29 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+    22 07 audio=10 -> c7i.2xlarge (1 in flight): ok 80.3s, predicted 14.5s
+    30 07 audio=10 -> c7a.2xlarge (1 in flight): ok 12.4s, predicted 8.0s
+    25 03 text=3072 -> c7i.2xlarge (2 in flight): ok 81.1s, predicted 38.0s
+    31 00 chat=short -> m8g.xlarge (1 in flight): ok 1.4s, predicted 5.8s
+    32 01 text=512 -> c7a.2xlarge (1 in flight): ok 12.9s, predicted 9.8s
+    33 01 text=512 -> c7i.2xlarge (1 in flight): ok 17.0s, predicted 11.6s
+    34 02 text=1024 -> c7a.2xlarge (1 in flight): ok 18.7s, predicted 11.8s
+    35 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    38 00 chat=short -> m8g.xlarge (1 in flight): ok 2.9s, predicted 5.8s
+    39 00 chat=short -> m8g.xlarge (1 in flight): ok 4.2s, predicted 5.8s
+    42 00 chat=short -> m8g.xlarge (1 in flight): ok 9.2s, predicted 5.8s
+    43 00 chat=short -> m8g.xlarge (2 in flight): ok 7.7s, predicted 9.8s
+    40 07 audio=10 -> c7i.2xlarge (2 in flight): ok 29.0s, predicted 17.4s
+    44 00 chat=short -> m8g.xlarge (1 in flight): ok 7.4s, predicted 5.8s
+    46 00 chat=short -> m8g.xlarge (2 in flight): ok 3.6s, predicted 7.5s
+    47 00 chat=short -> m8g.xlarge (1 in flight): ok 3.5s, predicted 5.8s
+    45 04 image=1 -> c7i.2xlarge (3 in flight): ok 24.5s, predicted 12.5s
+    37 02 text=1024 -> c7i.2xlarge (1 in flight): ok 62.5s, predicted 15.3s
+    36 03 text=3072 -> c7a.2xlarge (1 in flight): ok 63.9s, predicted 22.9s
+    49 00 chat=short -> m8g.xlarge (1 in flight): ok 5.2s, predicted 5.8s
+    41 03 text=3072 -> c7a.2xlarge (2 in flight): ok 57.3s, predicted 31.4s
+    48 04 image=1 -> c7a.2xlarge (3 in flight): ok 21.2s, predicted 12.3s
+    50 08 audio=40 -> c7a.2xlarge (1 in flight): ok 29.8s, predicted 20.0s
+    52 00 chat=short -> m8g.xlarge (1 in flight): ok 1.4s, predicted 5.8s
+    53 01 text=512 -> c7i.2xlarge (1 in flight): ok 17.9s, predicted 11.6s
+    55 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    51 06 image=4 -> c7a.2xlarge (1 in flight): ok 47.7s, predicted 20.4s
+    56 02 text=1024 -> c7i.2xlarge (1 in flight): ok 26.5s, predicted 15.3s
+    57 07 audio=10 -> c7a.2xlarge (3 in flight): ok 23.2s, predicted 10.6s
+    54 08 audio=40 -> c7a.2xlarge (2 in flight): ok 67.8s, predicted 37.5s
+    61 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    58 07 audio=10 -> c7a.2xlarge (3 in flight): ok 24.0s, predicted 8.0s
+    60 07 audio=10 -> c7a.2xlarge (3 in flight): ok 20.0s, predicted 11.9s
+    62 07 audio=10 -> c7a.2xlarge (3 in flight): ok 18.8s, predicted 8.0s
+    64 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+    66 00 chat=short -> m8g.xlarge (1 in flight): ok 7.0s, predicted 5.8s
+    59 02 text=1024 -> c7i.2xlarge (1 in flight): ok 43.1s, predicted 15.3s
+    67 00 chat=short -> m8g.xlarge (2 in flight): ok 5.1s, predicted 6.9s
+    63 02 text=1024 -> c7i.2xlarge (2 in flight): ok 31.7s, predicted 15.3s
+    65 01 text=512 -> c7a.2xlarge (1 in flight): ok 14.7s, predicted 9.8s
+    69 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+    68 00 chat=short -> c7i.2xlarge (3 in flight): ok 12.8s, predicted 8.3s
+    70 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    72 00 chat=short -> c7a.2xlarge (1 in flight): ok 5.7s, predicted 7.8s
+    71 00 chat=short -> m8g.xlarge (1 in flight): ok 7.4s, predicted 5.8s
+    73 00 chat=short -> m8g.xlarge (2 in flight): ok 4.9s, predicted 7.4s
+    74 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    77 00 chat=short -> m8g.xlarge (1 in flight): ok 0.8s, predicted 5.8s
+    78 00 chat=short -> m8g.xlarge (1 in flight): ok 4.1s, predicted 5.8s
+    75 08 audio=40 -> c7a.2xlarge (1 in flight): ok 49.1s, predicted 20.0s
+    82 00 chat=short -> m8g.xlarge (2 in flight): ok 7.2s, predicted 11.6s
+    81 00 chat=short -> m8g.xlarge (1 in flight): ok 9.0s, predicted 5.8s
+    79 06 image=4 -> c7a.2xlarge (2 in flight): ok 33.5s, predicted 20.4s
+    83 04 image=1 -> c7a.2xlarge (2 in flight): ok 16.3s, predicted 12.3s
+    85 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    80 07 audio=10 -> c7i.2xlarge (2 in flight): ok 51.5s, predicted 17.5s
+    86 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    84 01 text=512 -> c7i.2xlarge (3 in flight): ok 42.2s, predicted 11.6s
+    76 03 text=3072 -> c7i.2xlarge (1 in flight): ok 98.5s, predicted 31.4s
+    88 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    89 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.6s, predicted 8.3s
+    90 03 text=3072 -> c7a.2xlarge (2 in flight): ok 39.6s, predicted 32.7s
+    93 00 chat=short -> m8g.xlarge (1 in flight): ok 6.4s, predicted 5.8s
+    94 00 chat=short -> m8g.xlarge (2 in flight): ok 2.8s, predicted 6.3s
+    87 08 audio=40 -> c7a.2xlarge (1 in flight): ok 61.3s, predicted 20.0s
+    97 00 chat=short -> m8g.xlarge (1 in flight): ok 4.3s, predicted 5.8s
+    92 04 image=1 -> c7a.2xlarge (3 in flight): ok 47.6s, predicted 30.6s
+    95 07 audio=10 -> c7a.2xlarge (3 in flight): ok 24.6s, predicted 11.3s
+    98 00 chat=short -> c7i.2xlarge (2 in flight): ok 17.5s, predicted 8.3s
+    99 00 chat=short -> m8g.xlarge (1 in flight): ok 1.0s, predicted 5.8s
+    96 01 text=512 -> c7a.2xlarge (3 in flight): ok 25.3s, predicted 11.4s
+    91 03 text=3072 -> c7i.2xlarge (1 in flight): ok 68.7s, predicted 31.4s
+   100 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+   101 00 chat=short -> c7a.2xlarge (1 in flight): ok 6.6s, predicted 7.8s
+   102 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+   103 01 text=512 -> c7a.2xlarge (1 in flight): ok 36.1s, predicted 9.8s
+   106 00 chat=short -> m8g.xlarge (1 in flight): ok 4.8s, predicted 5.8s
+   105 07 audio=10 -> c7a.2xlarge (3 in flight): ok 22.1s, predicted 13.4s
+   107 00 chat=short -> m8g.xlarge (1 in flight): ok 6.5s, predicted 5.8s
+   104 03 text=3072 -> c7a.2xlarge (2 in flight): ok 46.6s, predicted 23.7s
+   109 00 chat=short -> m8g.xlarge (1 in flight): ok 1.7s, predicted 5.8s
+   110 00 chat=short -> m8g.xlarge (1 in flight): ok 2.7s, predicted 5.8s
+all requests sent; waiting for the last ones to finish
+   111 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+   108 06 image=4 -> c7a.2xlarge (1 in flight): ok 23.9s, predicted 20.4s
+   112 07 audio=10 -> c7i.2xlarge (1 in flight): ok 24.3s, predicted 14.5s
+  all            112/112 ok, median e2e 11.0s, p95 63.1s, median TTFT 0.8s, 0.121 req/s
+  chat           59/59 ok, median e2e 5.7s, p95 10.8s, median TTFT 0.3s, 0.064 req/s
+  text           25/25 ok, median e2e 36.1s, p95 78.6s, median TTFT 17.3s, 0.027 req/s
+  image          12/12 ok, median e2e 30.4s, p95 48.6s, median TTFT 18.8s, 0.013 req/s
+  audio          16/16 ok, median e2e 24.5s, p95 71.0s, median TTFT 18.3s, 0.017 req/s
+  c7a.2xlarge    39/39 ok, median e2e 24.6s, p95 61.6s, median TTFT 15.0s, 0.042 req/s
+  c7i.2xlarge    20/20 ok, median e2e 30.4s, p95 81.9s, median TTFT 20.0s, 0.022 req/s
+  m8g.xlarge     53/53 ok, median e2e 5.7s, p95 8.7s, median TTFT 0.3s, 0.057 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T095915Z)
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.092
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.070
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.032
+  cluster capacity for this mix ≈ 0.195 req/s (60% load = 0.117, 90% = 0.175); gain = slot_gain
+trace traces/phase2/poisson-load1.0-s1.csv: 178 requests, offered 0.198 req/s = 102% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 15.0s
+  warmup c7i.2xlarge text: ok 19.0s
+  warmup c7a.2xlarge image: ok 16.0s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 12.4s
+  warmup c7i.2xlarge audio: ok 24.2s
+  warmup m8g.xlarge audio: ok 48.9s
+replaying 178 requests with policy rr over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     6 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     1 04 image=1 -> c7a.2xlarge (1 in flight): ok 43.5s, predicted 12.3s
+     4 03 text=3072 -> c7a.2xlarge (2 in flight): ok 38.4s, predicted 25.6s
+     5 05 image=2 -> c7i.2xlarge (2 in flight): ok 33.5s, predicted 25.5s
+     7 00 chat=short -> c7a.2xlarge (3 in flight): ok 36.5s, predicted 19.3s
+     2 05 image=2 -> c7i.2xlarge (1 in flight): ok 59.7s, predicted 20.8s
+    12 00 chat=short -> m8g.xlarge (2 in flight): ok 16.9s, predicted 28.5s
+    11 00 chat=short -> c7i.2xlarge (4 in flight): ok 21.4s, predicted 14.3s
+    13 07 audio=10 -> c7a.2xlarge (3 in flight): ok 16.5s, predicted 8.0s
+     8 01 text=512 -> c7i.2xlarge (3 in flight): ok 48.5s, predicted 31.7s
+    10 01 text=512 -> c7a.2xlarge (4 in flight): ok 34.1s, predicted 13.9s
+    14 00 chat=short -> c7i.2xlarge (3 in flight): ok 7.0s, predicted 8.3s
+    16 00 chat=short -> c7a.2xlarge (1 in flight): ok 1.4s, predicted 7.8s
+     9 05 image=2 -> m8g.xlarge (1 in flight): ok 66.8s, predicted 50.1s
+    15 04 image=1 -> m8g.xlarge (3 in flight): ok 26.0s, predicted 43.6s
+    22 07 audio=10 -> c7a.2xlarge (2 in flight): ok 12.6s, predicted 12.0s
+    17 02 text=1024 -> c7i.2xlarge (1 in flight): ok 28.0s, predicted 15.3s
+    20 00 chat=short -> c7i.2xlarge (2 in flight): ok 21.0s, predicted 14.4s
+    23 00 chat=short -> c7i.2xlarge (3 in flight): ok 29.5s, predicted 21.2s
+    26 00 chat=short -> c7i.2xlarge (3 in flight): ok 11.7s, predicted 10.2s
+    19 00 chat=short -> c7a.2xlarge (1 in flight): ok 45.9s, predicted 7.8s
+    29 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+    25 03 text=3072 -> c7a.2xlarge (3 in flight): ok 46.3s, predicted 30.2s
+    31 00 chat=short -> c7a.2xlarge (2 in flight): ok 2.9s, predicted 7.8s
+    28 01 text=512 -> c7a.2xlarge (3 in flight): ok 35.4s, predicted 21.9s
+    32 01 text=512 -> c7i.2xlarge (1 in flight): ok 17.3s, predicted 11.6s
+    34 02 text=1024 -> c7a.2xlarge (1 in flight): ok 18.7s, predicted 11.8s
+    35 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+    38 00 chat=short -> c7i.2xlarge (1 in flight): ok 5.0s, predicted 8.3s
+    40 07 audio=10 -> c7a.2xlarge (2 in flight): ok 12.3s, predicted 12.4s
+    37 02 text=1024 -> c7a.2xlarge (1 in flight): ok 27.2s, predicted 11.8s
+    43 00 chat=short -> c7a.2xlarge (3 in flight): ok 14.9s, predicted 12.8s
+    46 00 chat=short -> c7a.2xlarge (3 in flight): ok 10.8s, predicted 12.3s
+    18 00 chat=short -> m8g.xlarge (3 in flight): ok 134.0s, predicted 36.0s
+    24 00 chat=short -> m8g.xlarge (5 in flight): ok 129.7s, predicted 157.0s
+    49 00 chat=short -> c7a.2xlarge (1 in flight): ok 8.3s, predicted 7.8s
+    21 03 text=3072 -> m8g.xlarge (4 in flight): ok 141.7s, predicted 155.8s
+    44 00 chat=short -> c7i.2xlarge (2 in flight): ok 57.5s, predicted 27.4s
+    41 03 text=3072 -> c7i.2xlarge (1 in flight): ok 69.8s, predicted 31.4s
+    52 00 chat=short -> c7a.2xlarge (1 in flight): ok 2.5s, predicted 7.8s
+    30 07 audio=10 -> m8g.xlarge (5 in flight): ok 146.0s, predicted 169.6s
+    27 00 chat=short -> m8g.xlarge (4 in flight): ok 178.6s, predicted 145.1s
+    55 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+    47 00 chat=short -> c7i.2xlarge (3 in flight): ok 94.2s, predicted 22.9s
+    58 07 audio=10 -> c7a.2xlarge (1 in flight): ok 13.3s, predicted 8.0s
+    61 00 chat=short -> c7a.2xlarge (2 in flight): ok 15.3s, predicted 9.6s
+    50 08 audio=40 -> c7i.2xlarge (4 in flight): ok 79.9s, predicted 34.0s
+    64 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.7s, predicted 7.8s
+    67 00 chat=short -> c7a.2xlarge (2 in flight): ok 8.7s, predicted 8.9s
+    53 01 text=512 -> c7i.2xlarge (3 in flight): ok 80.2s, predicted 25.1s
+    70 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.4s, predicted 7.8s
+    73 00 chat=short -> c7a.2xlarge (2 in flight): ok 8.1s, predicted 7.8s
+    56 02 text=1024 -> c7i.2xlarge (4 in flight): ok 85.7s, predicted 21.3s
+    59 02 text=1024 -> c7i.2xlarge (5 in flight): ok 90.2s, predicted 19.0s
+    62 07 audio=10 -> c7i.2xlarge (5 in flight): ok 92.4s, predicted 24.6s
+    79 06 image=4 -> c7a.2xlarge (2 in flight): ok 42.2s, predicted 28.8s
+    76 03 text=3072 -> c7a.2xlarge (1 in flight): ok 58.4s, predicted 22.9s
+    65 01 text=512 -> c7i.2xlarge (6 in flight): ok 90.6s, predicted 24.5s
+    68 00 chat=short -> c7i.2xlarge (6 in flight): ok 89.0s, predicted 28.5s
+    82 00 chat=short -> c7a.2xlarge (3 in flight): ok 40.7s, predicted 26.7s
+    33 01 text=512 -> m8g.xlarge (6 in flight): ok 275.4s, predicted 170.9s
+    85 00 chat=short -> c7a.2xlarge (4 in flight): ok 36.3s, predicted 24.9s
+    71 00 chat=short -> c7i.2xlarge (7 in flight): ok 85.7s, predicted 23.6s
+    36 03 text=3072 -> m8g.xlarge (7 in flight): ok 244.7s, predicted 260.5s
+    77 00 chat=short -> c7i.2xlarge (8 in flight): ok 64.5s, predicted 17.4s
+    39 00 chat=short -> m8g.xlarge (8 in flight): ok 242.8s, predicted 260.1s
+    74 00 chat=short -> c7i.2xlarge (7 in flight): ok 100.6s, predicted 23.2s
+    88 00 chat=short -> c7a.2xlarge (3 in flight): ok 40.4s, predicted 7.8s
+    42 00 chat=short -> m8g.xlarge (9 in flight): ok 260.9s, predicted 258.2s
+    94 00 chat=short -> c7a.2xlarge (3 in flight): ok 17.4s, predicted 12.5s
+    91 03 text=3072 -> c7a.2xlarge (2 in flight): ok 38.1s, predicted 22.9s
+    80 07 audio=10 -> c7i.2xlarge (8 in flight): ok 93.2s, predicted 24.3s
+    97 00 chat=short -> c7a.2xlarge (4 in flight): ok 20.4s, predicted 11.8s
+    83 04 image=1 -> c7i.2xlarge (9 in flight): ok 92.9s, predicted 26.7s
+    86 00 chat=short -> c7i.2xlarge (9 in flight): ok 75.1s, predicted 14.4s
+    45 04 image=1 -> m8g.xlarge (10 in flight): ok 283.2s, predicted 281.5s
+   100 00 chat=short -> c7a.2xlarge (1 in flight): ok 14.7s, predicted 7.8s
+    92 04 image=1 -> c7i.2xlarge (6 in flight): ok 67.7s, predicted 12.5s
+   103 01 text=512 -> c7a.2xlarge (2 in flight): ok 10.7s, predicted 9.8s
+   106 00 chat=short -> c7a.2xlarge (1 in flight): ok 9.1s, predicted 7.8s
+    89 00 chat=short -> c7i.2xlarge (8 in flight): ok 103.0s, predicted 8.3s
+    95 07 audio=10 -> c7i.2xlarge (7 in flight): ok 74.6s, predicted 14.5s
+    98 00 chat=short -> c7i.2xlarge (7 in flight): ok 73.6s, predicted 13.2s
+   109 00 chat=short -> c7a.2xlarge (1 in flight): ok 2.9s, predicted 7.8s
+   112 07 audio=10 -> c7a.2xlarge (1 in flight): ok 19.1s, predicted 8.0s
+   115 04 image=1 -> c7a.2xlarge (2 in flight): ok 18.7s, predicted 15.2s
+   101 00 chat=short -> c7i.2xlarge (6 in flight): ok 111.2s, predicted 8.3s
+   118 02 text=1024 -> c7a.2xlarge (1 in flight): ok 27.9s, predicted 11.8s
+   121 07 audio=10 -> c7a.2xlarge (2 in flight): ok 13.4s, predicted 8.0s
+    48 04 image=1 -> m8g.xlarge (11 in flight): ok 374.4s, predicted 299.8s
+   124 00 chat=short -> c7a.2xlarge (2 in flight): ok 6.1s, predicted 7.8s
+   104 03 text=3072 -> c7i.2xlarge (6 in flight): ok 106.6s, predicted 31.4s
+   107 00 chat=short -> c7i.2xlarge (6 in flight): ok 87.5s, predicted 16.6s
+   127 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+   110 00 chat=short -> c7i.2xlarge (4 in flight): ok 116.9s, predicted 9.5s
+   130 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.0s, predicted 7.8s
+   113 08 audio=40 -> c7i.2xlarge (5 in flight): ok 140.4s, predicted 39.3s
+   116 02 text=1024 -> c7i.2xlarge (6 in flight): ok 135.8s, predicted 46.9s
+   122 00 chat=short -> c7i.2xlarge (8 in flight): ok 107.0s, predicted 26.0s
+    51 06 image=4 -> m8g.xlarge (9 in flight): ok 433.1s, predicted 350.1s
+   133 08 audio=40 -> c7a.2xlarge (1 in flight): ok 31.2s, predicted 20.0s
+   136 04 image=1 -> c7a.2xlarge (2 in flight): ok 7.9s, predicted 12.3s
+   119 00 chat=short -> c7i.2xlarge (7 in flight): ok 169.1s, predicted 37.0s
+   128 00 chat=short -> c7i.2xlarge (7 in flight): ok 96.4s, predicted 11.7s
+   142 00 chat=short -> c7a.2xlarge (2 in flight): ok 14.7s, predicted 22.3s
+   125 08 audio=40 -> c7i.2xlarge (7 in flight): ok 141.8s, predicted 39.3s
+    57 07 audio=10 -> m8g.xlarge (10 in flight): ok 461.6s, predicted 484.3s
+   139 08 audio=40 -> c7a.2xlarge (1 in flight): ok 42.0s, predicted 20.0s
+   145 05 image=2 -> c7a.2xlarge (2 in flight): ok 20.7s, predicted 20.0s
+   148 00 chat=short -> c7a.2xlarge (3 in flight): ok 20.5s, predicted 23.7s
+   131 00 chat=short -> c7i.2xlarge (7 in flight): ok 98.6s, predicted 8.3s
+   134 07 audio=10 -> c7i.2xlarge (6 in flight): ok 88.0s, predicted 14.5s
+   137 00 chat=short -> c7i.2xlarge (6 in flight): ok 64.4s, predicted 8.3s
+   143 00 chat=short -> c7i.2xlarge (8 in flight): ok 45.5s, predicted 10.2s
+   151 00 chat=short -> c7a.2xlarge (1 in flight): ok 9.2s, predicted 7.8s
+   146 02 text=1024 -> c7i.2xlarge (7 in flight): ok 58.0s, predicted 15.3s
+   140 00 chat=short -> c7i.2xlarge (7 in flight): ok 77.4s, predicted 8.3s
+    60 07 audio=10 -> m8g.xlarge (10 in flight): ok 496.5s, predicted 517.0s
+   152 00 chat=short -> c7i.2xlarge (4 in flight): ok 26.3s, predicted 8.3s
+   154 02 text=1024 -> c7a.2xlarge (1 in flight): ok 35.6s, predicted 11.8s
+    54 08 audio=40 -> m8g.xlarge (10 in flight): ok 555.6s, predicted 457.3s
+    63 02 text=1024 -> m8g.xlarge (11 in flight): ok 516.4s, predicted 533.8s
+    66 00 chat=short -> m8g.xlarge (12 in flight): ok 510.4s, predicted 528.3s
+    69 00 chat=short -> m8g.xlarge (13 in flight): ok 507.8s, predicted 526.2s
+    72 00 chat=short -> m8g.xlarge (14 in flight): ok 498.3s, predicted 522.4s
+   157 08 audio=40 -> c7a.2xlarge (2 in flight): ok 57.5s, predicted 26.9s
+   160 03 text=3072 -> c7a.2xlarge (3 in flight): ok 62.1s, predicted 42.4s
+   163 00 chat=short -> c7a.2xlarge (3 in flight): ok 38.4s, predicted 24.3s
+   149 00 chat=short -> c7i.2xlarge (7 in flight): ok 110.2s, predicted 10.9s
+   155 03 text=3072 -> c7i.2xlarge (5 in flight): ok 94.2s, predicted 31.4s
+   166 00 chat=short -> c7a.2xlarge (4 in flight): ok 45.1s, predicted 12.9s
+all requests sent; waiting for the last ones to finish
+   158 01 text=512 -> c7i.2xlarge (6 in flight): ok 112.5s, predicted 38.4s
+   169 06 image=4 -> c7a.2xlarge (4 in flight): ok 45.8s, predicted 20.4s
+   172 05 image=2 -> c7a.2xlarge (3 in flight): ok 41.2s, predicted 26.0s
+   175 00 chat=short -> c7a.2xlarge (4 in flight): ok 35.1s, predicted 24.8s
+   178 00 chat=short -> c7a.2xlarge (4 in flight): ok 20.2s, predicted 17.4s
+   164 07 audio=10 -> c7i.2xlarge (5 in flight): ok 100.3s, predicted 31.8s
+   161 02 text=1024 -> c7i.2xlarge (5 in flight): ok 130.9s, predicted 44.1s
+    78 00 chat=short -> m8g.xlarge (16 in flight): ok 583.0s, predicted 609.8s
+    75 08 audio=40 -> m8g.xlarge (15 in flight): ok 602.7s, predicted 620.5s
+   170 07 audio=10 -> c7i.2xlarge (7 in flight): ok 92.8s, predicted 19.2s
+   167 00 chat=short -> c7i.2xlarge (6 in flight): ok 110.7s, predicted 20.0s
+   173 00 chat=short -> c7i.2xlarge (7 in flight): ok 90.8s, predicted 16.3s
+   176 00 chat=short -> c7i.2xlarge (8 in flight): ok 90.5s, predicted 21.5s
+    84 01 text=512 -> m8g.xlarge (18 in flight): ok 581.9s, predicted 610.0s
+    81 00 chat=short -> m8g.xlarge (17 in flight): ok 695.6s, predicted 605.3s
+    90 03 text=3072 -> m8g.xlarge (20 in flight): ok 784.0s, predicted 810.6s
+    87 08 audio=40 -> m8g.xlarge (19 in flight): ok 794.7s, predicted 692.2s
+    93 00 chat=short -> m8g.xlarge (18 in flight): ok 782.0s, predicted 795.6s
+    99 00 chat=short -> m8g.xlarge (19 in flight): ok 759.9s, predicted 790.6s
+    96 01 text=512 -> m8g.xlarge (19 in flight): ok 775.7s, predicted 798.8s
+   105 07 audio=10 -> m8g.xlarge (20 in flight): ok 773.4s, predicted 805.8s
+   108 06 image=4 -> m8g.xlarge (21 in flight): ok 816.9s, predicted 879.6s
+   102 00 chat=short -> m8g.xlarge (20 in flight): ok 858.9s, predicted 775.2s
+   114 02 text=1024 -> m8g.xlarge (23 in flight): ok 837.5s, predicted 901.1s
+   111 00 chat=short -> m8g.xlarge (22 in flight): ok 852.5s, predicted 880.1s
+   117 01 text=512 -> m8g.xlarge (24 in flight): ok 838.9s, predicted 898.6s
+   120 00 chat=short -> m8g.xlarge (25 in flight): ok 834.2s, predicted 895.5s
+   126 04 image=1 -> m8g.xlarge (26 in flight): ok 808.1s, predicted 888.0s
+   123 00 chat=short -> m8g.xlarge (26 in flight): ok 833.7s, predicted 881.6s
+   129 00 chat=short -> m8g.xlarge (27 in flight): ok 766.6s, predicted 847.2s
+   132 00 chat=short -> m8g.xlarge (28 in flight): ok 857.5s, predicted 833.4s
+   141 08 audio=40 -> m8g.xlarge (30 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   144 04 image=1 -> m8g.xlarge (31 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   147 00 chat=short -> m8g.xlarge (32 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   135 08 audio=40 -> m8g.xlarge (29 in flight): ok 968.0s, predicted 933.1s
+   153 00 chat=short -> m8g.xlarge (33 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   156 00 chat=short -> m8g.xlarge (34 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   159 07 audio=10 -> m8g.xlarge (35 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   162 00 chat=short -> m8g.xlarge (35 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   165 00 chat=short -> m8g.xlarge (33 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   168 00 chat=short -> m8g.xlarge (32 in flight): error HTTPConnectionPool(host='127.0.0.1', port=18082): Read timed out. (read timeout=900)
+   138 06 image=4 -> m8g.xlarge (29 in flight): ok 1037.6s, predicted 996.2s
+   150 06 image=4 -> m8g.xlarge (32 in flight): ok 995.4s, predicted 1195.3s
+   171 00 chat=short -> m8g.xlarge (33 in flight): ok 900.4s, predicted 1175.2s
+   174 00 chat=short -> m8g.xlarge (34 in flight): ok 914.9s, predicted 1170.2s
+   177 04 image=1 -> m8g.xlarge (35 in flight): ok 913.7s, predicted 1197.3s
+  all            169/178 ok, median e2e 67.7s, p95 847.0s, median TTFT 47.5s, 0.094 req/s
+  chat           87/93 ok, median e2e 45.5s, p95 847.0s, median TTFT 28.5s, 0.048 req/s
+  text           35/35 ok, median e2e 80.2s, p95 800.1s, median TTFT 56.2s, 0.019 req/s
+  image          21/22 ok, median e2e 66.8s, p95 995.4s, median TTFT 41.3s, 0.012 req/s
+  audio          26/28 ok, median e2e 92.6s, p95 789.4s, median TTFT 81.7s, 0.014 req/s
+  c7a.2xlarge    60/60 ok, median e2e 18.9s, p95 46.9s, median TTFT 9.1s, 0.033 req/s
+  c7i.2xlarge    59/59 ok, median e2e 87.5s, p95 136.3s, median TTFT 63.1s, 0.033 req/s
+  m8g.xlarge     50/59 ok, median e2e 582.5s, p95 944.1s, median TTFT 574.1s, 0.028 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T101612Z)
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.092
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.070
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.032
+  cluster capacity for this mix ≈ 0.195 req/s (60% load = 0.117, 90% = 0.175); gain = slot_gain
+trace traces/phase2/poisson-load1.0-s1.csv: 178 requests, offered 0.198 req/s = 102% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 15.3s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.5s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 12.4s
+  warmup c7i.2xlarge audio: ok 24.2s
+  warmup m8g.xlarge audio: ok 48.9s
+replaying 178 requests with policy least over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> c7i.2xlarge (1 in flight): ok 10.5s, predicted 8.3s
+     2 05 image=2 -> c7a.2xlarge (1 in flight): ok 18.9s, predicted 14.1s
+     6 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.9s, predicted 7.8s
+     7 00 chat=short -> c7a.2xlarge (2 in flight): ok 11.6s, predicted 11.7s
+    10 01 text=512 -> c7a.2xlarge (1 in flight): ok 15.6s, predicted 9.8s
+     5 05 image=2 -> c7i.2xlarge (1 in flight): ok 36.1s, predicted 20.8s
+    12 00 chat=short -> c7a.2xlarge (2 in flight): ok 3.3s, predicted 11.3s
+    11 00 chat=short -> c7a.2xlarge (2 in flight): ok 8.9s, predicted 7.8s
+    14 00 chat=short -> c7a.2xlarge (1 in flight): ok 8.7s, predicted 7.8s
+     8 01 text=512 -> c7i.2xlarge (2 in flight): ok 58.8s, predicted 27.0s
+    15 04 image=1 -> c7a.2xlarge (2 in flight): ok 18.9s, predicted 17.6s
+    17 02 text=1024 -> c7a.2xlarge (2 in flight): ok 20.3s, predicted 21.8s
+     9 05 image=2 -> c7i.2xlarge (3 in flight): ok 79.6s, predicted 45.1s
+    13 07 audio=10 -> c7i.2xlarge (3 in flight): ok 51.8s, predicted 30.6s
+    22 07 audio=10 -> c7a.2xlarge (4 in flight): ok 22.0s, predicted 26.9s
+    19 00 chat=short -> c7a.2xlarge (3 in flight): ok 26.3s, predicted 22.8s
+    24 00 chat=short -> c7a.2xlarge (4 in flight): ok 22.2s, predicted 30.2s
+    26 00 chat=short -> c7a.2xlarge (4 in flight): ok 18.5s, predicted 23.3s
+    28 01 text=512 -> c7a.2xlarge (3 in flight): ok 19.6s, predicted 29.6s
+    30 07 audio=10 -> c7a.2xlarge (2 in flight): ok 12.6s, predicted 22.5s
+    29 00 chat=short -> c7a.2xlarge (3 in flight): ok 24.5s, predicted 25.9s
+    31 00 chat=short -> c7a.2xlarge (3 in flight): ok 9.8s, predicted 20.8s
+     1 04 image=1 -> m8g.xlarge (1 in flight): ok 165.0s, predicted 31.3s
+     4 03 text=3072 -> m8g.xlarge (2 in flight): ok 155.8s, predicted 146.3s
+    18 00 chat=short -> c7i.2xlarge (3 in flight): ok 82.3s, predicted 10.9s
+    16 00 chat=short -> m8g.xlarge (3 in flight): ok 91.5s, predicted 86.5s
+    32 01 text=512 -> c7a.2xlarge (4 in flight): ok 25.7s, predicted 30.6s
+    34 02 text=1024 -> c7a.2xlarge (2 in flight): ok 19.8s, predicted 30.7s
+    21 03 text=3072 -> c7i.2xlarge (4 in flight): ok 88.6s, predicted 37.5s
+    23 00 chat=short -> c7i.2xlarge (5 in flight): ok 91.6s, predicted 45.8s
+    27 00 chat=short -> c7i.2xlarge (4 in flight): ok 87.0s, predicted 31.8s
+    33 01 text=512 -> c7i.2xlarge (5 in flight): ok 54.4s, predicted 11.6s
+    38 00 chat=short -> c7i.2xlarge (3 in flight): ok 21.6s, predicted 8.3s
+    42 00 chat=short -> c7i.2xlarge (4 in flight): ok 17.7s, predicted 8.3s
+    37 02 text=1024 -> c7a.2xlarge (2 in flight): ok 45.0s, predicted 34.5s
+    36 03 text=3072 -> c7a.2xlarge (1 in flight): ok 45.5s, predicted 22.9s
+    44 00 chat=short -> c7i.2xlarge (3 in flight): ok 26.0s, predicted 9.6s
+    45 04 image=1 -> c7i.2xlarge (4 in flight): ok 29.1s, predicted 21.2s
+    46 00 chat=short -> c7i.2xlarge (4 in flight): ok 31.2s, predicted 28.0s
+    40 07 audio=10 -> c7a.2xlarge (4 in flight): ok 49.8s, predicted 42.9s
+    47 00 chat=short -> c7i.2xlarge (4 in flight): ok 24.5s, predicted 25.9s
+    49 00 chat=short -> c7i.2xlarge (5 in flight): ok 23.1s, predicted 31.3s
+    39 00 chat=short -> c7a.2xlarge (3 in flight): ok 64.5s, predicted 36.3s
+    48 04 image=1 -> c7a.2xlarge (5 in flight): ok 39.3s, predicted 28.0s
+    52 00 chat=short -> c7a.2xlarge (2 in flight): ok 24.2s, predicted 28.1s
+    25 03 text=3072 -> m8g.xlarge (5 in flight): ok 202.3s, predicted 198.4s
+    20 00 chat=short -> m8g.xlarge (4 in flight): ok 210.3s, predicted 80.0s
+    53 01 text=512 -> c7i.2xlarge (2 in flight): ok 39.9s, predicted 25.1s
+    50 08 audio=40 -> c7i.2xlarge (1 in flight): ok 64.1s, predicted 34.0s
+    51 06 image=4 -> c7a.2xlarge (1 in flight): ok 48.6s, predicted 20.4s
+    54 08 audio=40 -> c7a.2xlarge (3 in flight): ok 62.5s, predicted 46.6s
+    57 07 audio=10 -> c7i.2xlarge (4 in flight): ok 46.2s, predicted 25.8s
+    55 00 chat=short -> c7i.2xlarge (3 in flight): ok 58.1s, predicted 17.9s
+    56 02 text=1024 -> c7a.2xlarge (4 in flight): ok 55.5s, predicted 40.4s
+    60 07 audio=10 -> c7a.2xlarge (5 in flight): ok 49.7s, predicted 41.9s
+    59 02 text=1024 -> c7a.2xlarge (4 in flight): ok 51.8s, predicted 34.5s
+    62 07 audio=10 -> c7i.2xlarge (4 in flight): ok 52.3s, predicted 25.1s
+    64 00 chat=short -> c7a.2xlarge (5 in flight): ok 45.4s, predicted 33.7s
+    66 00 chat=short -> c7a.2xlarge (6 in flight): ok 42.7s, predicted 37.6s
+    69 00 chat=short -> c7a.2xlarge (6 in flight): ok 45.1s, predicted 37.5s
+    61 00 chat=short -> c7i.2xlarge (4 in flight): ok 77.4s, predicted 15.0s
+    67 00 chat=short -> c7i.2xlarge (6 in flight): ok 66.2s, predicted 34.1s
+    63 02 text=1024 -> c7i.2xlarge (5 in flight): ok 81.3s, predicted 39.9s
+    71 00 chat=short -> c7a.2xlarge (6 in flight): ok 55.0s, predicted 35.8s
+    72 00 chat=short -> c7i.2xlarge (6 in flight): ok 58.9s, predicted 36.0s
+    70 00 chat=short -> c7i.2xlarge (6 in flight): ok 69.7s, predicted 33.2s
+    80 07 audio=10 -> c7i.2xlarge (7 in flight): ok 58.0s, predicted 28.4s
+    35 00 chat=short -> m8g.xlarge (3 in flight): ok 263.5s, predicted 130.2s
+    75 08 audio=40 -> c7a.2xlarge (7 in flight): ok 81.2s, predicted 44.9s
+    41 03 text=3072 -> m8g.xlarge (4 in flight): ok 243.0s, predicted 232.2s
+    77 00 chat=short -> c7a.2xlarge (7 in flight): ok 70.9s, predicted 63.7s
+    76 03 text=3072 -> c7a.2xlarge (7 in flight): ok 80.8s, predicted 65.4s
+    73 00 chat=short -> c7i.2xlarge (7 in flight): ok 98.3s, predicted 41.8s
+    83 04 image=1 -> c7i.2xlarge (8 in flight): ok 68.5s, predicted 30.8s
+    85 00 chat=short -> c7i.2xlarge (8 in flight): ok 65.8s, predicted 32.2s
+    78 00 chat=short -> c7a.2xlarge (6 in flight): ok 95.9s, predicted 67.0s
+    79 06 image=4 -> c7a.2xlarge (7 in flight): ok 98.4s, predicted 87.0s
+    84 01 text=512 -> c7a.2xlarge (8 in flight): ok 91.6s, predicted 86.2s
+    81 00 chat=short -> c7a.2xlarge (7 in flight): ok 102.1s, predicted 84.8s
+    58 07 audio=10 -> m8g.xlarge (4 in flight): ok 183.9s, predicted 176.5s
+    92 04 image=1 -> c7a.2xlarge (9 in flight): ok 64.3s, predicted 64.8s
+    89 00 chat=short -> c7a.2xlarge (8 in flight): ok 79.2s, predicted 64.6s
+    43 00 chat=short -> m8g.xlarge (5 in flight): ok 298.4s, predicted 231.6s
+    65 01 text=512 -> m8g.xlarge (5 in flight): ok 180.6s, predicted 167.3s
+    86 00 chat=short -> c7i.2xlarge (6 in flight): ok 102.5s, predicted 26.8s
+    68 00 chat=short -> m8g.xlarge (6 in flight): ok 179.5s, predicted 168.8s
+    95 07 audio=10 -> c7a.2xlarge (8 in flight): ok 62.3s, predicted 64.2s
+    99 00 chat=short -> c7a.2xlarge (8 in flight): ok 44.1s, predicted 52.2s
+    87 08 audio=40 -> c7i.2xlarge (6 in flight): ok 95.1s, predicted 48.9s
+    82 00 chat=short -> m8g.xlarge (8 in flight): ok 135.4s, predicted 129.5s
+    74 00 chat=short -> m8g.xlarge (7 in flight): ok 165.2s, predicted 152.8s
+    93 00 chat=short -> c7a.2xlarge (7 in flight): ok 73.8s, predicted 60.3s
+    94 00 chat=short -> m8g.xlarge (7 in flight): ok 74.3s, predicted 69.8s
+   100 00 chat=short -> c7a.2xlarge (8 in flight): ok 44.9s, predicted 48.6s
+   102 00 chat=short -> c7a.2xlarge (7 in flight): ok 44.5s, predicted 46.7s
+   105 07 audio=10 -> c7a.2xlarge (7 in flight): ok 39.8s, predicted 47.1s
+   103 01 text=512 -> c7a.2xlarge (8 in flight): ok 74.6s, predicted 55.4s
+   109 00 chat=short -> c7a.2xlarge (5 in flight): ok 35.6s, predicted 48.9s
+    90 03 text=3072 -> c7i.2xlarge (8 in flight): ok 151.2s, predicted 82.6s
+   108 06 image=4 -> c7a.2xlarge (4 in flight): ok 43.7s, predicted 43.3s
+   112 07 audio=10 -> c7a.2xlarge (6 in flight): ok 50.7s, predicted 61.0s
+   111 00 chat=short -> c7a.2xlarge (5 in flight): ok 61.5s, predicted 53.6s
+   116 02 text=1024 -> c7a.2xlarge (7 in flight): ok 65.0s, predicted 63.6s
+   117 01 text=512 -> c7a.2xlarge (7 in flight): ok 57.5s, predicted 63.1s
+   121 07 audio=10 -> c7a.2xlarge (6 in flight): ok 47.8s, predicted 55.7s
+   120 00 chat=short -> c7a.2xlarge (7 in flight): ok 66.1s, predicted 62.0s
+    88 00 chat=short -> c7i.2xlarge (7 in flight): ok 213.4s, predicted 55.5s
+   122 00 chat=short -> c7a.2xlarge (7 in flight): ok 51.9s, predicted 59.5s
+   124 00 chat=short -> c7a.2xlarge (8 in flight): ok 50.6s, predicted 66.5s
+   101 00 chat=short -> m8g.xlarge (8 in flight): ok 165.0s, predicted 43.0s
+   123 00 chat=short -> c7a.2xlarge (8 in flight): ok 62.5s, predicted 66.0s
+    91 03 text=3072 -> c7i.2xlarge (9 in flight): ok 223.4s, predicted 108.1s
+   126 04 image=1 -> c7a.2xlarge (8 in flight): ok 42.9s, predicted 61.2s
+    96 01 text=512 -> c7i.2xlarge (7 in flight): ok 200.0s, predicted 94.8s
+   104 03 text=3072 -> m8g.xlarge (8 in flight): ok 159.3s, predicted 151.9s
+   128 00 chat=short -> c7a.2xlarge (5 in flight): ok 15.2s, predicted 46.6s
+   106 00 chat=short -> m8g.xlarge (6 in flight): ok 145.8s, predicted 142.7s
+   127 00 chat=short -> c7a.2xlarge (6 in flight): ok 29.5s, predicted 48.8s
+   110 00 chat=short -> m8g.xlarge (5 in flight): ok 127.2s, predicted 130.9s
+   129 00 chat=short -> c7a.2xlarge (2 in flight): ok 5.7s, predicted 38.1s
+    98 00 chat=short -> c7i.2xlarge (8 in flight): ok 204.5s, predicted 107.6s
+   130 00 chat=short -> c7a.2xlarge (3 in flight): ok 13.2s, predicted 44.9s
+    97 00 chat=short -> c7i.2xlarge (8 in flight): ok 224.0s, predicted 101.3s
+   131 00 chat=short -> c7a.2xlarge (1 in flight): ok 11.6s, predicted 7.8s
+   114 02 text=1024 -> c7i.2xlarge (7 in flight): ok 148.9s, predicted 40.0s
+   132 00 chat=short -> c7a.2xlarge (2 in flight): ok 31.4s, predicted 10.4s
+   134 07 audio=10 -> c7a.2xlarge (3 in flight): ok 37.4s, predicted 30.5s
+   119 00 chat=short -> c7i.2xlarge (8 in flight): ok 170.1s, predicted 24.6s
+   133 08 audio=40 -> c7a.2xlarge (3 in flight): ok 63.5s, predicted 28.4s
+   136 04 image=1 -> c7i.2xlarge (3 in flight): ok 39.1s, predicted 12.5s
+   125 08 audio=40 -> c7i.2xlarge (8 in flight): ok 144.4s, predicted 34.0s
+   137 00 chat=short -> c7i.2xlarge (4 in flight): ok 40.0s, predicted 15.4s
+   107 00 chat=short -> m8g.xlarge (5 in flight): ok 252.2s, predicted 140.5s
+   138 06 image=4 -> c7a.2xlarge (4 in flight): ok 54.2s, predicted 34.8s
+   140 00 chat=short -> c7i.2xlarge (5 in flight): ok 52.7s, predicted 9.7s
+   144 04 image=1 -> c7i.2xlarge (5 in flight): ok 42.3s, predicted 12.5s
+   148 00 chat=short -> c7i.2xlarge (6 in flight): ok 35.7s, predicted 17.6s
+   147 00 chat=short -> c7i.2xlarge (5 in flight): ok 44.1s, predicted 10.7s
+   135 08 audio=40 -> c7a.2xlarge (4 in flight): ok 110.8s, predicted 49.3s
+   113 08 audio=40 -> m8g.xlarge (6 in flight): ok 262.6s, predicted 235.6s
+   115 04 image=1 -> m8g.xlarge (7 in flight): ok 284.4s, predicted 263.3s
+   139 08 audio=40 -> c7a.2xlarge (4 in flight): ok 104.5s, predicted 53.3s
+   118 02 text=1024 -> m8g.xlarge (8 in flight): ok 262.6s, predicted 266.5s
+   143 00 chat=short -> m8g.xlarge (6 in flight): ok 96.3s, predicted 110.8s
+   142 00 chat=short -> m8g.xlarge (5 in flight): ok 101.1s, predicted 109.1s
+   141 08 audio=40 -> c7a.2xlarge (5 in flight): ok 111.3s, predicted 69.0s
+   149 00 chat=short -> c7i.2xlarge (5 in flight): ok 85.5s, predicted 17.4s
+   152 00 chat=short -> m8g.xlarge (6 in flight): ok 66.5s, predicted 69.8s
+   153 00 chat=short -> c7i.2xlarge (4 in flight): ok 65.5s, predicted 34.8s
+   146 02 text=1024 -> c7a.2xlarge (6 in flight): ok 109.4s, predicted 77.3s
+   145 05 image=2 -> c7a.2xlarge (5 in flight): ok 115.0s, predicted 65.5s
+   158 01 text=512 -> m8g.xlarge (7 in flight): ok 74.8s, predicted 68.0s
+   150 06 image=4 -> c7i.2xlarge (6 in flight): ok 105.4s, predicted 46.3s
+   151 00 chat=short -> c7a.2xlarge (6 in flight): ok 105.1s, predicted 50.9s
+all requests sent; waiting for the last ones to finish
+   159 07 audio=10 -> c7a.2xlarge (7 in flight): ok 98.3s, predicted 58.5s
+   157 08 audio=40 -> c7a.2xlarge (7 in flight): ok 108.1s, predicted 56.6s
+   164 07 audio=10 -> m8g.xlarge (4 in flight): ok 88.3s, predicted 105.1s
+   161 02 text=1024 -> m8g.xlarge (7 in flight): ok 117.9s, predicted 83.8s
+   162 00 chat=short -> c7a.2xlarge (8 in flight): ok 120.0s, predicted 60.0s
+   166 00 chat=short -> m8g.xlarge (5 in flight): ok 81.6s, predicted 101.5s
+   165 00 chat=short -> m8g.xlarge (5 in flight): ok 91.9s, predicted 103.2s
+   167 00 chat=short -> m8g.xlarge (6 in flight): ok 84.7s, predicted 102.5s
+   154 02 text=1024 -> c7i.2xlarge (5 in flight): ok 147.1s, predicted 47.7s
+   170 07 audio=10 -> c7a.2xlarge (6 in flight): ok 72.3s, predicted 28.2s
+   171 00 chat=short -> m8g.xlarge (6 in flight): ok 71.6s, predicted 89.8s
+   155 03 text=3072 -> c7i.2xlarge (6 in flight): ok 151.3s, predicted 77.9s
+   173 00 chat=short -> m8g.xlarge (7 in flight): ok 66.4s, predicted 87.6s
+   178 00 chat=short -> m8g.xlarge (8 in flight): ok 52.2s, predicted 75.2s
+   169 06 image=4 -> c7a.2xlarge (5 in flight): ok 91.4s, predicted 23.5s
+   172 05 image=2 -> c7a.2xlarge (7 in flight): ok 88.5s, predicted 37.1s
+   176 00 chat=short -> c7a.2xlarge (8 in flight): ok 90.1s, predicted 35.8s
+   177 04 image=1 -> c7a.2xlarge (8 in flight): ok 91.1s, predicted 44.2s
+   156 00 chat=short -> c7i.2xlarge (7 in flight): ok 215.1s, predicted 85.7s
+   160 03 text=3072 -> c7i.2xlarge (7 in flight): ok 209.8s, predicted 106.5s
+   163 00 chat=short -> c7i.2xlarge (8 in flight): ok 191.6s, predicted 88.9s
+   168 00 chat=short -> c7i.2xlarge (7 in flight): ok 167.3s, predicted 71.9s
+   175 00 chat=short -> c7i.2xlarge (8 in flight): ok 145.4s, predicted 60.3s
+   174 00 chat=short -> c7i.2xlarge (7 in flight): ok 149.8s, predicted 52.1s
+  all            178/178 ok, median e2e 66.2s, p95 216.3s, median TTFT 48.3s, 0.172 req/s
+  chat           93/93 ok, median e2e 66.1s, p95 214.1s, median TTFT 46.2s, 0.090 req/s
+  text           35/35 ok, median e2e 81.3s, p95 229.3s, median TTFT 66.0s, 0.034 req/s
+  image          22/22 ok, median e2e 59.2s, p95 162.5s, median TTFT 41.6s, 0.021 req/s
+  audio          28/28 ok, median e2e 63.0s, p95 170.0s, median TTFT 48.6s, 0.027 req/s
+  c7a.2xlarge    85/85 ok, median e2e 49.7s, p95 109.1s, median TTFT 36.1s, 0.082 req/s
+  c7i.2xlarge    59/59 ok, median e2e 69.7s, p95 213.6s, median TTFT 53.9s, 0.057 req/s
+  m8g.xlarge     34/34 ok, median e2e 150.8s, p95 270.8s, median TTFT 111.0s, 0.033 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T104745Z)
+predicted service time when alone, s (* = estimated from the other nodes):
+  node                 chat   txt512  txt1024  txt3072     img1     img2     img4    aud10    aud40   gain  cap req/s
+  c7a.2xlarge         10.9     13.7     16.5     31.9     17.1     19.7     28.5     11.1     27.9    1.39      0.092
+  c7i.2xlarge          9.8     13.7     18.0     37.0     14.8     24.5     44.3     17.0     40.0    1.18      0.070
+  m8g.xlarge           5.9     13.4     25.9    126.7     31.8     50.9     99.7     48.8    110.8    1.02      0.032
+  cluster capacity for this mix ≈ 0.195 req/s (60% load = 0.117, 90% = 0.175); gain = slot_gain
+trace traces/phase2/poisson-load1.0-s1.csv: 178 requests, offered 0.198 req/s = 102% of predicted capacity
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] Model config: tts_text_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151860. This may result in unexpected behavior.
+[transformers] Model config: tts_text_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151861. This may result in unexpected behavior.
+[transformers] Model config: tts_text_pad_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151859. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151652. This may result in unexpected behavior.
+[transformers] Model config: vision_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151653. This may result in unexpected behavior.
+[transformers] Model config: audio_start_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151647. This may result in unexpected behavior.
+[transformers] Model config: audio_end_token_id must be `None` or an integer within the vocabulary (between 0 and 8447), got 151648. This may result in unexpected behavior.
+building requests
+  warmup m8g.xlarge chat: ok 0.9s
+  warmup c7a.2xlarge chat: ok 1.4s
+  warmup c7i.2xlarge chat: ok 1.6s
+  warmup m8g.xlarge text: ok 13.6s
+  warmup c7a.2xlarge text: ok 15.1s
+  warmup c7i.2xlarge text: ok 18.9s
+  warmup c7a.2xlarge image: ok 16.1s
+  warmup c7i.2xlarge image: ok 18.9s
+  warmup m8g.xlarge image: ok 25.3s
+  warmup c7a.2xlarge audio: ok 12.5s
+  warmup c7i.2xlarge audio: ok 24.2s
+  warmup m8g.xlarge audio: ok 48.9s
+replaying 178 requests with policy ect over ['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge']
+     3 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+     6 00 chat=short -> m8g.xlarge (1 in flight): ok 7.4s, predicted 5.8s
+     7 00 chat=short -> m8g.xlarge (2 in flight): ok 18.3s, predicted 7.7s
+     8 01 text=512 -> m8g.xlarge (3 in flight): ok 18.9s, predicted 20.0s
+     1 04 image=1 -> c7a.2xlarge (1 in flight): ok 43.6s, predicted 12.3s
+     5 05 image=2 -> c7i.2xlarge (2 in flight): ok 33.6s, predicted 25.5s
+    11 00 chat=short -> m8g.xlarge (1 in flight): ok 7.1s, predicted 5.8s
+    12 00 chat=short -> m8g.xlarge (2 in flight): ok 2.8s, predicted 7.3s
+     4 03 text=3072 -> c7a.2xlarge (2 in flight): ok 48.6s, predicted 25.6s
+     2 05 image=2 -> c7i.2xlarge (1 in flight): ok 59.8s, predicted 20.8s
+    14 00 chat=short -> m8g.xlarge (1 in flight): ok 1.9s, predicted 5.8s
+     9 05 image=2 -> c7a.2xlarge (3 in flight): ok 43.0s, predicted 22.1s
+    13 07 audio=10 -> c7a.2xlarge (3 in flight): ok 14.4s, predicted 8.0s
+    10 01 text=512 -> c7i.2xlarge (3 in flight): ok 33.0s, predicted 17.3s
+    16 00 chat=short -> m8g.xlarge (1 in flight): ok 0.9s, predicted 5.8s
+    15 04 image=1 -> c7a.2xlarge (1 in flight): ok 11.3s, predicted 12.3s
+    18 00 chat=short -> m8g.xlarge (1 in flight): ok 1.9s, predicted 5.8s
+    20 00 chat=short -> m8g.xlarge (1 in flight): ok 9.3s, predicted 5.8s
+    23 00 chat=short -> m8g.xlarge (2 in flight): ok 10.6s, predicted 10.1s
+    24 00 chat=short -> m8g.xlarge (3 in flight): ok 6.8s, predicted 11.4s
+    22 07 audio=10 -> c7i.2xlarge (2 in flight): ok 31.1s, predicted 19.1s
+    19 00 chat=short -> c7a.2xlarge (1 in flight): ok 37.8s, predicted 7.8s
+    26 00 chat=short -> m8g.xlarge (1 in flight): ok 16.1s, predicted 5.8s
+    28 01 text=512 -> m8g.xlarge (2 in flight): ok 16.1s, predicted 15.5s
+    17 02 text=1024 -> c7i.2xlarge (1 in flight): ok 50.8s, predicted 15.3s
+    27 00 chat=short -> c7i.2xlarge (3 in flight): ok 21.6s, predicted 8.3s
+    29 00 chat=short -> c7i.2xlarge (3 in flight): ok 16.7s, predicted 8.3s
+    31 00 chat=short -> m8g.xlarge (1 in flight): ok 1.3s, predicted 5.8s
+    21 03 text=3072 -> c7a.2xlarge (2 in flight): ok 63.2s, predicted 26.9s
+    32 01 text=512 -> c7i.2xlarge (1 in flight): ok 17.3s, predicted 11.6s
+    30 07 audio=10 -> c7a.2xlarge (3 in flight): ok 30.5s, predicted 12.0s
+    25 03 text=3072 -> c7a.2xlarge (3 in flight): ok 76.9s, predicted 45.0s
+    35 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+    38 00 chat=short -> m8g.xlarge (1 in flight): ok 2.9s, predicted 5.8s
+    33 01 text=512 -> c7a.2xlarge (4 in flight): ok 40.0s, predicted 9.9s
+    39 00 chat=short -> m8g.xlarge (1 in flight): ok 4.2s, predicted 5.8s
+    43 00 chat=short -> m8g.xlarge (2 in flight): ok 8.0s, predicted 10.6s
+    42 00 chat=short -> m8g.xlarge (1 in flight): ok 10.1s, predicted 5.8s
+    46 00 chat=short -> m8g.xlarge (3 in flight): ok 4.3s, predicted 13.8s
+    44 00 chat=short -> m8g.xlarge (3 in flight): ok 10.0s, predicted 10.5s
+    34 02 text=1024 -> c7a.2xlarge (4 in flight): ok 58.9s, predicted 12.3s
+    47 00 chat=short -> m8g.xlarge (1 in flight): ok 4.3s, predicted 5.8s
+    40 07 audio=10 -> c7i.2xlarge (2 in flight): ok 33.9s, predicted 22.4s
+    49 00 chat=short -> m8g.xlarge (2 in flight): ok 5.8s, predicted 8.8s
+    45 04 image=1 -> c7i.2xlarge (3 in flight): ok 39.0s, predicted 20.6s
+    36 03 text=3072 -> c7a.2xlarge (3 in flight): ok 68.2s, predicted 22.9s
+    37 02 text=1024 -> c7i.2xlarge (1 in flight): ok 80.7s, predicted 15.3s
+    52 00 chat=short -> m8g.xlarge (1 in flight): ok 1.4s, predicted 5.8s
+    41 03 text=3072 -> c7a.2xlarge (3 in flight): ok 82.4s, predicted 37.1s
+    48 04 image=1 -> c7i.2xlarge (4 in flight): ok 60.6s, predicted 20.2s
+    53 01 text=512 -> c7i.2xlarge (2 in flight): ok 18.5s, predicted 11.6s
+    55 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    51 06 image=4 -> c7a.2xlarge (3 in flight): ok 38.4s, predicted 20.6s
+    50 08 audio=40 -> c7a.2xlarge (3 in flight): ok 77.1s, predicted 20.0s
+    58 07 audio=10 -> c7i.2xlarge (2 in flight): ok 26.6s, predicted 14.5s
+    61 00 chat=short -> m8g.xlarge (1 in flight): ok 28.2s, predicted 5.8s
+    57 07 audio=10 -> c7a.2xlarge (4 in flight): ok 48.3s, predicted 25.9s
+    63 02 text=1024 -> m8g.xlarge (2 in flight): ok 29.3s, predicted 26.4s
+    66 00 chat=short -> m8g.xlarge (3 in flight): ok 23.2s, predicted 21.0s
+    60 07 audio=10 -> c7i.2xlarge (3 in flight): ok 48.6s, predicted 26.5s
+    68 00 chat=short -> m8g.xlarge (4 in flight): ok 24.4s, predicted 22.5s
+    54 08 audio=40 -> c7a.2xlarge (4 in flight): ok 85.3s, predicted 38.9s
+    56 02 text=1024 -> c7i.2xlarge (1 in flight): ok 70.4s, predicted 15.3s
+    71 00 chat=short -> m8g.xlarge (4 in flight): ok 16.3s, predicted 15.1s
+    73 00 chat=short -> m8g.xlarge (4 in flight): ok 14.4s, predicted 18.4s
+    59 02 text=1024 -> c7a.2xlarge (5 in flight): ok 59.3s, predicted 23.1s
+    67 00 chat=short -> c7i.2xlarge (5 in flight): ok 36.6s, predicted 20.4s
+    77 00 chat=short -> m8g.xlarge (1 in flight): ok 0.8s, predicted 5.8s
+    64 00 chat=short -> c7i.2xlarge (4 in flight): ok 45.5s, predicted 18.8s
+    62 07 audio=10 -> c7a.2xlarge (5 in flight): ok 57.2s, predicted 22.2s
+    78 00 chat=short -> m8g.xlarge (1 in flight): ok 4.1s, predicted 5.8s
+    70 00 chat=short -> c7i.2xlarge (5 in flight): ok 39.8s, predicted 19.4s
+    65 01 text=512 -> c7a.2xlarge (5 in flight): ok 55.0s, predicted 20.3s
+    69 00 chat=short -> c7a.2xlarge (6 in flight): ok 50.0s, predicted 20.2s
+    82 00 chat=short -> m8g.xlarge (2 in flight): ok 7.2s, predicted 11.6s
+    81 00 chat=short -> m8g.xlarge (1 in flight): ok 17.2s, predicted 5.8s
+    84 01 text=512 -> m8g.xlarge (2 in flight): ok 14.4s, predicted 16.4s
+    72 00 chat=short -> c7a.2xlarge (6 in flight): ok 62.0s, predicted 18.4s
+    85 00 chat=short -> m8g.xlarge (3 in flight): ok 17.9s, predicted 21.0s
+    86 00 chat=short -> m8g.xlarge (2 in flight): ok 7.6s, predicted 13.2s
+    88 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    75 08 audio=40 -> c7a.2xlarge (7 in flight): ok 80.5s, predicted 27.5s
+    74 00 chat=short -> c7i.2xlarge (6 in flight): ok 83.1s, predicted 13.6s
+    79 06 image=4 -> c7a.2xlarge (6 in flight): ok 74.8s, predicted 31.1s
+    76 03 text=3072 -> c7i.2xlarge (6 in flight): ok 102.7s, predicted 40.4s
+    83 04 image=1 -> c7i.2xlarge (3 in flight): ok 77.5s, predicted 25.7s
+    92 04 image=1 -> m8g.xlarge (1 in flight): ok 31.4s, predicted 31.3s
+    80 07 audio=10 -> c7a.2xlarge (6 in flight): ok 91.7s, predicted 36.5s
+    96 01 text=512 -> m8g.xlarge (2 in flight): ok 17.5s, predicted 22.2s
+    98 00 chat=short -> m8g.xlarge (3 in flight): ok 14.4s, predicted 24.4s
+   100 00 chat=short -> m8g.xlarge (1 in flight): ok 5.7s, predicted 5.8s
+   102 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+    87 08 audio=40 -> c7a.2xlarge (4 in flight): ok 85.6s, predicted 20.0s
+    91 03 text=3072 -> c7a.2xlarge (5 in flight): ok 75.2s, predicted 30.9s
+   106 00 chat=short -> m8g.xlarge (1 in flight): ok 4.8s, predicted 5.8s
+    95 07 audio=10 -> c7a.2xlarge (5 in flight): ok 67.5s, predicted 27.6s
+    94 00 chat=short -> c7a.2xlarge (4 in flight): ok 69.8s, predicted 20.5s
+    99 00 chat=short -> c7a.2xlarge (5 in flight): ok 53.0s, predicted 15.6s
+    90 03 text=3072 -> c7i.2xlarge (5 in flight): ok 101.2s, predicted 36.3s
+   107 00 chat=short -> m8g.xlarge (1 in flight): ok 6.5s, predicted 5.8s
+    89 00 chat=short -> c7i.2xlarge (4 in flight): ok 109.5s, predicted 8.3s
+   109 00 chat=short -> m8g.xlarge (1 in flight): ok 1.7s, predicted 5.8s
+    93 00 chat=short -> c7i.2xlarge (5 in flight): ok 92.7s, predicted 23.7s
+    97 00 chat=short -> c7i.2xlarge (6 in flight): ok 83.4s, predicted 20.2s
+   103 01 text=512 -> c7a.2xlarge (6 in flight): ok 66.5s, predicted 9.8s
+   105 07 audio=10 -> c7i.2xlarge (6 in flight): ok 56.8s, predicted 14.5s
+   111 00 chat=short -> m8g.xlarge (1 in flight): ok 28.5s, predicted 5.8s
+   110 00 chat=short -> c7i.2xlarge (5 in flight): ok 35.5s, predicted 8.3s
+   104 03 text=3072 -> c7a.2xlarge (7 in flight): ok 78.4s, predicted 27.3s
+   114 02 text=1024 -> m8g.xlarge (2 in flight): ok 38.0s, predicted 26.8s
+   117 01 text=512 -> m8g.xlarge (3 in flight): ok 26.2s, predicted 24.3s
+   119 00 chat=short -> m8g.xlarge (4 in flight): ok 24.1s, predicted 22.1s
+   122 00 chat=short -> m8g.xlarge (2 in flight): ok 6.0s, predicted 8.7s
+   101 00 chat=short -> c7i.2xlarge (5 in flight): ok 111.1s, predicted 8.3s
+   124 00 chat=short -> m8g.xlarge (1 in flight): ok 3.1s, predicted 5.8s
+   108 06 image=4 -> c7a.2xlarge (3 in flight): ok 69.7s, predicted 20.4s
+   112 07 audio=10 -> c7i.2xlarge (5 in flight): ok 72.5s, predicted 20.2s
+   113 08 audio=40 -> c7a.2xlarge (4 in flight): ok 74.6s, predicted 32.9s
+   116 02 text=1024 -> c7a.2xlarge (5 in flight): ok 74.9s, predicted 37.1s
+   120 00 chat=short -> c7a.2xlarge (5 in flight): ok 68.0s, predicted 25.7s
+   115 04 image=1 -> c7i.2xlarge (5 in flight): ok 91.8s, predicted 27.6s
+   127 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+   118 02 text=1024 -> c7i.2xlarge (5 in flight): ok 75.1s, predicted 20.7s
+   128 00 chat=short -> m8g.xlarge (1 in flight): ok 1.4s, predicted 5.8s
+   121 07 audio=10 -> c7a.2xlarge (5 in flight): ok 72.9s, predicted 19.4s
+   126 04 image=1 -> c7i.2xlarge (4 in flight): ok 44.1s, predicted 12.5s
+   123 00 chat=short -> c7i.2xlarge (5 in flight): ok 69.5s, predicted 8.3s
+   129 00 chat=short -> m8g.xlarge (1 in flight): ok 2.8s, predicted 5.8s
+   125 08 audio=40 -> c7a.2xlarge (5 in flight): ok 60.1s, predicted 20.0s
+   130 00 chat=short -> c7a.2xlarge (2 in flight): ok 12.3s, predicted 7.8s
+   131 00 chat=short -> m8g.xlarge (1 in flight): ok 6.5s, predicted 5.8s
+   132 00 chat=short -> m8g.xlarge (2 in flight): ok 6.2s, predicted 6.4s
+   134 07 audio=10 -> c7i.2xlarge (1 in flight): ok 29.4s, predicted 14.5s
+   137 00 chat=short -> m8g.xlarge (1 in flight): ok 2.9s, predicted 5.8s
+   136 04 image=1 -> c7i.2xlarge (2 in flight): ok 9.7s, predicted 12.5s
+   133 08 audio=40 -> c7a.2xlarge (1 in flight): ok 50.2s, predicted 20.0s
+   142 00 chat=short -> m8g.xlarge (2 in flight): ok 1.5s, predicted 9.4s
+   140 00 chat=short -> m8g.xlarge (1 in flight): ok 7.0s, predicted 5.8s
+   143 00 chat=short -> m8g.xlarge (2 in flight): ok 0.9s, predicted 11.1s
+   135 08 audio=40 -> c7a.2xlarge (2 in flight): ok 48.9s, predicted 32.9s
+   144 04 image=1 -> m8g.xlarge (1 in flight): ok 35.6s, predicted 31.3s
+   147 00 chat=short -> m8g.xlarge (2 in flight): ok 29.2s, predicted 27.0s
+   148 00 chat=short -> m8g.xlarge (3 in flight): ok 28.1s, predicted 31.4s
+   138 06 image=4 -> c7a.2xlarge (3 in flight): ok 58.6s, predicted 20.4s
+   151 00 chat=short -> m8g.xlarge (1 in flight): ok 4.8s, predicted 5.8s
+   146 02 text=1024 -> c7i.2xlarge (2 in flight): ok 45.8s, predicted 27.3s
+   153 00 chat=short -> m8g.xlarge (1 in flight): ok 4.5s, predicted 5.8s
+   139 08 audio=40 -> c7i.2xlarge (1 in flight): ok 72.9s, predicted 34.0s
+   141 08 audio=40 -> c7a.2xlarge (4 in flight): ok 68.7s, predicted 34.6s
+   152 00 chat=short -> c7i.2xlarge (4 in flight): ok 18.6s, predicted 9.3s
+   156 00 chat=short -> m8g.xlarge (2 in flight): ok 15.0s, predicted 7.6s
+   149 00 chat=short -> c7i.2xlarge (3 in flight): ok 59.4s, predicted 23.0s
+   145 05 image=2 -> c7a.2xlarge (3 in flight): ok 77.5s, predicted 31.1s
+   161 02 text=1024 -> m8g.xlarge (3 in flight): ok 29.7s, predicted 32.4s
+   158 01 text=512 -> m8g.xlarge (2 in flight): ok 40.4s, predicted 16.5s
+   162 00 chat=short -> m8g.xlarge (3 in flight): ok 30.9s, predicted 36.4s
+   165 00 chat=short -> m8g.xlarge (1 in flight): ok 6.0s, predicted 5.8s
+   166 00 chat=short -> m8g.xlarge (1 in flight): ok 3.2s, predicted 5.8s
+   167 00 chat=short -> m8g.xlarge (1 in flight): ok 4.5s, predicted 5.8s
+   150 06 image=4 -> c7a.2xlarge (4 in flight): ok 89.4s, predicted 30.1s
+   154 02 text=1024 -> c7i.2xlarge (5 in flight): ok 79.7s, predicted 15.6s
+   159 07 audio=10 -> c7a.2xlarge (4 in flight): ok 70.1s, predicted 27.8s
+   157 08 audio=40 -> c7i.2xlarge (5 in flight): ok 78.9s, predicted 44.6s
+   171 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+   168 00 chat=short -> c7i.2xlarge (4 in flight): ok 28.5s, predicted 8.3s
+   173 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+   175 00 chat=short -> m8g.xlarge (2 in flight): ok 5.7s, predicted 8.7s
+   176 00 chat=short -> m8g.xlarge (3 in flight): ok 8.4s, predicted 14.4s
+   155 03 text=3072 -> c7a.2xlarge (4 in flight): ok 105.6s, predicted 29.5s
+all requests sent; waiting for the last ones to finish
+   178 00 chat=short -> m8g.xlarge (1 in flight): ok 5.8s, predicted 5.8s
+   163 00 chat=short -> c7i.2xlarge (3 in flight): ok 74.9s, predicted 19.6s
+   170 07 audio=10 -> c7i.2xlarge (5 in flight): ok 39.0s, predicted 14.5s
+   164 07 audio=10 -> c7a.2xlarge (5 in flight): ok 77.5s, predicted 27.4s
+   174 00 chat=short -> c7i.2xlarge (4 in flight): ok 47.4s, predicted 8.7s
+   177 04 image=1 -> c7i.2xlarge (4 in flight): ok 43.7s, predicted 17.0s
+   160 03 text=3072 -> c7a.2xlarge (5 in flight): ok 137.8s, predicted 49.3s
+   169 06 image=4 -> c7a.2xlarge (5 in flight): ok 89.6s, predicted 20.4s
+   172 05 image=2 -> c7a.2xlarge (5 in flight): ok 88.9s, predicted 26.0s
+  all            178/178 ok, median e2e 31.0s, p95 89.9s, median TTFT 19.2s, 0.185 req/s
+  chat           93/93 ok, median e2e 7.6s, p95 78.2s, median TTFT 0.4s, 0.097 req/s
+  text           35/35 ok, median e2e 58.9s, p95 103.5s, median TTFT 24.4s, 0.036 req/s
+  image          22/22 ok, median e2e 51.4s, p95 89.5s, median TTFT 36.7s, 0.023 req/s
+  audio          28/28 ok, median e2e 63.8s, p95 85.5s, median TTFT 46.2s, 0.029 req/s
+  c7a.2xlarge    51/51 ok, median e2e 68.0s, p95 90.6s, median TTFT 47.1s, 0.053 req/s
+  c7i.2xlarge    47/47 ok, median e2e 48.6s, p95 102.2s, median TTFT 32.1s, 0.049 req/s
+  m8g.xlarge     80/80 ok, median e2e 6.5s, p95 30.9s, median TTFT 0.4s, 0.083 req/s
+Appended results to results/routing/requests.csv and summary.csv (run_id=20261127T110630Z)
+=== 11:22:34 6c: router queue vs dispatch on arrival (sim)
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+Traceback (most recent call last):
+  File "/home/ubuntu/livia-router/src/main.py", line 471, in <module>
+    main()
+  File "/home/ubuntu/livia-router/src/main.py", line 467, in main
+    {'capacity': capacity, 'run': run, 'sim': simulate}[args.command](args)
+  File "/home/ubuntu/livia-router/src/main.py", line 320, in simulate
+    model = fit_service_model(nodes)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/livia-router/src/router.py", line 133, in fit_service_model
+    d = median([float(r['tpot_ms']) / 1000 for r in rows if r['tpot_ms']])
+                                                            ~^^^^^^^^^^^
+KeyError: 'tpot_ms'
+=== 11:22:35 backup to c7a, then stop everything

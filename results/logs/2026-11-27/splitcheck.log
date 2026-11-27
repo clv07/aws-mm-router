@@ -1,0 +1,15 @@
+run_id=20261127T074133Z model=Qwen2.5-Omni-3B-Q8_0 nodes=['c7a.2xlarge', 'c7i.2xlarge', 'm8g.xlarge'] pairs=[('c7a.2xlarge', 'm8g.xlarge')] transport=direct -> results/split/aws-check
+  warmed up c7a.2xlarge
+  warmed up c7i.2xlarge
+  warmed up m8g.xlarge
+[alone]
+  c7a.2xlarge 00 chat=short #1: 10.9s (prompt 0.2 + decode 10.7)
+  c7a.2xlarge 04 image=1 #1: 18.2s (prompt 7.1 + decode 11.2)
+  c7i.2xlarge 00 chat=short #1: 10.4s (prompt 0.5 + decode 9.9)
+  c7i.2xlarge 04 image=1 #1: 27.4s (prompt 17.1 + decode 10.3)
+  m8g.xlarge 00 chat=short #1: 5.7s (prompt 0.3 + decode 5.5)
+  m8g.xlarge 04 image=1 #1: 35.1s (prompt 29.2 + decode 5.9)
+[split]
+  c7a.2xlarge->m8g.xlarge 00 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+  c7a.2xlarge->m8g.xlarge 04 #1: ERROR 501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase
+appended results to results/split/aws-check; next: python src/split.py summarize results/split/aws-check
