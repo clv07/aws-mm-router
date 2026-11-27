@@ -1,0 +1,3 @@
+run_id,timestamp_utc,label,src,dst,model,run,modality,size,input,repeat,status,error,prompt_tokens,src_prompt_n,src_prefill_s,src_prompt_s,src_encoding_ms,save_s,kv_bytes,copy_s,restore_s,dst_continue_s,dst_prompt_n,dst_encoding_ms,dst_decode_s,dst_decode_tok_s,split_s,same_prefix_chars,answer_chars
+20261127T074133Z,2026-11-27T07:44:02+00:00,aws-check,c7a.2xlarge,m8g.xlarge,Qwen2.5-Omni-3B-Q8_0,00,chat,short,1,1,error,501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase,,,,,,,,,,,,,,,,,
+20261127T074133Z,2026-11-27T07:44:02+00:00,aws-check,c7a.2xlarge,m8g.xlarge,Qwen2.5-Omni-3B-Q8_0,04,image,1,1,1,error,501 Server Error: Not Implemented for url: http://127.0.0.1:18080/slots/0?action=erase,,,,,,,,,,,,,,,,,
