@@ -680,8 +680,8 @@ class Router:
                 candidates,
                 key=lambda c: (
                     c["violations"],
-                    c["added_delay_s"],
-                    c["completion_s"]
+                    c["completion_s"] + c["added_delay_s"],
+                    c["completion_s"],
                 )
             )
 
