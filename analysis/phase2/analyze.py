@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
 import main as runner
-import router
+import router.router as router
 from benchmark import median
 
 
