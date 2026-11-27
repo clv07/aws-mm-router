@@ -1,0 +1,72 @@
+{
+  "params": {
+    "cmd": "make",
+    "arrivals": "onoff",
+    "rate": null,
+    "load": 0.7,
+    "capacity": null,
+    "nodes": "nodes.aws.json",
+    "duration": 900.0,
+    "seed": 1,
+    "mix": "default",
+    "slo": "chat=3,text=4,image=4,audio=4",
+    "ttft_slo": "chat=3,text=4,image=4,audio=4",
+    "tpot_slo": 3.0,
+    "burst_factor": 3.0,
+    "burst_fraction": 0.2,
+    "burst_length": 60.0,
+    "step_at": 300.0,
+    "step_length": 120.0,
+    "step_factor": 3.0,
+    "ramp_from": 0.3,
+    "ramp_to": 1.2,
+    "replay": null,
+    "replay_column": "timestamp",
+    "replay_unit": "s",
+    "replay_offset": 0,
+    "out": "traces/phase2/onoff-load0.7-s1.csv"
+  },
+  "mix": "chat=50,text=20,image=15,audio=15",
+  "rate_req_s": 0.12802264163206167,
+  "capacity_req_s": 0.1828894880458024,
+  "segments": [
+    [
+      0.0,
+      10.681,
+      0.35982,
+      true
+    ],
+    [
+      10.681,
+      162.487,
+      0.05997,
+      false
+    ],
+    [
+      162.487,
+      356.069,
+      0.35982,
+      true
+    ],
+    [
+      356.069,
+      900.0,
+      0.05997,
+      false
+    ]
+  ],
+  "stats": {
+    "requests": 126,
+    "span_s": 900.0,
+    "mean_req_s": 0.14,
+    "interarrival_cv": 1.46,
+    "peak_60s_vs_mean": 3.93,
+    "requests_in_bursts": 86,
+    "per_modality": {
+      "chat": 64,
+      "text": 29,
+      "image": 14,
+      "audio": 19
+    }
+  }
+}
